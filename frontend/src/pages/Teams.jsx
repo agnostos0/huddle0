@@ -8,6 +8,8 @@ export default function Teams() {
   const [showInviteForm, setShowInviteForm] = useState(false)
   const [showManualForm, setShowManualForm] = useState(false)
   const [inviteEmail, setInviteEmail] = useState('')
+  const [inviteName, setInviteName] = useState('')
+  const [pendingInvites, setPendingInvites] = useState([])
   const [manualForm, setManualForm] = useState({ name: '', email: '', bio: '', socialLinks: { linkedin: '', twitter: '', github: '', website: '' } })
 
   async function load() {
@@ -23,6 +25,15 @@ export default function Teams() {
     try {
       const { data } = await api.get(`/teams/${teamId}`)
       setSelectedTeam(data)
+      
+      // Load pending invites for this team
+      try {
+        const invitesResponse = await api.get(`/invites/teams/${teamId}/invites`)
+        setPendingInvites(invitesResponse.data)
+      } catch (e) {
+        console.log('No pending invites or error loading invites')
+        setPendingInvites([])
+      }
     } catch (e) {
       setError('Failed to load team details')
     }
@@ -30,11 +41,15 @@ export default function Teams() {
 
   async function inviteMember(teamId) {
     try {
-      await api.post(`/invites/teams/${teamId}/invite`, { email: inviteEmail })
+      await api.post(`/invites/teams/${teamId}/invite`, { 
+        email: inviteEmail, 
+        invitedName: inviteName || inviteEmail.split('@')[0] 
+      })
       setInviteEmail('')
+      setInviteName('')
       setShowInviteForm(false)
       setError('') // Clear any previous errors
-      alert('Invitation sent successfully! Check your email for the invite link.')
+      await loadTeamDetails(teamId) // Reload to show new invite
     } catch (e) {
       setError(e.response?.data?.message || 'Failed to send invitation')
     }
@@ -59,6 +74,16 @@ export default function Teams() {
       await load()
     } catch (e) {
       setError('Failed to remove member')
+    }
+  }
+
+  async function resendInvite(inviteId) {
+    try {
+      await api.post(`/invites/${inviteId}/resend`)
+      setError('') // Clear any previous errors
+      alert('Invitation resent successfully!')
+    } catch (e) {
+      setError(e.response?.data?.message || 'Failed to resend invitation')
     }
   }
 
@@ -109,6 +134,12 @@ export default function Teams() {
                   value={inviteEmail} 
                   onChange={(e) => setInviteEmail(e.target.value)} 
                 />
+                <input 
+                  className="w-full border px-3 py-2 rounded mb-2" 
+                  placeholder="Name (optional)" 
+                  value={inviteName} 
+                  onChange={(e) => setInviteName(e.target.value)} 
+                />
                 <div className="flex gap-2">
                   <button onClick={() => inviteMember(selectedTeam._id)} className="bg-green-600 text-white px-3 py-1 rounded text-sm">Send Invite</button>
                   <button onClick={() => setShowInviteForm(false)} className="bg-gray-600 text-white px-3 py-1 rounded text-sm">Cancel</button>
@@ -128,6 +159,33 @@ export default function Teams() {
                 <div className="flex gap-2">
                   <button onClick={() => addManualMember(selectedTeam._id)} className="bg-purple-600 text-white px-3 py-1 rounded text-sm">Add Member</button>
                   <button onClick={() => setShowManualForm(false)} className="bg-gray-600 text-white px-3 py-1 rounded text-sm">Cancel</button>
+                </div>
+              </div>
+            )}
+
+            {/* Pending Invitations */}
+            {pendingInvites.length > 0 && (
+              <div className="mb-6">
+                <h3 className="font-semibold mb-2 text-orange-600">Pending Invitations</h3>
+                <div className="space-y-2">
+                  {pendingInvites.map(invite => (
+                    <div key={invite._id} className="flex items-center justify-between p-3 bg-orange-50 border border-orange-200 rounded">
+                      <div>
+                        <p className="font-medium">{invite.invitedName || invite.email.split('@')[0]}</p>
+                        <p className="text-sm text-gray-600">{invite.email}</p>
+                        <p className="text-xs text-orange-600">Sent: {new Date(invite.createdAt).toLocaleDateString()}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <span className="text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded">Pending</span>
+                        <button 
+                          onClick={() => resendInvite(invite._id)} 
+                          className="text-blue-600 text-sm hover:text-blue-800"
+                        >
+                          Resend
+                        </button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}

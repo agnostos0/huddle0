@@ -46,7 +46,7 @@ router.get('/:token', async (req, res) => {
 // Accept invite (public route)
 router.post('/:token/accept', async (req, res) => {
   try {
-    const { name, password, bio, socialLinks } = req.body;
+    const { name, username, password, bio, socialLinks } = req.body;
 
     const invite = await Invite.findOne({ 
       token: req.params.token,
@@ -71,9 +71,18 @@ router.post('/:token/accept', async (req, res) => {
         await team.save();
       }
     } else {
+      // Check if username is available
+      if (username) {
+        const existingUsername = await User.findOne({ username });
+        if (existingUsername) {
+          return res.status(400).json({ message: 'Username already taken' });
+        }
+      }
+      
       // Create new user
       user = await User.create({
         name,
+        username: username || email.split('@')[0], // Use email prefix if no username provided
         email: invite.email,
         password,
         bio,
@@ -99,6 +108,7 @@ router.post('/:token/accept', async (req, res) => {
       user: {
         id: user._id,
         name: user.name,
+        username: user.username,
         email: user.email,
       },
       team: {
@@ -115,7 +125,7 @@ router.post('/:token/accept', async (req, res) => {
 // Create invite (protected route)
 router.post('/teams/:teamId/invite', authenticate, async (req, res) => {
   try {
-    const { email } = req.body;
+    const { email, invitedName } = req.body;
     const teamId = req.params.teamId;
 
     // Check if team exists and user is owner
@@ -150,6 +160,7 @@ router.post('/teams/:teamId/invite', authenticate, async (req, res) => {
     const invite = await Invite.create({
       team: teamId,
       email,
+      invitedName: invitedName || email.split('@')[0], // Use email prefix if no name provided
       token: generateInviteToken(),
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
       invitedBy: req.user.id,
@@ -168,7 +179,9 @@ router.post('/teams/:teamId/invite', authenticate, async (req, res) => {
       invite: {
         id: invite._id,
         email: invite.email,
+        invitedName: invite.invitedName,
         expiresAt: invite.expiresAt,
+        status: invite.status,
       }
     });
   } catch (error) {
@@ -219,6 +232,48 @@ router.post('/test-email', async (req, res) => {
       message: 'Failed to send test email',
       error: error.message 
     });
+  }
+});
+
+// Resend invitation (protected route)
+router.post('/:inviteId/resend', authenticate, async (req, res) => {
+  try {
+    const invite = await Invite.findById(req.params.inviteId)
+      .populate('team', 'name')
+      .populate('invitedBy', 'name');
+
+    if (!invite) {
+      return res.status(404).json({ message: 'Invitation not found' });
+    }
+
+    // Check if user is team owner
+    if (invite.team.owner.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'Only team owner can resend invitations' });
+    }
+
+    // Check if invite is still valid
+    if (invite.status !== 'pending' || invite.expiresAt < new Date()) {
+      return res.status(400).json({ message: 'Invitation is no longer valid' });
+    }
+
+    // Update last sent time
+    invite.lastSentAt = new Date();
+    await invite.save();
+
+    // Send email
+    try {
+      await sendInviteEmail(invite, invite.team.name, invite.invitedBy.name);
+      res.json({ 
+        message: 'Invitation resent successfully',
+        lastSentAt: invite.lastSentAt
+      });
+    } catch (emailError) {
+      console.error('Failed to send email:', emailError);
+      res.status(500).json({ message: 'Failed to send email' });
+    }
+  } catch (error) {
+    console.error('Error resending invite:', error);
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
