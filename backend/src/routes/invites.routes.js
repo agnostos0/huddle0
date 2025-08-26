@@ -239,15 +239,19 @@ router.post('/test-email', async (req, res) => {
 router.post('/:inviteId/resend', authenticate, async (req, res) => {
   try {
     const invite = await Invite.findById(req.params.inviteId)
-      .populate('team', 'name')
+      .populate('team', 'name owner')
       .populate('invitedBy', 'name');
 
     if (!invite) {
       return res.status(404).json({ message: 'Invitation not found' });
     }
 
+    if (!invite.team) {
+      return res.status(404).json({ message: 'Team not found' });
+    }
+
     // Check if user is team owner
-    if (invite.team.owner.toString() !== req.user.id) {
+    if (!invite.team.owner || invite.team.owner.toString() !== req.user.id) {
       return res.status(403).json({ message: 'Only team owner can resend invitations' });
     }
 
