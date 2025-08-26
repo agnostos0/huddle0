@@ -277,4 +277,64 @@ router.post('/:inviteId/resend', authenticate, async (req, res) => {
   }
 });
 
+// Join team for logged-in users (protected route)
+router.post('/:token/join', authenticate, async (req, res) => {
+  try {
+    const { bio, socialLinks } = req.body;
+
+    const invite = await Invite.findOne({ 
+      token: req.params.token,
+      status: 'pending',
+      expiresAt: { $gt: new Date() }
+    }).populate('team');
+
+    if (!invite) {
+      return res.status(404).json({ 
+        message: 'Invitation not found or has expired' 
+      });
+    }
+
+    // Check if the logged-in user's email matches the invite email
+    if (req.user.email !== invite.email) {
+      return res.status(403).json({ 
+        message: 'This invitation is not for your email address' 
+      });
+    }
+
+    // Check if user is already a team member
+    const team = await Team.findById(invite.team._id);
+    if (team.members.some(m => m.toString() === req.user.id)) {
+      return res.status(400).json({ message: 'You are already a member of this team' });
+    }
+
+    // Update user's bio and social links if provided
+    if (bio || socialLinks) {
+      const updateData = {};
+      if (bio) updateData.bio = bio;
+      if (socialLinks) updateData.socialLinks = socialLinks;
+      
+      await User.findByIdAndUpdate(req.user.id, updateData);
+    }
+
+    // Add user to team
+    team.members.push(req.user.id);
+    await team.save();
+
+    // Mark invite as accepted
+    invite.status = 'accepted';
+    await invite.save();
+
+    res.json({ 
+      message: 'Successfully joined the team',
+      team: {
+        id: invite.team._id,
+        name: invite.team.name,
+      }
+    });
+  } catch (error) {
+    console.error('Error joining team:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 export default router;
