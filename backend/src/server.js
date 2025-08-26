@@ -6,6 +6,8 @@ import { connectToDatabase } from './db/mongoose.js';
 import authRoutes from './routes/auth.routes.js';
 import eventRoutes from './routes/events.routes.js';
 import userRoutes from './routes/users.routes.js';
+import teamRoutes from './routes/teams.routes.js';
+import inviteRoutes from './routes/invites.routes.js';
 
 const app = express();
 
@@ -20,6 +22,8 @@ app.get('/api/health', (_req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/teams', teamRoutes);
+app.use('/api/invites', inviteRoutes);
 
 async function start() {
   try {

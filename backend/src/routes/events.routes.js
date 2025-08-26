@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { Event } from '../models/Event.js';
+import { Team } from '../models/Team.js';
 import { authenticate } from '../middleware/auth.js';
 
 const router = Router();
@@ -56,9 +57,21 @@ router.post('/:id/join', authenticate, async (req, res) => {
   const event = await Event.findById(req.params.id);
   if (!event) return res.status(404).json({ message: 'Not found' });
   if (event.organizer.toString() === req.user.id) return res.status(400).json({ message: 'Organizer cannot join' });
-  if (!event.participants.some((p) => p.toString() === req.user.id)) {
-    event.participants.push(req.user.id);
+  const { teamId } = req.body || {};
+  if (teamId) {
+    const team = await Team.findById(teamId);
+    if (!team) return res.status(404).json({ message: 'Team not found' });
+    // Add all team members who are not already participants
+    const current = new Set(event.participants.map((p) => p.toString()));
+    for (const memberId of team.members.map((m) => m.toString())) {
+      if (!current.has(memberId)) event.participants.push(memberId);
+    }
     await event.save();
+  } else {
+    if (!event.participants.some((p) => p.toString() === req.user.id)) {
+      event.participants.push(req.user.id);
+      await event.save();
+    }
   }
   res.json(event);
 });

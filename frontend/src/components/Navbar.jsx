@@ -1,3 +1,4 @@
+import React from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 
@@ -19,6 +20,7 @@ export default function Navbar() {
           <Link to="/">Home</Link>
           {token && <Link to="/dashboard">Dashboard</Link>}
           {token && <Link to="/create" className="text-white bg-blue-600 px-3 py-1.5 rounded">Create Event</Link>}
+          {token && <Link to="/teams">My Teams</Link>}
           {!token ? (
             <>
               <Link to="/login">Login</Link>

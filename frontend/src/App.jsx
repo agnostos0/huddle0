@@ -1,3 +1,4 @@
+import React from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext.jsx'
 import Landing from './pages/Landing.jsx'
@@ -6,6 +7,9 @@ import Register from './pages/Register.jsx'
 import Dashboard from './pages/Dashboard.jsx'
 import CreateEvent from './pages/CreateEvent.jsx'
 import EventDetails from './pages/EventDetails.jsx'
+import Teams from './pages/Teams.jsx'
+import CreateTeam from './pages/CreateTeam.jsx'
+import InviteAccept from './pages/InviteAccept.jsx'
 import Navbar from './components/Navbar.jsx'
 
 function ProtectedRoute({ children }) {
@@ -26,6 +30,10 @@ export default function App() {
             <Route path="/register" element={<Register />} />
             <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/create" element={<ProtectedRoute><CreateEvent /></ProtectedRoute>} />
+            <Route path="/teams" element={<ProtectedRoute><Teams /></ProtectedRoute>} />
+            <Route path="/teams/create" element={<ProtectedRoute><CreateTeam /></ProtectedRoute>} />
+            <Route path="/invite/:token" element={<InviteAccept />} />
+            <Route path="/event" element={<Navigate to="/dashboard" replace />} />
             <Route path="/event/:id" element={<ProtectedRoute><EventDetails /></ProtectedRoute>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
