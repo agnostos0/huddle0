@@ -65,6 +65,31 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// Check username availability
+router.get('/check-username/:username', async (req, res) => {
+  try {
+    const { username } = req.params;
+    
+    if (!username || username.length < 3) {
+      return res.json({ available: false, message: 'Username must be at least 3 characters' });
+    }
+    
+    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+      return res.json({ available: false, message: 'Username can only contain letters, numbers, and underscores' });
+    }
+    
+    const existingUser = await User.findOne({ username: username.toLowerCase() });
+    
+    if (existingUser) {
+      return res.json({ available: false, message: 'Username is already taken' });
+    }
+    
+    res.json({ available: true, message: 'Username is available' });
+  } catch (err) {
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 export default router;
 
 
