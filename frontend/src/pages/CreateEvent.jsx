@@ -7,7 +7,7 @@ import Navbar from '../components/Navbar.jsx'
 
 export default function CreateEvent() {
   const navigate = useNavigate()
-  const { user, token } = useAuth()
+  const { user, token, logout } = useAuth()
   
   const [form, setForm] = useState({
     title: '',
@@ -50,6 +50,11 @@ export default function CreateEvent() {
       console.log('CreateEvent: User:', user)
       console.log('CreateEvent: Token:', token)
       console.log('CreateEvent: Form data:', form)
+      
+      // Check if user and token are valid
+      if (!user || !token) {
+        throw new Error('User or token not found')
+      }
       
       const payload = { 
         ...form, 
@@ -98,6 +103,14 @@ export default function CreateEvent() {
               Create Amazing Event
             </h2>
             <p className="text-gray-600 mt-2">Share your event with the world!</p>
+          </div>
+
+          {/* Debug Info */}
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
+            <h3 className="font-semibold text-blue-800 mb-2">Debug Info:</h3>
+            <p className="text-sm text-blue-700">User: {user ? user.name : 'None'}</p>
+            <p className="text-sm text-blue-700">Token: {token ? 'Present' : 'None'}</p>
+            <p className="text-sm text-blue-700">User ID: {user ? user.id : 'None'}</p>
           </div>
           
           {error && (
@@ -307,6 +320,17 @@ export default function CreateEvent() {
                 className="px-8 py-4 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 transform hover:scale-105 transition-all duration-300"
               >
                 Test Create
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  console.log('CreateEvent: Manual logout test')
+                  logout()
+                }}
+                className="px-8 py-4 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 transform hover:scale-105 transition-all duration-300"
+              >
+                Test Logout
               </button>
             </div>
           </form>

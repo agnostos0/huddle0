@@ -54,49 +54,7 @@ export const AuthProvider = ({ children }) => {
     initializeAuth();
   }, [token]);
 
-  const fetchUser = async (retryCount = 0) => {
-    try {
-      console.log('AuthContext: Fetching user data...', retryCount > 0 ? `(Retry ${retryCount})` : '');
-      
-      // Add timeout to prevent infinite loading
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Request timeout')), 10000)
-      );
-      
-      const response = await Promise.race([
-        api.get('/auth/me'),
-        timeoutPromise
-      ]);
-      
-      console.log('AuthContext: User data received:', response.data);
-      setUser(response.data.user);
-    } catch (error) {
-      console.error('AuthContext: Error fetching user:', error);
-      
-      // Retry logic for network errors (max 2 retries)
-      if (retryCount < 2 && (error.message === 'Request timeout' || error.code === 'NETWORK_ERROR' || !error.response)) {
-        console.log(`AuthContext: Retrying... (${retryCount + 1}/2)`);
-        setTimeout(() => fetchUser(retryCount + 1), 2000);
-        return;
-      }
-      
-      // Handle different types of errors
-      if (error.response?.status === 401) {
-        console.log('AuthContext: Unauthorized, logging out');
-        logout();
-      } else if (error.message === 'Request timeout' || error.code === 'NETWORK_ERROR') {
-        console.log('AuthContext: Network error after retries, clearing token and redirecting to login');
-        logout();
-      } else {
-        console.log('AuthContext: Other error, but not logging out automatically');
-        // Don't automatically logout for other errors
-      }
-    } finally {
-      if (retryCount === 0) {
-        setLoading(false);
-      }
-    }
-  };
+
 
   const login = async (emailOrUsername, password) => {
     try {
@@ -147,18 +105,14 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
+    console.log('AuthContext: Logging out user');
     setToken(null);
     setUser(null);
     localStorage.removeItem('token');
     localStorage.removeItem('user');
   };
 
-  const refreshAuth = async () => {
-    if (token) {
-      setLoading(true);
-      await fetchUser();
-    }
-  };
+
 
   const updateUser = (updatedUser) => {
     setUser(updatedUser);
