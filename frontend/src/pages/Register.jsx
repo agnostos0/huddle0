@@ -59,13 +59,13 @@ export default function Register() {
       // Basic validation
       const isValid = username.length >= 3 && !/\s/.test(username) && /^[a-z0-9_]+$/.test(username);
       
-      setUsernameCriteria({
+      setUsernameCriteria(prev => ({
         minLength: username.length >= 3,
         noSpaces: !/\s/.test(username),
         noCapital: !/[A-Z]/.test(username),
         validChars: /^[a-z0-9_]+$/.test(username),
         isAvailable: false // Reset availability check
-      });
+      }));
       
       // Check username availability if basic criteria are met
       if (isValid) {
@@ -130,14 +130,15 @@ export default function Register() {
   const checkUsernameAvailability = async (username) => {
     if (username.length < 3) return;
     
+    console.log('Checking username availability for:', username);
     setIsCheckingUsername(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api'}/auth/check-username/${username}`);
-      const data = await response.json();
+      const response = await api.get(`/auth/check-username/${username}`);
+      console.log('Username availability response:', response.data);
       
       setUsernameCriteria(prev => ({
         ...prev,
-        isAvailable: data.available
+        isAvailable: response.data.available
       }));
     } catch (error) {
       console.error('Error checking username availability:', error);
