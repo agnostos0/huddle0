@@ -20,6 +20,13 @@ api.interceptors.response.use(
   },
   (error) => {
     console.error('API: Error response:', error.config?.url, error.response?.status, error.response?.data)
+    
+    // Handle 401 errors (unauthorized) - don't automatically logout
+    if (error.response?.status === 401) {
+      console.log('API: 401 error - token might be invalid');
+      // Let the component handle this error
+    }
+    
     return Promise.reject(error)
   }
 )

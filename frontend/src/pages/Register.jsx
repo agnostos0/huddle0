@@ -78,14 +78,8 @@ export default function Register() {
           colors: ['#8B5CF6', '#3B82F6', '#10B981', '#F59E0B', '#EF4444']
         });
 
-        // Navigate to appropriate dashboard based on role
-        if (result.user.role === 'admin') {
-          navigate('/admin-dashboard');
-        } else if (result.user.role === 'organizer') {
-          navigate('/organizer-dashboard');
-        } else {
-          navigate('/dashboard');
-        }
+        // Navigate to dashboard
+        navigate('/dashboard');
       } else {
         setError(result.message);
       }
@@ -177,51 +171,7 @@ export default function Register() {
               />
             </div>
 
-            {/* Role Selection */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Account Type *</label>
-              <div className="grid grid-cols-2 gap-3">
-                <label className={`relative cursor-pointer rounded-xl border-2 p-4 transition-all duration-300 ${
-                  formData.role === 'user' 
-                    ? 'border-purple-500 bg-purple-50' 
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}>
-                  <input
-                    type="radio"
-                    name="role"
-                    value="user"
-                    checked={formData.role === 'user'}
-                    onChange={handleInputChange}
-                    className="sr-only"
-                  />
-                  <div className="text-center">
-                    <div className="text-2xl mb-2">👤</div>
-                    <div className="font-medium text-gray-900">Event Attendee</div>
-                    <div className="text-sm text-gray-600">Join events & teams</div>
-                  </div>
-                </label>
-                
-                <label className={`relative cursor-pointer rounded-xl border-2 p-4 transition-all duration-300 ${
-                  formData.role === 'organizer' 
-                    ? 'border-blue-500 bg-blue-50' 
-                    : 'border-gray-200 hover:border-gray-300'
-                }`}>
-                  <input
-                    type="radio"
-                    name="role"
-                    value="organizer"
-                    checked={formData.role === 'organizer'}
-                    onChange={handleInputChange}
-                    className="sr-only"
-                  />
-                  <div className="text-center">
-                    <div className="text-2xl mb-2">🎯</div>
-                    <div className="font-medium text-gray-900">Event Organizer</div>
-                    <div className="text-sm text-gray-600">Create & manage events</div>
-                  </div>
-                </label>
-              </div>
-            </div>
+
 
             {/* Password */}
             <div>

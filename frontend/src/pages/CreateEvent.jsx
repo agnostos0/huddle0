@@ -99,7 +99,13 @@ export default function CreateEvent() {
       
       navigate(`/event/${data._id}`)
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to create event')
+      console.error('CreateEvent error:', err);
+      if (err.response?.status === 401) {
+        setError('Session expired. Please login again.');
+        // Don't logout automatically, let user see the error
+      } else {
+        setError(err.response?.data?.message || 'Failed to create event. Please try again.');
+      }
     } finally {
       setIsSubmitting(false)
     }
