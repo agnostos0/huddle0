@@ -248,18 +248,38 @@ router.patch('/organizers/:userId/verify', authenticate, async (req, res) => {
   }
 });
 
+// Debug endpoint to check all usernames
+router.get('/debug/usernames', async (req, res) => {
+  try {
+    const users = await User.find({}, 'username email');
+    console.log('All users in database:', users);
+    res.json({ users });
+  } catch (error) {
+    console.error('Debug usernames error:', error);
+    res.status(500).json({ message: 'Error fetching usernames' });
+  }
+});
+
 // Check username availability
 router.get('/check-username/:username', async (req, res) => {
   try {
     const { username } = req.params;
     
+    console.log('Checking username availability for:', username);
+    
     // Check if username exists
     const existingUser = await User.findOne({ username: username.toLowerCase() });
     
-    res.json({
+    console.log('Existing user found:', existingUser ? 'Yes' : 'No');
+    
+    const result = {
       available: !existingUser,
       username: username.toLowerCase()
-    });
+    };
+    
+    console.log('Username availability result:', result);
+    
+    res.json(result);
   } catch (error) {
     console.error('Check username error:', error);
     res.status(500).json({ message: 'Error checking username availability' });

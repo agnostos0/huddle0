@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import confetti from 'canvas-confetti';
 import Navbar from '../components/Navbar.jsx';
+import api from '../lib/api.js';
+import { testUsernameAvailability, testDebugUsernames } from '../utils/testApi.js';
 
 export default function Register() {
   const navigate = useNavigate();
@@ -35,6 +37,19 @@ export default function Register() {
     isAvailable: false
   });
   const [isCheckingUsername, setIsCheckingUsername] = useState(false);
+  const [debugInfo, setDebugInfo] = useState(null);
+
+  const testUsername = async () => {
+    setDebugInfo('Testing username availability...')
+    const result = await testUsernameAvailability('testuser')
+    setDebugInfo(JSON.stringify(result, null, 2))
+  }
+
+  const testDebug = async () => {
+    setDebugInfo('Testing debug usernames...')
+    const result = await testDebugUsernames()
+    setDebugInfo(JSON.stringify(result, null, 2))
+  }
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -142,6 +157,9 @@ export default function Register() {
       }));
     } catch (error) {
       console.error('Error checking username availability:', error);
+      console.error('Error details:', error.response?.data);
+      
+      // If there's an error, assume username is not available to be safe
       setUsernameCriteria(prev => ({
         ...prev,
         isAvailable: false
@@ -389,6 +407,37 @@ export default function Register() {
               </a>
             </p>
           </div>
+
+          {/* Debug Section - Only show in development */}
+          {import.meta.env.DEV && (
+            <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+              <h3 className="text-sm font-semibold text-gray-700 mb-2">Debug Info</h3>
+              <div className="text-xs text-gray-600 mb-2">
+                API URL: {import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api'}
+              </div>
+              <div className="flex space-x-2 mb-2">
+                <button
+                  type="button"
+                  onClick={testUsername}
+                  className="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600"
+                >
+                  Test Username
+                </button>
+                <button
+                  type="button"
+                  onClick={testDebug}
+                  className="text-xs bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600"
+                >
+                  Debug DB
+                </button>
+              </div>
+              {debugInfo && (
+                <pre className="text-xs bg-white p-2 rounded border overflow-auto max-h-32">
+                  {debugInfo}
+                </pre>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

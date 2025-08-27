@@ -34,3 +34,35 @@ export const testLoginEndpoint = async (emailOrUsername, password) => {
     }
   }
 }
+
+export const testUsernameAvailability = async (username) => {
+  try {
+    console.log('Testing username availability for:', username)
+    const response = await api.get(`/auth/check-username/${username}`)
+    console.log('Username Availability Test Response:', response.data)
+    return { success: true, data: response.data }
+  } catch (error) {
+    console.error('Username Availability Test Failed:', error)
+    return { 
+      success: false, 
+      error: error.response?.data?.message || error.message,
+      status: error.response?.status
+    }
+  }
+}
+
+export const testDebugUsernames = async () => {
+  try {
+    console.log('Testing debug usernames endpoint...')
+    const response = await api.get('/auth/debug/usernames')
+    console.log('Debug Usernames Test Response:', response.data)
+    return { success: true, data: response.data }
+  } catch (error) {
+    console.error('Debug Usernames Test Failed:', error)
+    return { 
+      success: false, 
+      error: error.response?.data?.message || error.message,
+      status: error.response?.status
+    }
+  }
+}
