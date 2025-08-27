@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { Team } from '../models/Team.js';
 import { User } from '../models/User.js';
+import { Invite } from '../models/Invite.js';
 import { authenticate } from '../middleware/auth.js';
 
 const router = Router();

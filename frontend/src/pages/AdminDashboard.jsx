@@ -13,8 +13,12 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState(null);
   const [showImpersonateModal, setShowImpersonateModal] = useState(false);
+  const [showNoticeModal, setShowNoticeModal] = useState(false);
+  const [selectedUserForNotice, setSelectedUserForNotice] = useState(null);
+  const [noticeText, setNoticeText] = useState('');
   const [impersonateLoading, setImpersonateLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState({});
+  const [noticeLoading, setNoticeLoading] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -141,6 +145,74 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleSendNotice = async () => {
+    if (!noticeText.trim()) {
+      alert('Please enter a notice message');
+      return;
+    }
+
+    try {
+      setNoticeLoading(true);
+      await api.post(`/admin/users/${selectedUserForNotice._id}/notice`, {
+        notice: noticeText,
+        deactivateAccount: true
+      });
+      
+      // Update user status in the list
+      setUsers(users.map(user => 
+        user._id === selectedUserForNotice._id 
+          ? { ...user, isActive: false, notice: noticeText }
+          : user
+      ));
+      
+      setNoticeText('');
+      setShowNoticeModal(false);
+      setSelectedUserForNotice(null);
+      alert('Notice sent and account deactivated successfully');
+    } catch (error) {
+      console.error('Error sending notice:', error);
+      alert('Failed to send notice');
+    } finally {
+      setNoticeLoading(false);
+    }
+  };
+
+  const handleDeactivateUser = async (userId) => {
+    if (!confirm('Are you sure you want to deactivate this user account?')) {
+      return;
+    }
+
+    try {
+      setDeleteLoading(prev => ({ ...prev, [userId]: true }));
+      await api.post(`/admin/users/${userId}/deactivate`);
+      setUsers(users.map(user => 
+        user._id === userId ? { ...user, isActive: false } : user
+      ));
+      alert('User account deactivated successfully');
+    } catch (error) {
+      console.error('Error deactivating user:', error);
+      alert('Failed to deactivate user account');
+    } finally {
+      setDeleteLoading(prev => ({ ...prev, [userId]: false }));
+    }
+  };
+
+  const handleActivateUser = async (userId) => {
+    try {
+      setDeleteLoading(prev => ({ ...prev, [userId]: true }));
+      await api.post(`/admin/users/${userId}/activate`);
+      setUsers(users.map(user => 
+        user._id === userId ? { ...user, isActive: true } : user
+      ));
+      alert('User account activated successfully');
+    } catch (error) {
+      console.error('Error activating user:', error);
+      alert('Failed to activate user account');
+    } finally {
+      setDeleteLoading(prev => ({ ...prev, [userId]: false }));
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
@@ -153,16 +225,16 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-gray-900 text-white">
       {/* Header */}
       <div className="bg-gray-800 border-b border-gray-700">
-        <div className="max-w-7xl mx-auto px-6 py-6">
-          <div className="flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
             <div>
-              <h1 className="text-3xl font-bold text-yellow-400">🔐 Admin Dashboard</h1>
-              <p className="text-gray-400 mt-1">Welcome Prince Sir - Master Control Panel</p>
+              <h1 className="text-2xl sm:text-3xl font-bold text-yellow-400">🔐 Admin Dashboard</h1>
+              <p className="text-gray-400 mt-1 text-sm sm:text-base">Welcome Prince Sir - Master Control Panel</p>
             </div>
-            <div className="flex space-x-4">
+            <div className="flex space-x-2 sm:space-x-4">
               <button
                 onClick={() => navigate('/')}
-                className="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg transition-colors"
+                className="px-3 sm:px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg transition-colors text-sm sm:text-base"
               >
                 Home
               </button>
@@ -171,9 +243,9 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-8">
         {/* Analytics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
           <div className="bg-gray-800 p-6 rounded-lg border border-gray-700">
             <div className="flex items-center">
               <div className="p-3 bg-blue-500 rounded-lg">
@@ -232,12 +304,12 @@ export default function AdminDashboard() {
         </div>
 
         {/* Tabs */}
-        <div className="bg-gray-800 rounded-lg border border-gray-700 mb-8">
+        <div className="bg-gray-800 rounded-lg border border-gray-700 mb-6 sm:mb-8">
           <div className="border-b border-gray-700">
-            <nav className="flex space-x-8 px-6">
+            <nav className="flex flex-wrap space-x-2 sm:space-x-8 px-4 sm:px-6 overflow-x-auto">
               <button
                 onClick={() => setSelectedUser('users')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                className={`py-3 sm:py-4 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap ${
                   selectedUser === 'users' ? 'border-yellow-400 text-yellow-400' : 'border-transparent text-gray-400 hover:text-gray-300'
                 }`}
               >
@@ -245,7 +317,7 @@ export default function AdminDashboard() {
               </button>
               <button
                 onClick={() => setSelectedUser('events')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                className={`py-3 sm:py-4 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap ${
                   selectedUser === 'events' ? 'border-yellow-400 text-yellow-400' : 'border-transparent text-gray-400 hover:text-gray-300'
                 }`}
               >
@@ -253,7 +325,7 @@ export default function AdminDashboard() {
               </button>
               <button
                 onClick={() => setSelectedUser('teams')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                className={`py-3 sm:py-4 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap ${
                   selectedUser === 'teams' ? 'border-yellow-400 text-yellow-400' : 'border-transparent text-gray-400 hover:text-gray-300'
                 }`}
               >
@@ -261,7 +333,7 @@ export default function AdminDashboard() {
               </button>
               <button
                 onClick={() => setSelectedUser('invites')}
-                className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                className={`py-3 sm:py-4 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap ${
                   selectedUser === 'invites' ? 'border-yellow-400 text-yellow-400' : 'border-transparent text-gray-400 hover:text-gray-300'
                 }`}
               >
@@ -276,12 +348,13 @@ export default function AdminDashboard() {
               <div className="space-y-4">
                 <h3 className="text-xl font-semibold text-yellow-400 mb-4">User Management</h3>
                 <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-700">
+                  <table className="min-w-full divide-y divide-gray-700" style={{ minWidth: '900px' }}>
                     <thead className="bg-gray-700">
                       <tr>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">User</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Email</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Notice</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
                       </tr>
                     </thead>
@@ -311,7 +384,25 @@ export default function AdminDashboard() {
                               {user.isActive ? 'Active' : 'Inactive'}
                             </span>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                            {user.notice ? (
+                              <div className="max-w-xs">
+                                <div className="text-yellow-400 font-medium">Notice Sent</div>
+                                <div className="text-xs text-gray-400 truncate" title={user.notice}>
+                                  {user.notice}
+                                </div>
+                                {user.noticeDate && (
+                                  <div className="text-xs text-gray-500">
+                                    {new Date(user.noticeDate).toLocaleDateString()}
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-gray-500">No notice</span>
+                            )}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div className="flex flex-col sm:flex-row gap-2">
                             <button
                               onClick={() => handleImpersonate(user._id)}
                               disabled={impersonateLoading}
@@ -320,12 +411,39 @@ export default function AdminDashboard() {
                               {impersonateLoading ? 'Loading...' : 'Login As'}
                             </button>
                             <button
+                              onClick={() => {
+                                setSelectedUserForNotice(user);
+                                setShowNoticeModal(true);
+                              }}
+                              className="text-orange-400 hover:text-orange-300"
+                            >
+                              Notice
+                            </button>
+                            {user.isActive ? (
+                              <button
+                                onClick={() => handleDeactivateUser(user._id)}
+                                disabled={deleteLoading[user._id]}
+                                className="text-yellow-400 hover:text-yellow-300 disabled:opacity-50"
+                              >
+                                {deleteLoading[user._id] ? 'Deactivating...' : 'Deactivate'}
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => handleActivateUser(user._id)}
+                                disabled={deleteLoading[user._id]}
+                                className="text-green-400 hover:text-green-300 disabled:opacity-50"
+                              >
+                                {deleteLoading[user._id] ? 'Activating...' : 'Activate'}
+                              </button>
+                            )}
+                            <button
                               onClick={() => handleDeleteUser(user._id)}
                               disabled={deleteLoading[user._id]}
                               className="text-red-400 hover:text-red-300 disabled:opacity-50"
                             >
                               {deleteLoading[user._id] ? 'Deleting...' : 'Delete'}
                             </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -479,6 +597,58 @@ export default function AdminDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Notice Modal */}
+      {showNoticeModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-800 rounded-2xl p-6 w-full max-w-md mx-4 border border-gray-700">
+            <h3 className="text-xl font-semibold text-yellow-400 mb-4">
+              Send Legal Notice
+            </h3>
+            <div className="mb-4">
+              <p className="text-gray-300 text-sm mb-2">
+                Sending notice to: <span className="font-semibold text-white">{selectedUserForNotice?.name}</span>
+              </p>
+              <p className="text-gray-400 text-xs">
+                This will send a notice and deactivate the user's account.
+              </p>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Notice Message
+                </label>
+                <textarea
+                  value={noticeText}
+                  onChange={(e) => setNoticeText(e.target.value)}
+                  className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-white placeholder-gray-400"
+                  placeholder="Enter the legal notice message..."
+                  rows={4}
+                />
+              </div>
+            </div>
+            <div className="flex space-x-3 mt-6">
+              <button
+                onClick={() => {
+                  setShowNoticeModal(false);
+                  setSelectedUserForNotice(null);
+                  setNoticeText('');
+                }}
+                className="flex-1 px-4 py-2 border border-gray-600 rounded-lg text-gray-300 hover:bg-gray-700 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSendNotice}
+                disabled={noticeLoading}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
+              >
+                {noticeLoading ? 'Sending...' : 'Send Notice & Deactivate'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

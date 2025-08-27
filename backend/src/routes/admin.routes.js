@@ -134,6 +134,54 @@ router.post('/create-admin', async (req, res) => {
   }
 });
 
+// Send notice and deactivate user
+router.post('/users/:userId/notice', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { notice, deactivateAccount } = req.body;
+    
+    if (!notice || !notice.trim()) {
+      return res.status(400).json({ message: 'Notice message is required' });
+    }
+
+    const updateData = {
+      notice: notice.trim(),
+      noticeDate: new Date()
+    };
+
+    if (deactivateAccount) {
+      updateData.isActive = false;
+    }
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      updateData,
+      { new: true }
+    ).select('-password');
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Send email notification to user
+    try {
+      const { sendNoticeEmail } = await import('../utils/email.js');
+      await sendNoticeEmail(user, notice);
+    } catch (emailError) {
+      console.error('Failed to send notice email:', emailError);
+    }
+
+    res.json({ 
+      message: 'Notice sent successfully', 
+      user,
+      deactivated: deactivateAccount 
+    });
+  } catch (error) {
+    console.error('Send notice error:', error);
+    res.status(500).json({ message: 'Failed to send notice' });
+  }
+});
+
 // Activate/Deactivate user
 router.post('/users/:userId/:action', async (req, res) => {
   try {

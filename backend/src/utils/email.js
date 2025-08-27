@@ -21,6 +21,57 @@ transporter.verify(function (error, success) {
   }
 });
 
+export const sendNoticeEmail = async (user, notice) => {
+  const mailOptions = {
+    from: config.smtpUser,
+    to: user.email,
+    subject: '🔔 Important Notice from Eventify Admin',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8f9fa; padding: 20px;">
+        <div style="background: #ffffff; border-radius: 10px; padding: 30px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <div style="background: #dc3545; color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 24px;">
+              ⚠️
+            </div>
+            <h1 style="color: #dc3545; margin: 0; font-size: 24px;">Important Notice</h1>
+            <p style="color: #6c757d; margin: 10px 0 0 0;">From Eventify Administration</p>
+          </div>
+          
+          <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 20px; margin: 20px 0;">
+            <h2 style="color: #856404; margin: 0 0 15px 0; font-size: 18px;">Dear ${user.name},</h2>
+            <p style="color: #856404; line-height: 1.6; margin: 0;">
+              ${notice}
+            </p>
+          </div>
+          
+          <div style="background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 8px; padding: 15px; margin: 20px 0;">
+            <p style="color: #721c24; margin: 0; font-size: 14px; font-weight: bold;">
+              ⚠️ Your account has been deactivated due to this notice.
+            </p>
+          </div>
+          
+          <div style="text-align: center; margin-top: 30px;">
+            <p style="color: #6c757d; font-size: 14px; margin: 0;">
+              If you have any questions or concerns, please contact our support team.
+            </p>
+            <p style="color: #6c757d; font-size: 12px; margin: 10px 0 0 0;">
+              This is an automated message from Eventify. Please do not reply to this email.
+            </p>
+          </div>
+        </div>
+      </div>
+    `
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log('Notice email sent successfully to:', user.email);
+  } catch (error) {
+    console.error('Error sending notice email:', error);
+    throw error;
+  }
+};
+
 export const sendInviteEmail = async (invite, teamName, inviterName, reason = null) => {
   const inviteUrl = `${config.clientOrigin}/invite/${invite.token}`;
   

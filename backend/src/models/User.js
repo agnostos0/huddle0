@@ -67,6 +67,13 @@ const userSchema = new mongoose.Schema({
       showEmail: { type: Boolean, default: false },
       showPhone: { type: Boolean, default: false }
     }
+  },
+  notice: {
+    type: String,
+    default: ''
+  },
+  noticeDate: {
+    type: Date
   }
 }, {
   timestamps: true
