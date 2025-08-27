@@ -20,7 +20,17 @@ export const AuthProvider = ({ children }) => {
     const initializeAuth = async () => {
       try {
         if (token) {
-          await fetchUser();
+          // Don't automatically fetch user data - just use stored user
+          const storedUser = localStorage.getItem('user');
+          if (storedUser) {
+            try {
+              const parsedUser = JSON.parse(storedUser);
+              setUser(parsedUser);
+            } catch (e) {
+              console.log('AuthContext: Invalid stored user data, clearing');
+              localStorage.removeItem('user');
+            }
+          }
         } else {
           // If no token, try to get user from localStorage as fallback
           const storedUser = localStorage.getItem('user');
@@ -33,8 +43,8 @@ export const AuthProvider = ({ children }) => {
               localStorage.removeItem('user');
             }
           }
-          setLoading(false);
         }
+        setLoading(false);
       } catch (error) {
         console.error('AuthContext: Error during initialization:', error);
         setLoading(false);
