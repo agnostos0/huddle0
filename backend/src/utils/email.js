@@ -25,7 +25,7 @@ export const sendNoticeEmail = async (user, notice) => {
   const mailOptions = {
     from: config.smtpUser,
     to: user.email,
-    subject: '🔔 Important Notice from Eventify Admin',
+    subject: '🔔 Important Notice from Huddle Admin',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8f9fa; padding: 20px;">
         <div style="background: #ffffff; border-radius: 10px; padding: 30px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
@@ -34,7 +34,7 @@ export const sendNoticeEmail = async (user, notice) => {
               ⚠️
             </div>
             <h1 style="color: #dc3545; margin: 0; font-size: 24px;">Important Notice</h1>
-            <p style="color: #6c757d; margin: 10px 0 0 0;">From Eventify Administration</p>
+            <p style="color: #6c757d; margin: 10px 0 0 0;">From Huddle Administration</p>
           </div>
           
           <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 20px; margin: 20px 0;">
@@ -55,7 +55,7 @@ export const sendNoticeEmail = async (user, notice) => {
               If you have any questions or concerns, please contact our support team.
             </p>
             <p style="color: #6c757d; font-size: 12px; margin: 10px 0 0 0;">
-              This is an automated message from Eventify. Please do not reply to this email.
+              This is an automated message from Huddle. Please do not reply to this email.
             </p>
           </div>
         </div>
@@ -78,7 +78,7 @@ export const sendInviteEmail = async (invite, teamName, inviterName, reason = nu
   const mailOptions = {
     from: config.email.from,
     to: invite.email,
-    subject: `You're invited to join ${teamName} on Eventify!`,
+    subject: `You're invited to join ${teamName} on Huddle!`,
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
@@ -90,7 +90,7 @@ export const sendInviteEmail = async (invite, teamName, inviterName, reason = nu
           <h2 style="color: #333; margin-top: 0;">Hi there!</h2>
           
           <p style="color: #555; line-height: 1.6; font-size: 16px;">
-            <strong>${inviterName}</strong> has invited you to join their team <strong>"${teamName}"</strong> on Eventify.
+            <strong>${inviterName}</strong> has invited you to join their team <strong>"${teamName}"</strong> on Huddle.
           </p>
           
           ${reason ? `
@@ -101,7 +101,7 @@ export const sendInviteEmail = async (invite, teamName, inviterName, reason = nu
           ` : ''}
           
           <p style="color: #555; line-height: 1.6; font-size: 16px;">
-            Eventify is a platform where teams can create, join, and manage events together. 
+            Huddle is a platform where teams can create, join, and manage events together. 
             As a team member, you'll be able to participate in events as a group and collaborate with your teammates.
           </p>
           
@@ -128,7 +128,7 @@ export const sendInviteEmail = async (invite, teamName, inviterName, reason = nu
           <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
           
           <p style="color: #777; font-size: 12px; text-align: center;">
-            This email was sent from Eventify. If you didn't expect this invitation, you can safely ignore this email.
+            This email was sent from Huddle. If you didn't expect this invitation, you can safely ignore this email.
           </p>
         </div>
       </div>
@@ -200,7 +200,7 @@ export const sendEventJoinNotification = async (event, participant, joinType, te
           <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
           
           <p style="color: #777; font-size: 12px; text-align: center;">
-            This email was sent from Eventify. You can manage your event notifications in your dashboard.
+            This email was sent from Huddle. You can manage your event notifications in your dashboard.
           </p>
         </div>
       </div>
@@ -221,11 +221,11 @@ export const sendTestEmail = async () => {
   const mailOptions = {
     from: config.email.from,
     to: config.smtp.user, // Send to yourself as a test
-    subject: 'Eventify SMTP Test',
+    subject: 'Huddle SMTP Test',
     html: `
       <div style="font-family: Arial, sans-serif; padding: 20px;">
         <h2>🎉 SMTP Configuration Successful!</h2>
-        <p>Your Gmail SMTP is working correctly for Eventify.</p>
+        <p>Your Gmail SMTP is working correctly for Huddle.</p>
         <p>Time: ${new Date().toLocaleString()}</p>
       </div>
     `,

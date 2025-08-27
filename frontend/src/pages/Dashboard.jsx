@@ -32,7 +32,7 @@ export default function Dashboard() {
   useEffect(() => {
     // Check if this is an admin impersonating a user
     const adminToken = localStorage.getItem('adminToken')
-    if (adminToken && user?.email !== 'admin@eventify.com') {
+    if (adminToken && user?.email !== 'admin@huddle.com') {
       setIsImpersonating(true)
     }
   }, [user])
@@ -141,7 +141,7 @@ export default function Dashboard() {
     const adminToken = localStorage.getItem('adminToken')
     const adminUser = JSON.parse(localStorage.getItem('adminUser') || '{}')
     
-    if (adminToken && adminUser.email === 'admin@eventify.com') {
+    if (adminToken && adminUser.email === 'admin@huddle.com') {
       localStorage.setItem('token', adminToken)
       localStorage.removeItem('adminToken')
       localStorage.removeItem('adminUser')
@@ -212,7 +212,7 @@ export default function Dashboard() {
               >
                 + Create Team
               </Link>
-              {user.email === 'admin@eventify.com' && (
+              {user.email === 'admin@huddle.com' && (
                 <Link
                   to="/admin"
                   className="px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-red-600 to-purple-600 text-white rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-300 text-sm sm:text-base text-center"

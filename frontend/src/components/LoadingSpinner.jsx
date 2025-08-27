@@ -13,7 +13,7 @@ export default function LoadingSpinner({ message = "Loading..." }) {
         </div>
         
         {/* Loading text */}
-        <h2 className="text-xl font-semibold text-gray-800 mb-2">Eventify</h2>
+        <h2 className="text-xl font-semibold text-gray-800 mb-2">Huddle</h2>
         <p className="text-gray-600">{message}</p>
         
         {/* Dots animation */}

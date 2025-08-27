@@ -22,9 +22,9 @@ const allowedOrigins = [
   'http://localhost:5175',
   'http://localhost:5176',
   'http://localhost:5177',
-  'https://eventify-frontend.vercel.app',
-  'https://eventify-frontend-git-main.vercel.app',
-  'https://eventify-frontend-git-develop.vercel.app',
+  'https://huddle-frontend.vercel.app',
+  'https://huddle-frontend-git-main.vercel.app',
+  'https://huddle-frontend-git-develop.vercel.app',
   env.clientOrigin
 ].filter(Boolean);
 

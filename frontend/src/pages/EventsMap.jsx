@@ -78,7 +78,7 @@ export default function EventsMap() {
                 <span className="text-white font-bold text-lg">E</span>
               </div>
               <span className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-                Eventify
+                Huddle
               </span>
             </Link>
             <div className="flex space-x-4">

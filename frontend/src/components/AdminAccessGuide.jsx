@@ -49,7 +49,7 @@ export default function AdminAccessGuide() {
                 <div className="flex items-start space-x-2">
                   <span className="bg-purple-100 text-purple-800 text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center mt-0.5">1</span>
                   <div>
-                    <p className="text-sm text-gray-600">Register with email: <span className="font-mono text-purple-600">admin@eventify.com</span></p>
+                    <p className="text-sm text-gray-600">Register with email: <span className="font-mono text-purple-600">admin@huddle.com</span></p>
                   </div>
                 </div>
                 

@@ -171,10 +171,10 @@ export default function Landing() {
       <nav className="relative z-10 flex justify-between items-center p-4 md:p-6 max-w-7xl mx-auto">
         <div className="flex items-center space-x-2">
           <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-lg md:text-xl">E</span>
+            <span className="text-white font-bold text-lg md:text-xl">H</span>
           </div>
           <span className="text-xl md:text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-            Eventify
+            Huddle
           </span>
         </div>
         <div className="flex space-x-2 md:space-x-4">
@@ -281,7 +281,7 @@ export default function Landing() {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-800 mb-4">
-              How to Use Eventify
+              How to Use Huddle
             </h2>
             <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
               Get started in 4 simple steps and begin creating amazing events with your team
@@ -389,9 +389,9 @@ export default function Landing() {
             <div>
               <div className="flex items-center space-x-2 mb-4">
                 <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">E</span>
+                  <span className="text-white font-bold text-lg">H</span>
                 </div>
-                <span className="text-xl font-bold">Eventify</span>
+                <span className="text-xl font-bold">Huddle</span>
               </div>
               <p className="text-gray-400">
                 The ultimate platform for creating and managing amazing events with powerful team collaboration.
@@ -426,7 +426,7 @@ export default function Landing() {
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 Eventify. All rights reserved.</p>
+            <p>&copy; 2024 Huddle. All rights reserved.</p>
           </div>
         </div>
       </footer>

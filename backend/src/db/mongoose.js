@@ -24,7 +24,7 @@ export async function connectToDatabase() {
     
     // Try local MongoDB as fallback
     try {
-      const localUri = 'mongodb://localhost:27017/eventify';
+      const localUri = 'mongodb://localhost:27017/huddle';
       console.log('🔄 Trying local MongoDB connection...');
       await mongoose.connect(localUri, {
         autoIndex: true,
