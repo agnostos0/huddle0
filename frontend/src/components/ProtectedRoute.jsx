@@ -1,9 +1,15 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
+import LoadingSpinner from './LoadingSpinner.jsx';
 
 const ProtectedRoute = ({ children, requiredRole = null }) => {
-  const { token, user } = useAuth();
+  const { token, user, loading } = useAuth();
+
+  // Show loading spinner while authentication is being checked
+  if (loading) {
+    return <LoadingSpinner message="Checking authentication..." />;
+  }
 
   // Check if user is authenticated
   if (!token) {

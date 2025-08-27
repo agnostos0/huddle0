@@ -1,7 +1,8 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext.jsx';
+import { AuthProvider, useAuth } from './context/AuthContext.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
+import LoadingSpinner from './components/LoadingSpinner.jsx';
 import Landing from './pages/Landing.jsx';
 import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
@@ -19,12 +20,17 @@ import ExploreEvents from './pages/ExploreEvents.jsx';
 import AdminAccessGuide from './components/AdminAccessGuide.jsx';
 import UserProfile from './pages/UserProfile.jsx';
 
-function App() {
+function AppContent() {
+  const { loading } = useAuth();
+
+  if (loading) {
+    return <LoadingSpinner message="Initializing..." />;
+  }
+
   return (
-    <AuthProvider>
-      <div className="App">
-        <AdminAccessGuide />
-        <Routes>
+    <div className="App">
+      <AdminAccessGuide />
+      <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
@@ -93,6 +99,13 @@ function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
     </AuthProvider>
   );
 }

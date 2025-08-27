@@ -17,30 +17,74 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (token) {
-      fetchUser();
-    } else {
-      setLoading(false);
-    }
+    const initializeAuth = async () => {
+      try {
+        if (token) {
+          await fetchUser();
+        } else {
+          // If no token, try to get user from localStorage as fallback
+          const storedUser = localStorage.getItem('user');
+          if (storedUser) {
+            try {
+              const parsedUser = JSON.parse(storedUser);
+              setUser(parsedUser);
+            } catch (e) {
+              console.log('AuthContext: Invalid stored user data, clearing');
+              localStorage.removeItem('user');
+            }
+          }
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('AuthContext: Error during initialization:', error);
+        setLoading(false);
+      }
+    };
+
+    initializeAuth();
   }, [token]);
 
-  const fetchUser = async () => {
+  const fetchUser = async (retryCount = 0) => {
     try {
-      console.log('AuthContext: Fetching user data...');
-      const response = await api.get('/auth/me');
+      console.log('AuthContext: Fetching user data...', retryCount > 0 ? `(Retry ${retryCount})` : '');
+      
+      // Add timeout to prevent infinite loading
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Request timeout')), 10000)
+      );
+      
+      const response = await Promise.race([
+        api.get('/auth/me'),
+        timeoutPromise
+      ]);
+      
       console.log('AuthContext: User data received:', response.data);
       setUser(response.data.user);
     } catch (error) {
       console.error('AuthContext: Error fetching user:', error);
-      // Only logout if it's a 401 error (unauthorized)
+      
+      // Retry logic for network errors (max 2 retries)
+      if (retryCount < 2 && (error.message === 'Request timeout' || error.code === 'NETWORK_ERROR' || !error.response)) {
+        console.log(`AuthContext: Retrying... (${retryCount + 1}/2)`);
+        setTimeout(() => fetchUser(retryCount + 1), 2000);
+        return;
+      }
+      
+      // Handle different types of errors
       if (error.response?.status === 401) {
         console.log('AuthContext: Unauthorized, logging out');
         logout();
+      } else if (error.message === 'Request timeout' || error.code === 'NETWORK_ERROR') {
+        console.log('AuthContext: Network error after retries, clearing token and redirecting to login');
+        logout();
       } else {
-        console.log('AuthContext: Other error, not logging out');
+        console.log('AuthContext: Other error, clearing token for safety');
+        logout();
       }
     } finally {
-      setLoading(false);
+      if (retryCount === 0) {
+        setLoading(false);
+      }
     }
   };
 
@@ -96,6 +140,13 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('user');
   };
 
+  const refreshAuth = async () => {
+    if (token) {
+      setLoading(true);
+      await fetchUser();
+    }
+  };
+
   const updateUser = (updatedUser) => {
     setUser(updatedUser);
     localStorage.setItem('user', JSON.stringify(updatedUser));
@@ -141,6 +192,7 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
+    refreshAuth,
     updateUser,
     hasPermission,
     isOrganizer,
