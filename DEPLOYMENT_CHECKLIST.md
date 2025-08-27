@@ -21,14 +21,14 @@
 Add these variables in Railway dashboard:
 
 - [ ] `PORT` = `4000`
-- [ ] `MONGODB_URI` = `mongodb+srv://username:password@cluster.mongodb.net/eventify?retryWrites=true&w=majority`
-- [ ] `JWT_SECRET` = `your_super_secret_jwt_key_here`
+- [ ] `MONGODB_URI` = `mongodb+srv://princetagadiya11:LlFxXfXU82tFFJN4@cluster0.ybpu75u.mongodb.net/eventify?retryWrites=true&w=majority`
+- [ ] `JWT_SECRET` = `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30`
 - [ ] `CLIENT_ORIGIN` = `https://your-frontend.vercel.app` (update after frontend deployment)
 - [ ] `SMTP_HOST` = `smtp.gmail.com`
 - [ ] `SMTP_PORT` = `587`
-- [ ] `SMTP_USER` = `your_email@gmail.com`
+- [ ] `SMTP_USER` = `princetagadiya11@gmail.com`
 - [ ] `SMTP_PASS` = `your_gmail_app_password`
-- [ ] `EMAIL_FROM` = `Eventify <your_email@gmail.com>`
+- [ ] `EMAIL_FROM` = `Eventify <princetagadiya11@gmail.com>`
 
 ### Step 3: Get Backend URL
 - [ ] Copy the Railway deployment URL (e.g., `https://your-app.railway.app`)

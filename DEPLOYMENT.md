@@ -27,14 +27,14 @@ This guide will help you deploy the Eventify application to production.
 
 ```env
 PORT=4000
-MONGODB_URI=mongodb+srv://your_username:your_password@your_cluster.mongodb.net/eventify?retryWrites=true&w=majority
-JWT_SECRET=your_super_secret_jwt_key_here
+MONGODB_URI=mongodb+srv://princetagadiya11:LlFxXfXU82tFFJN4@cluster0.ybpu75u.mongodb.net/eventify?retryWrites=true&w=majority
+JWT_SECRET=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30
 CLIENT_ORIGIN=https://your-frontend-domain.vercel.app
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
-SMTP_USER=your_email@gmail.com
+SMTP_USER=princetagadiya11@gmail.com
 SMTP_PASS=your_app_password
-EMAIL_FROM=Eventify <your_email@gmail.com>
+EMAIL_FROM=Eventify <princetagadiya11@gmail.com>
 ```
 
 ### 1.3 Gmail SMTP Setup
@@ -104,14 +104,14 @@ Go back to Vercel and update the `VITE_API_BASE_URL` environment variable with y
 ### Backend (.env)
 ```env
 PORT=4000
-MONGODB_URI=mongodb+srv://...
-JWT_SECRET=your_secret_key
+MONGODB_URI=mongodb+srv://princetagadiya11:LlFxXfXU82tFFJN4@cluster0.ybpu75u.mongodb.net/eventify?retryWrites=true&w=majority
+JWT_SECRET=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30
 CLIENT_ORIGIN=https://your-frontend.vercel.app
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
-SMTP_USER=your_email@gmail.com
+SMTP_USER=princetagadiya11@gmail.com
 SMTP_PASS=your_app_password
-EMAIL_FROM=Eventify <your_email@gmail.com>
+EMAIL_FROM=Eventify <princetagadiya11@gmail.com>
 ```
 
 ### Frontend (.env.production)

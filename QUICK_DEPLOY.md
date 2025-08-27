@@ -23,14 +23,14 @@ Click "Variables" tab and add these:
 
 ```
 PORT=4000
-MONGODB_URI=mongodb+srv://your_username:your_password@your_cluster.mongodb.net/eventify?retryWrites=true&w=majority
-JWT_SECRET=eventify_super_secret_key_2024_make_it_long_and_random
+MONGODB_URI=mongodb+srv://princetagadiya11:LlFxXfXU82tFFJN4@cluster0.ybpu75u.mongodb.net/eventify?retryWrites=true&w=majority
+JWT_SECRET=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30
 CLIENT_ORIGIN=https://your-frontend.vercel.app
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
-SMTP_USER=your_email@gmail.com
+SMTP_USER=princetagadiya11@gmail.com
 SMTP_PASS=your_gmail_app_password
-EMAIL_FROM=Eventify <your_email@gmail.com>
+EMAIL_FROM=Eventify <princetagadiya11@gmail.com>
 ```
 
 ### 1.5 Get Backend URL
