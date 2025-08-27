@@ -8,17 +8,34 @@ const router = Router();
 // Register
 router.post('/register', async (req, res) => {
   try {
-    const { name, email, username, password, contactNumber, role = 'user' } = req.body;
+    const { name, email, username, password, contactNumber, gender, role = 'user' } = req.body;
+
+    console.log('Registration attempt:', { name, email, username, gender, role });
+
+    // Validate required fields
+    if (!name || !email || !username || !password || !gender) {
+      return res.status(400).json({
+        message: 'All required fields must be provided'
+      });
+    }
+
+    // Validate gender
+    if (!['male', 'female', 'other'].includes(gender)) {
+      return res.status(400).json({
+        message: 'Invalid gender selection'
+      });
+    }
 
     // Check if user already exists
     const existingUser = await User.findOne({
-      $or: [{ email }, { username }]
+      $or: [{ email: email.toLowerCase() }, { username: username.toLowerCase() }]
     });
 
     if (existingUser) {
-      return res.status(400).json({
-        message: existingUser.email === email ? 'Email already registered' : 'Username already taken'
-      });
+      const message = existingUser.email === email.toLowerCase() 
+        ? 'Email already registered' 
+        : 'Username already taken';
+      return res.status(400).json({ message });
     }
 
     // Validate role (only allow user and organizer roles during registration)
@@ -29,14 +46,16 @@ router.post('/register', async (req, res) => {
     // Create user
     const user = new User({
       name,
-      email,
-      username,
+      email: email.toLowerCase(),
+      username: username.toLowerCase(),
       password,
-      contactNumber: contactNumber || undefined, // Let the model handle the default
+      gender,
+      contactNumber: contactNumber || undefined,
       role
     });
 
     await user.save();
+    console.log('User created successfully:', user._id);
 
     // Generate token
     const token = signJwt({ id: user._id.toString(), role: user.role });
@@ -62,13 +81,23 @@ router.post('/login', async (req, res) => {
   try {
     const { emailOrUsername, password } = req.body;
 
-    // Find user by email or username
+    console.log('Login attempt:', { emailOrUsername });
+
+    if (!emailOrUsername || !password) {
+      return res.status(400).json({ 
+        message: 'Email/username and password are required' 
+      });
+    }
+
+    // Find user by email or username (case insensitive)
     const user = await User.findOne({
       $or: [
-        { email: emailOrUsername },
-        { username: emailOrUsername }
+        { email: emailOrUsername.toLowerCase() },
+        { username: emailOrUsername.toLowerCase() }
       ]
     });
+
+    console.log('User lookup result:', user ? 'User found' : 'User not found');
 
     if (!user) {
       return res.status(401).json({ message: 'Invalid credentials' });
@@ -81,12 +110,16 @@ router.post('/login', async (req, res) => {
 
     // Check password
     const isPasswordValid = await user.comparePassword(password);
+    console.log('Password validation result:', isPasswordValid);
+
     if (!isPasswordValid) {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
     // Generate token with role
     const token = signJwt({ id: user._id.toString(), role: user.role });
+
+    console.log('Login successful for user:', user.username);
 
     res.json({
       token,

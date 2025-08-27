@@ -197,11 +197,15 @@ export default function Landing() {
       <section ref={heroRef} className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4 md:px-6 text-center">
         {/* Main Heading */}
         <div className={`transition-all duration-1000 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'}`}>
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold mb-6 bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 bg-clip-text text-transparent leading-tight">
-            Organize & Join
-            <br />
-            <span className="text-gray-800">Amazing Events</span>
+          <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
+            Welcome to{' '}
+            <span className="bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+              Huddle
+            </span>
           </h1>
+          <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+            Connect, collaborate, and create amazing events together. Join the ultimate platform for team building and event management.
+          </p>
         </div>
 
         {/* Subtitle */}

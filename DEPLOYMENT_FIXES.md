@@ -1,4 +1,4 @@
-# Eventify Login Fixes & Deployment Guide
+# Huddle Login Fixes & Deployment Guide
 
 ## 🔧 Login Issues Fixed
 
@@ -23,6 +23,11 @@
 - Added debug section in Login component (development only)
 - Enhanced console logging for troubleshooting
 
+### 5. Registration Fixes
+- Fixed gender field requirement in User model
+- Added proper validation for all required fields
+- Improved error messages for registration issues
+
 ## 🚀 Quick Deployment
 
 ### Option 1: Use the Deployment Script
@@ -40,7 +45,7 @@ This script will:
 ```bash
 # 1. Add and commit changes
 git add .
-git commit -m "Fix login issues and improve error handling"
+git commit -m "Fix login issues, rebrand to Huddle"
 
 # 2. Push to GitHub
 git push origin main
@@ -86,6 +91,11 @@ git push origin main
    - Check if user credentials are correct
    - Verify backend authentication endpoint
    - Check JWT token generation
+
+4. **Registration Error:**
+   - Ensure all required fields are provided (including gender)
+   - Check username availability
+   - Verify email format
 
 ## 📋 Environment Variables
 

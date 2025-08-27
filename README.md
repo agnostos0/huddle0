@@ -1,8 +1,8 @@
-# 🎉 Eventify - Comprehensive Event Management Platform
+# 🎉 Huddle - Comprehensive Event Management Platform
 
 A full-stack MERN application for creating, managing, and participating in events with advanced team collaboration features, role-based access control, and interactive maps.
 
-![Eventify Platform](https://img.shields.io/badge/Eventify-Platform-blue?style=for-the-badge&logo=react)
+![Huddle Platform](https://img.shields.io/badge/Huddle-Platform-blue?style=for-the-badge&logo=react)
 ![MERN Stack](https://img.shields.io/badge/MERN-Stack-green?style=for-the-badge)
 ![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue?style=for-the-badge&logo=typescript)
 
@@ -54,8 +54,8 @@ A full-stack MERN application for creating, managing, and participating in event
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/yourusername/eventify.git
-cd eventify
+git clone https://github.com/yourusername/huddle.git
+cd huddle
 ```
 
 2. **Install dependencies**
@@ -76,7 +76,7 @@ Create `.env` files in both backend and frontend directories:
 **Backend (.env)**
 ```env
 PORT=4000
-MONGODB_URI=mongodb://localhost:27017/eventify
+MONGODB_URI=mongodb://localhost:27017/huddle
 JWT_SECRET=your_jwt_secret_here
 CLIENT_ORIGIN=http://localhost:5175
 SMTP_HOST=smtp.gmail.com
@@ -432,9 +432,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 For support and questions:
 - Create an issue in the GitHub repository
-- Email: support@eventify.com
-- Documentation: [docs.eventify.com](https://docs.eventify.com)
+- Email: support@huddle.com
+- Documentation: [docs.huddle.com](https://docs.huddle.com)
 
 ---
 
-**Made with ❤️ by the Eventify Team**
+**Made with ❤️ by the Huddle Team**

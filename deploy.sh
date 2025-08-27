@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Eventify Deployment Script
-echo "🚀 Starting Eventify deployment..."
+# Huddle Deployment Script
+echo "🚀 Starting Huddle deployment..."
 
 # Check if we're in the right directory
 if [ ! -f "package.json" ] && [ ! -d "frontend" ] && [ ! -d "backend" ]; then
@@ -35,7 +35,7 @@ if [ -n "$(git status --porcelain)" ]; then
     
     # Commit with timestamp
     timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-    git commit -m "Deploy: Fix login issues and improve error handling - $timestamp"
+    git commit -m "Deploy: Fix login issues, rebrand to Huddle - $timestamp"
     
     echo "✅ Changes committed"
 else
@@ -71,13 +71,13 @@ if command_exists vercel; then
     
     echo ""
     echo "🎉 Deployment completed!"
-    echo "📱 Your app should automatically deploy on Vercel"
+    echo "📱 Your Huddle app should automatically deploy on Vercel"
     echo "🔗 Check your Vercel dashboard for the deployment status"
 else
     echo "🌐 Vercel CLI not found"
     echo "📋 To install Vercel CLI: npm i -g vercel"
     echo "🎉 Git push completed!"
-    echo "📱 Your app should automatically deploy on Vercel if connected"
+    echo "📱 Your Huddle app should automatically deploy on Vercel if connected"
 fi
 
 echo ""

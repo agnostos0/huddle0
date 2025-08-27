@@ -51,7 +51,7 @@ app.use(helmet());
 app.use(express.json());
 
 app.get('/api/health', (_req, res) => {
-  res.json({ status: 'ok', service: 'eventify-backend' });
+  res.json({ status: 'ok', service: 'huddle-backend' });
 });
 
 app.use('/api/auth', authRoutes);
@@ -70,7 +70,7 @@ async function start() {
     
     app.listen(env.port, () => {
       // eslint-disable-next-line no-console
-      console.log(`Eventify backend listening on port ${env.port}`);
+      console.log(`Huddle backend listening on port ${env.port}`);
     });
   } catch (err) {
     // eslint-disable-next-line no-console

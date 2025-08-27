@@ -3,7 +3,7 @@ dotenv.config();
 
 export const config = {
   port: process.env.PORT || 4000,
-  mongoUri: process.env.MONGODB_URI || 'mongodb://localhost:27017/eventify',
+  mongoUri: process.env.MONGODB_URI || 'mongodb://localhost:27017/huddle',
   jwtSecret: process.env.JWT_SECRET || 'dev-secret-change-me',
   clientOrigin: process.env.CLIENT_ORIGIN || 'http://localhost:5176',
   smtp: {
@@ -13,7 +13,7 @@ export const config = {
     pass: process.env.SMTP_PASS,
   },
   email: {
-    from: process.env.EMAIL_FROM || 'Eventify <noreply@eventify.com>',
+    from: process.env.EMAIL_FROM || 'Huddle <noreply@huddle.com>',
   },
 };
 

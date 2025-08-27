@@ -195,7 +195,7 @@ export default function Register() {
               <span className="text-white text-2xl">🚀</span>
             </div>
             <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-              Join Eventify
+              Join Huddle
             </h2>
             <p className="text-gray-600 mt-2">Create your account and start exploring events</p>
           </div>
