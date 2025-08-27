@@ -78,10 +78,25 @@ export default function CreateEvent() {
       navigate(`/event/${data._id}`)
     } catch (err) {
       console.error('CreateEvent error:', err);
+      console.error('CreateEvent error details:', {
+        message: err.message,
+        status: err.response?.status,
+        data: err.response?.data,
+        config: err.config
+      });
+      
       if (err.response?.status === 401) {
         setError('Session expired. Please login again.');
+        console.log('CreateEvent: 401 error - session expired');
+      } else if (err.response?.status === 403) {
+        setError('Access denied. You may not have permission to create events.');
+        console.log('CreateEvent: 403 error - access denied');
+      } else if (err.code === 'NETWORK_ERROR') {
+        setError('Network error. Please check your connection.');
+        console.log('CreateEvent: Network error');
       } else {
         setError(err.response?.data?.message || 'Failed to create event. Please try again.');
+        console.log('CreateEvent: Other error');
       }
     } finally {
       setIsSubmitting(false)
@@ -300,6 +315,9 @@ export default function CreateEvent() {
                 type="button"
                 onClick={async () => {
                   console.log('CreateEvent: Testing simple event creation...')
+                  console.log('CreateEvent: Current user:', user)
+                  console.log('CreateEvent: Current token:', token)
+                  
                   try {
                     const testPayload = {
                       title: 'Test Event',
@@ -309,11 +327,18 @@ export default function CreateEvent() {
                       category: 'General'
                     }
                     console.log('CreateEvent: Test payload:', testPayload)
+                    console.log('CreateEvent: About to make API call...')
+                    
                     const { data } = await api.post('/events', testPayload)
                     console.log('CreateEvent: Test event created:', data)
                     alert('Test event created successfully!')
                   } catch (err) {
                     console.error('CreateEvent: Test event failed:', err)
+                    console.error('CreateEvent: Test error details:', {
+                      message: err.message,
+                      status: err.response?.status,
+                      data: err.response?.data
+                    });
                     alert('Test event failed: ' + err.message)
                   }
                 }}
