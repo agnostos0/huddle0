@@ -4,9 +4,6 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 import confetti from 'canvas-confetti'
 import Navbar from '../components/Navbar.jsx'
-import LocationPicker from '../components/LocationPicker.jsx'
-import PhotoUpload from '../components/PhotoUpload.jsx'
-import TagInput from '../components/TagInput.jsx'
 
 export default function CreateEvent() {
   const navigate = useNavigate()
@@ -17,25 +14,12 @@ export default function CreateEvent() {
     description: '',
     date: '',
     location: '',
-    coordinates: null,
     category: 'General',
-    tags: [],
-    photos: [],
-    coverPhoto: '',
     maxParticipants: 0,
     price: 0,
-    currency: 'USD',
     eventType: 'in-person',
-    virtualMeetingLink: '',
     contactEmail: '',
-    contactPhone: '',
-    website: '',
-    socialLinks: {
-      facebook: '',
-      twitter: '',
-      instagram: '',
-      linkedin: ''
-    }
+    contactPhone: ''
   })
   const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -51,26 +35,9 @@ export default function CreateEvent() {
     { value: 'hybrid', label: 'Hybrid Event' }
   ]
 
-  const handleLocationChange = (location) => {
-    setForm(prev => ({ ...prev, location }))
-  }
-
-  const handleCoordinatesChange = (coordinates) => {
-    setForm(prev => ({ ...prev, coordinates }))
-  }
-
-  const handlePhotosChange = (photos) => {
-    const photoUrls = photos.map(photo => photo.url)
-    const coverPhoto = photos.find(p => p.isCover)?.url || photoUrls[0] || ''
-    setForm(prev => ({ 
-      ...prev, 
-      photos: photoUrls,
-      coverPhoto
-    }))
-  }
-
-  const handleTagsChange = (tags) => {
-    setForm(prev => ({ ...prev, tags }))
+  const handleInputChange = (e) => {
+    const { name, value } = e.target
+    setForm(prev => ({ ...prev, [name]: value }))
   }
 
   async function onSubmit(e) {
@@ -80,12 +47,12 @@ export default function CreateEvent() {
 
     try {
       console.log('CreateEvent: Starting event creation...')
+      console.log('CreateEvent: User:', user)
+      console.log('CreateEvent: Token:', token)
+      
       const payload = { 
         ...form, 
-        date: new Date(form.date).toISOString(),
-        // Convert photos array to URLs
-        photos: form.photos,
-        coverPhoto: form.coverPhoto
+        date: new Date(form.date).toISOString()
       }
       
       console.log('CreateEvent: Sending payload:', payload)
@@ -105,7 +72,6 @@ export default function CreateEvent() {
       console.error('CreateEvent error:', err);
       if (err.response?.status === 401) {
         setError('Session expired. Please login again.');
-        // Don't logout automatically, let user see the error
       } else {
         setError(err.response?.data?.message || 'Failed to create event. Please try again.');
       }
@@ -137,7 +103,7 @@ export default function CreateEvent() {
             </div>
           )}
           
-          <form onSubmit={onSubmit} className="space-y-8">
+          <form onSubmit={onSubmit} className="space-y-6">
             {/* Basic Information */}
             <div className="space-y-6">
               <h3 className="text-xl font-semibold text-gray-800 border-b border-gray-200 pb-2">
@@ -148,10 +114,12 @@ export default function CreateEvent() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Event Title *</label>
                   <input 
+                    type="text"
+                    name="title"
+                    value={form.title}
+                    onChange={handleInputChange}
                     className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300" 
                     placeholder="Enter event title" 
-                    value={form.title} 
-                    onChange={(e)=>setForm({...form, title:e.target.value})} 
                     required
                   />
                 </div>
@@ -159,9 +127,10 @@ export default function CreateEvent() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Category</label>
                   <select
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300"
+                    name="category"
                     value={form.category}
-                    onChange={(e) => setForm({...form, category: e.target.value})}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300"
                   >
                     {categories.map(category => (
                       <option key={category} value={category}>{category}</option>
@@ -173,11 +142,12 @@ export default function CreateEvent() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Description *</label>
                 <textarea 
+                  name="description"
+                  value={form.description}
+                  onChange={handleInputChange}
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 resize-none" 
                   placeholder="Describe your event..." 
                   rows="4"
-                  value={form.description} 
-                  onChange={(e)=>setForm({...form, description:e.target.value})} 
                   required
                 />
               </div>
@@ -186,136 +156,96 @@ export default function CreateEvent() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Date & Time *</label>
                   <input 
+                    type="datetime-local"
+                    name="date"
+                    value={form.date}
+                    onChange={handleInputChange}
                     className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300" 
-                    type="datetime-local" 
-                    value={form.date} 
-                    onChange={(e)=>setForm({...form, date:e.target.value})} 
                     required
                   />
                 </div>
                 
                 <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Location *</label>
+                  <input 
+                    type="text"
+                    name="location"
+                    value={form.location}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300" 
+                    placeholder="Enter event location"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Event Details */}
+            <div className="space-y-6">
+              <h3 className="text-xl font-semibold text-gray-800 border-b border-gray-200 pb-2">
+                Event Details
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Event Type</label>
                   <select
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300"
+                    name="eventType"
                     value={form.eventType}
-                    onChange={(e) => setForm({...form, eventType: e.target.value})}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300"
                   >
                     {eventTypes.map(type => (
                       <option key={type.value} value={type.value}>{type.label}</option>
                     ))}
                   </select>
                 </div>
-              </div>
-            </div>
-
-            {/* Location */}
-            <div className="space-y-6">
-              <h3 className="text-xl font-semibold text-gray-800 border-b border-gray-200 pb-2">
-                Location & Details
-              </h3>
-              
-              <LocationPicker
-                location={form.location}
-                coordinates={form.coordinates}
-                onLocationChange={handleLocationChange}
-                onCoordinatesChange={handleCoordinatesChange}
-                placeholder="Enter event location or click on map"
-              />
-              
-              {form.eventType === 'virtual' && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Virtual Meeting Link</label>
-                  <input 
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300" 
-                    placeholder="https://meet.google.com/..." 
-                    value={form.virtualMeetingLink} 
-                    onChange={(e)=>setForm({...form, virtualMeetingLink:e.target.value})} 
-                  />
-                </div>
-              )}
-            </div>
-
-            {/* Photos */}
-            <div className="space-y-6">
-              <h3 className="text-xl font-semibold text-gray-800 border-b border-gray-200 pb-2">
-                Event Photos
-              </h3>
-              
-              <PhotoUpload
-                photos={form.photos.map((url, index) => ({ id: index, url, name: `Photo ${index + 1}` }))}
-                onPhotosChange={handlePhotosChange}
-                maxPhotos={5}
-              />
-            </div>
-
-            {/* Tags */}
-            <div className="space-y-6">
-              <h3 className="text-xl font-semibold text-gray-800 border-b border-gray-200 pb-2">
-                Tags
-              </h3>
-              
-              <TagInput
-                tags={form.tags}
-                onTagsChange={handleTagsChange}
-                placeholder="Add tags to help people find your event..."
-              />
-            </div>
-
-            {/* Additional Details */}
-            <div className="space-y-6">
-              <h3 className="text-xl font-semibold text-gray-800 border-b border-gray-200 pb-2">
-                Additional Details
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Max Participants</label>
                   <input 
                     type="number"
+                    name="maxParticipants"
+                    value={form.maxParticipants}
+                    onChange={handleInputChange}
                     className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300" 
-                    placeholder="0 for unlimited" 
-                    value={form.maxParticipants} 
-                    onChange={(e)=>setForm({...form, maxParticipants: parseInt(e.target.value) || 0})} 
+                    placeholder="0 for unlimited"
+                    min="0"
                   />
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Price</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Price (USD)</label>
                   <input 
                     type="number"
-                    step="0.01"
+                    name="price"
+                    value={form.price}
+                    onChange={handleInputChange}
                     className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300" 
-                    placeholder="0 for free" 
-                    value={form.price} 
-                    onChange={(e)=>setForm({...form, price: parseFloat(e.target.value) || 0})} 
+                    placeholder="0 for free"
+                    min="0"
+                    step="0.01"
                   />
                 </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Currency</label>
-                  <select
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300"
-                    value={form.currency}
-                    onChange={(e) => setForm({...form, currency: e.target.value})}
-                  >
-                    <option value="USD">USD ($)</option>
-                    <option value="EUR">EUR (€)</option>
-                    <option value="GBP">GBP (£)</option>
-                    <option value="INR">INR (₹)</option>
-                  </select>
-                </div>
               </div>
+            </div>
+
+            {/* Contact Information */}
+            <div className="space-y-6">
+              <h3 className="text-xl font-semibold text-gray-800 border-b border-gray-200 pb-2">
+                Contact Information
+              </h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Contact Email</label>
                   <input 
                     type="email"
+                    name="contactEmail"
+                    value={form.contactEmail}
+                    onChange={handleInputChange}
                     className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300" 
-                    placeholder="contact@example.com" 
-                    value={form.contactEmail} 
-                    onChange={(e)=>setForm({...form, contactEmail:e.target.value})} 
+                    placeholder="contact@example.com"
                   />
                 </div>
                 
@@ -323,94 +253,27 @@ export default function CreateEvent() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">Contact Phone</label>
                   <input 
                     type="tel"
+                    name="contactPhone"
+                    value={form.contactPhone}
+                    onChange={handleInputChange}
                     className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300" 
-                    placeholder="+1 234 567 8900" 
-                    value={form.contactPhone} 
-                    onChange={(e)=>setForm({...form, contactPhone:e.target.value})} 
+                    placeholder="+1 234 567 8900"
                   />
                 </div>
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Website</label>
-                <input 
-                  type="url"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300" 
-                  placeholder="https://example.com" 
-                  value={form.website} 
-                  onChange={(e)=>setForm({...form, website:e.target.value})} 
-                />
               </div>
             </div>
 
-            {/* Social Links */}
-            <div className="space-y-6">
-              <h3 className="text-xl font-semibold text-gray-800 border-b border-gray-200 pb-2">
-                Social Links
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Facebook</label>
-                  <input 
-                    type="url"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300" 
-                    placeholder="https://facebook.com/..." 
-                    value={form.socialLinks.facebook} 
-                    onChange={(e)=>setForm({...form, socialLinks: {...form.socialLinks, facebook: e.target.value}})} 
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Twitter</label>
-                  <input 
-                    type="url"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300" 
-                    placeholder="https://twitter.com/..." 
-                    value={form.socialLinks.twitter} 
-                    onChange={(e)=>setForm({...form, socialLinks: {...form.socialLinks, twitter: e.target.value}})} 
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Instagram</label>
-                  <input 
-                    type="url"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300" 
-                    placeholder="https://instagram.com/..." 
-                    value={form.socialLinks.instagram} 
-                    onChange={(e)=>setForm({...form, socialLinks: {...form.socialLinks, instagram: e.target.value}})} 
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">LinkedIn</label>
-                  <input 
-                    type="url"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300" 
-                    placeholder="https://linkedin.com/..." 
-                    value={form.socialLinks.linkedin} 
-                    onChange={(e)=>setForm({...form, socialLinks: {...form.socialLinks, linkedin: e.target.value}})} 
-                  />
-                </div>
-              </div>
-            </div>
-            
             {/* Submit Button */}
-            <div className="pt-6">
-              <button 
+            <div className="flex justify-center pt-6">
+              <button
                 type="submit"
                 disabled={isSubmitting}
-                className={`w-full py-4 px-6 rounded-xl font-semibold text-white transition-all duration-300 transform ${
-                  !isSubmitting
-                    ? 'bg-gradient-to-r from-purple-600 to-blue-600 hover:shadow-lg hover:scale-105'
-                    : 'bg-gray-400 cursor-not-allowed'
-                }`}
+                className="px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-semibold rounded-xl hover:from-purple-700 hover:to-blue-700 transform hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
               >
                 {isSubmitting ? (
-                  <div className="flex items-center justify-center">
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                    Creating Event...
+                  <div className="flex items-center space-x-2">
+                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Creating Event...</span>
                   </div>
                 ) : (
                   'Create Event'
