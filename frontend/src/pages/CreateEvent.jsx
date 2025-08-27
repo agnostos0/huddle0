@@ -103,6 +103,10 @@ export default function CreateEvent() {
     }
   }
 
+  console.log('CreateEvent: Component rendering...');
+  console.log('CreateEvent: User:', user);
+  console.log('CreateEvent: Token:', token);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50">
       <Navbar />
@@ -294,8 +298,13 @@ export default function CreateEvent() {
               </div>
             </div>
 
-            {/* Submit Button */}
-            <div className="flex justify-center pt-6 space-x-4">
+            {/* Submit Buttons */}
+            <div className="pt-6">
+              <h3 className="text-xl font-semibold text-gray-800 border-b border-gray-200 pb-2 mb-4">
+                Action Buttons
+              </h3>
+              
+              <div className="flex flex-wrap justify-center gap-4">
               <button
                 type="submit"
                 disabled={isSubmitting}
@@ -357,6 +366,7 @@ export default function CreateEvent() {
               >
                 Test Logout
               </button>
+              </div>
             </div>
           </form>
         </div>
