@@ -80,11 +80,76 @@ router.delete('/:id/members/:userId', authenticate, async (req, res) => {
   res.json(team);
 });
 
+// Delete team (owner only)
+router.delete('/:id', authenticate, async (req, res) => {
+  try {
+    const team = await Team.findById(req.params.id);
+    if (!team) {
+      return res.status(404).json({ message: 'Team not found' });
+    }
+    
+    if (team.owner.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'Only team owner can delete the team' });
+    }
+
+    // Delete all invites for this team
+    await Invite.deleteMany({ team: req.params.id });
+    
+    // Delete the team
+    await Team.findByIdAndDelete(req.params.id);
+    
+    res.json({ message: 'Team deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting team:', error);
+    res.status(500).json({ message: 'Failed to delete team' });
+  }
+});
+
+// Search users by username for team invitation
+router.get('/search-users/:username', authenticate, async (req, res) => {
+  try {
+    const { username } = req.params;
+    const { teamId } = req.query;
+
+    if (!username || username.length < 2) {
+      return res.json([]);
+    }
+
+    // Get team members to exclude them from search
+    let excludeUsers = [];
+    if (teamId) {
+      const team = await Team.findById(teamId);
+      if (team) {
+        excludeUsers = team.members.map(m => m.toString());
+      }
+    }
+
+    // Search users by username (excluding current user and team members)
+    const users = await User.find({
+      username: { $regex: username, $options: 'i' },
+      _id: { 
+        $nin: [req.user.id, ...excludeUsers]
+      }
+    })
+    .select('name username email bio socialLinks')
+    .limit(10);
+
+    res.json(users);
+  } catch (error) {
+    console.error('Error searching users:', error);
+    res.status(500).json({ message: 'Failed to search users' });
+  }
+});
+
 // Invite user by username
 router.post('/:id/invite-by-username', authenticate, async (req, res) => {
   try {
     const { username, reason } = req.body;
     const teamId = req.params.id;
+
+    if (!username || !username.trim()) {
+      return res.status(400).json({ message: 'Username is required' });
+    }
 
     // Check if team exists and user is owner
     const team = await Team.findById(teamId);
@@ -96,10 +161,13 @@ router.post('/:id/invite-by-username', authenticate, async (req, res) => {
       return res.status(403).json({ message: 'Only team owner can send invitations' });
     }
 
-    // Find user by username
-    const user = await User.findOne({ username });
+    // Find user by username (case insensitive)
+    const user = await User.findOne({ 
+      username: { $regex: new RegExp(`^${username}$`, 'i') }
+    });
+    
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ message: `User with username "${username}" not found` });
     }
 
     // Check if user is already a member
@@ -135,6 +203,7 @@ router.post('/:id/invite-by-username', authenticate, async (req, res) => {
       await sendInviteEmail(invite, team.name, req.user.name, reason);
     } catch (emailError) {
       console.error('Failed to send email:', emailError);
+      // Don't fail the request if email fails
     }
 
     res.json({ 
@@ -149,7 +218,7 @@ router.post('/:id/invite-by-username', authenticate, async (req, res) => {
     });
   } catch (error) {
     console.error('Error inviting user by username:', error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ message: 'Failed to send invitation. Please try again.' });
   }
 });
 

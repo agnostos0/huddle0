@@ -185,7 +185,7 @@ export default function Teams() {
     }
     
     try {
-      const response = await api.get(`/users/search/username/${username}`)
+      const response = await api.get(`/teams/search-users/${username}?teamId=${selectedTeam?._id || ''}`)
       setSearchResults(response.data)
     } catch (e) {
       console.error('Error searching users:', e)
@@ -232,6 +232,28 @@ export default function Teams() {
       await loadTeamDetails(teamId)
     } catch (e) {
       setError(e.response?.data?.message || 'Failed to send invitation')
+      setSuccess('')
+    }
+  }
+
+  async function addUserToTeam(teamId, userId) {
+    try {
+      await api.post(`/teams/${teamId}/members`, { userId })
+      
+      setSuccess('User added to team successfully!')
+      setError('')
+      
+      // Trigger confetti
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#10B981', '#3B82F6', '#8B5CF6']
+      })
+      
+      await loadTeamDetails(teamId)
+    } catch (e) {
+      setError(e.response?.data?.message || 'Failed to add user to team')
       setSuccess('')
     }
   }
@@ -643,11 +665,11 @@ export default function Teams() {
       {/* Invite by Username Modal */}
       {showUsernameForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-6 w-full max-w-md mx-4">
-            <h3 className="text-xl font-semibold text-gray-800 mb-4">Invite by Username</h3>
+          <div className="bg-white rounded-2xl p-6 w-full max-w-lg mx-4">
+            <h3 className="text-xl font-semibold text-gray-800 mb-4">Add User by Username</h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Search Username</label>
                 <input
                   type="text"
                   value={inviteUsername}
@@ -656,47 +678,84 @@ export default function Teams() {
                     searchUsersByUsername(e.target.value)
                   }}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="Enter username"
+                  placeholder="Enter username to search..."
                 />
                 {searchResults.length > 0 && (
-                  <div className="mt-2 max-h-32 overflow-y-auto border border-gray-200 rounded-lg">
+                  <div className="mt-2 max-h-48 overflow-y-auto border border-gray-200 rounded-lg">
                     {searchResults.map((user) => (
                       <div
                         key={user._id}
-                        onClick={() => setInviteUsername(user.username)}
-                        className="p-2 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                        className="p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
                       >
-                        <div className="font-medium text-gray-800">{user.username}</div>
-                        <div className="text-sm text-gray-600">{user.name}</div>
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <div className="font-medium text-gray-800">@{user.username}</div>
+                            <div className="text-sm text-gray-600">{user.name}</div>
+                            {user.bio && (
+                              <div className="text-xs text-gray-500 mt-1">{user.bio}</div>
+                            )}
+                          </div>
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={() => addUserToTeam(selectedTeam._id, user._id)}
+                              className="px-3 py-1 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors"
+                            >
+                              Add Directly
+                            </button>
+                            <button
+                              onClick={() => {
+                                setInviteUsername(user.username)
+                                setInviteReason('')
+                              }}
+                              className="px-3 py-1 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition-colors"
+                            >
+                              Send Invite
+                            </button>
+                          </div>
+                        </div>
                       </div>
                     ))}
                   </div>
                 )}
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Why invite this person?</label>
-                <textarea
-                  value={inviteReason}
-                  onChange={(e) => setInviteReason(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  placeholder="Tell them why you want them to join your team..."
-                  rows={3}
-                />
-              </div>
+              {inviteUsername && searchResults.length === 0 && inviteUsername.length >= 2 && (
+                <div className="text-center py-4 text-gray-500">
+                  No users found with that username
+                </div>
+              )}
+              {inviteUsername && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Invitation Message (Optional)</label>
+                  <textarea
+                    value={inviteReason}
+                    onChange={(e) => setInviteReason(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    placeholder="Tell them why you want them to join your team..."
+                    rows={3}
+                  />
+                </div>
+              )}
             </div>
             <div className="flex space-x-3 mt-6">
               <button
-                onClick={() => setShowUsernameForm(false)}
+                onClick={() => {
+                  setShowUsernameForm(false)
+                  setInviteUsername('')
+                  setInviteReason('')
+                  setSearchResults([])
+                }}
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
               >
                 Cancel
               </button>
-              <button
-                onClick={() => inviteUserByUsername(selectedTeam._id)}
-                className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-              >
-                Send Invitation
-              </button>
+              {inviteUsername && (
+                <button
+                  onClick={() => inviteUserByUsername(selectedTeam._id)}
+                  className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                >
+                  Send Invitation
+                </button>
+              )}
             </div>
           </div>
         </div>
