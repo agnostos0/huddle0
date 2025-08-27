@@ -1,10 +1,12 @@
 import React, { useState } from 'react'
 import api from '../lib/api.js'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext.jsx'
 import confetti from 'canvas-confetti'
 import Navbar from '../components/Navbar.jsx'
 
 export default function CreateTeam() {
+  const { user } = useAuth()
   const [name, setName] = useState('')
   const [error, setError] = useState('')
   const navigate = useNavigate()
@@ -12,6 +14,13 @@ export default function CreateTeam() {
   async function onSubmit(e) {
     e.preventDefault()
     setError('')
+    
+    if (!user) {
+      setError('Please login to create a team')
+      navigate('/login')
+      return
+    }
+    
     try {
       await api.post('/teams', { name })
       
@@ -25,8 +34,32 @@ export default function CreateTeam() {
       
       navigate('/teams')
     } catch (e) {
-      setError('Failed to create team')
+      if (e.response?.status === 401) {
+        setError('Please login to create a team')
+        navigate('/login')
+      } else {
+        setError('Failed to create team')
+      }
     }
+  }
+
+  // Redirect to login if not authenticated
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-500 text-6xl mb-4">🔒</div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Login Required</h2>
+          <p className="text-gray-600 mb-4">Please login to create a team</p>
+          <button 
+            onClick={() => navigate('/login')}
+            className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors"
+          >
+            Go to Login
+          </button>
+        </div>
+      </div>
+    )
   }
 
   return (

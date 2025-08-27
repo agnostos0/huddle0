@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { MapContainer, TileLayer, Marker, Popup, Circle } from 'react-leaflet';
 import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import api from '../lib/api.js';
 import Navbar from '../components/Navbar.jsx';
 
@@ -13,13 +14,35 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-// Custom event marker icon
-const eventIcon = new L.Icon({
-  iconUrl: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTEyIDJMMTMuMDkgOC4yNkwyMCA5TDEzLjA5IDkuNzRMMTIgMTZMMTAuOTEgOS43NEw0IDlMMTAuOTEgOC4yNkwxMiAyWiIgZmlsbD0iI0Y1OTkyQSIvPgo8L3N2Zz4K',
-  iconSize: [30, 30],
-  iconAnchor: [15, 30],
-  popupAnchor: [0, -30]
-});
+// Function to create event marker icon based on category
+const createEventIcon = (category) => {
+  const colors = {
+    technology: '#3B82F6', // Blue
+    business: '#10B981',   // Green
+    social: '#EC4899',     // Pink
+    education: '#F59E0B',  // Yellow
+    entertainment: '#8B5CF6', // Purple
+    sports: '#EF4444',     // Red
+    default: '#F59E0B'     // Default orange
+  };
+  
+  const color = colors[category] || colors.default;
+  
+  return new L.Icon({
+    iconUrl: `data:image/svg+xml;base64,${btoa(`
+      <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M20 2c-9.94 0-18 8.06-18 18 0 13.25 18 20 18 20s18-6.75 18-20C38 10.06 29.94 2 20 2z" fill="${color}"/>
+        <circle cx="20" cy="14" r="6" fill="white"/>
+        <path d="M18 12c0-1.1 0.9-2 2-2s2 0.9 2 2-2 2-2 2-2-0.9-2-2z" fill="${color}"/>
+        <path d="M16 16c0-1.1 0.9-2 2-2h4c1.1 0 2 0.9 2 2v4c0 1.1-0.9 2-2 2h-4c-1.1 0-2-0.9-2-2z" fill="white"/>
+        <path d="M18 14c0-0.6 0.4-1 1-1h2c0.6 0 1 0.4 1 1v2c0 0.6-0.4 1-1 1h-2c-0.6 0-1-0.4-1-1v-2z" fill="${color}"/>
+      </svg>
+    `)}`,
+    iconSize: [40, 40],
+    iconAnchor: [20, 40],
+    popupAnchor: [0, -40]
+  });
+};
 
 // User location marker
 const userLocationIcon = new L.Icon({
@@ -42,6 +65,10 @@ export default function ExploreEvents() {
   const [mapView, setMapView] = useState(true);
   const [selectedCity, setSelectedCity] = useState('');
   const [cityCoordinates, setCityCoordinates] = useState(null);
+  const [showManualLocation, setShowManualLocation] = useState(false);
+  const [manualLocation, setManualLocation] = useState({ lat: '', lng: '' });
+  const [mapLoaded, setMapLoaded] = useState(false);
+  const [mapError, setMapError] = useState(null);
 
   useEffect(() => {
     fetchEvents();
@@ -65,25 +92,62 @@ export default function ExploreEvents() {
 
   const detectUserLocation = () => {
     setIsDetectingLocation(true);
+    console.log('Attempting to detect user location...');
+    
     if (navigator.geolocation) {
+      const options = {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 300000 // 5 minutes
+      };
+      
       navigator.geolocation.getCurrentPosition(
         (position) => {
+          console.log('Location detected successfully:', position);
           const coords = {
             lat: position.coords.latitude,
             lng: position.coords.longitude
           };
           setUserLocation(coords);
           setIsDetectingLocation(false);
+          setShowNearbyOnly(true); // Automatically enable nearby events
+          
+          // Find and set the nearest city
+          const nearestCityInfo = findNearestCity(coords.lat, coords.lng);
+          if (nearestCityInfo.city && nearestCityInfo.distance < 50) { // Within 50km
+            setSelectedCity(nearestCityInfo.city.name);
+            setCityCoordinates(nearestCityInfo.city);
+            console.log(`Nearest city: ${nearestCityInfo.city.name} (${nearestCityInfo.distance.toFixed(1)}km away)`);
+          }
+          
+          console.log('User location set to:', coords);
         },
         (error) => {
-          console.error('Error getting location:', error);
+          console.error('Geolocation error:', error);
           setIsDetectingLocation(false);
-          alert('Unable to detect your location. Please try again.');
-        }
+          
+          let errorMessage = 'Unable to detect your location. ';
+          switch (error.code) {
+            case error.PERMISSION_DENIED:
+              errorMessage += 'Please allow location access in your browser settings.';
+              break;
+            case error.POSITION_UNAVAILABLE:
+              errorMessage += 'Location information is unavailable.';
+              break;
+            case error.TIMEOUT:
+              errorMessage += 'Location request timed out.';
+              break;
+            default:
+              errorMessage += 'An unknown error occurred.';
+          }
+          
+          alert(errorMessage);
+        },
+        options
       );
     } else {
       setIsDetectingLocation(false);
-      alert('Geolocation is not supported by this browser.');
+      alert('Geolocation is not supported by this browser. Please use a modern browser.');
     }
   };
 
@@ -97,6 +161,22 @@ export default function ExploreEvents() {
               Math.sin(dLon/2) * Math.sin(dLon/2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     return R * c;
+  };
+
+  // Find nearest city to user location
+  const findNearestCity = (userLat, userLng) => {
+    let nearestCity = null;
+    let shortestDistance = Infinity;
+
+    popularCities.forEach(city => {
+      const distance = calculateDistance(userLat, userLng, city.lat, city.lng);
+      if (distance < shortestDistance) {
+        shortestDistance = distance;
+        nearestCity = city;
+      }
+    });
+
+    return { city: nearestCity, distance: shortestDistance };
   };
 
   const filteredEvents = events.filter(event => {
@@ -146,7 +226,52 @@ export default function ExploreEvents() {
     { name: 'Indore', lat: 22.7196, lng: 75.8577 },
     { name: 'Thane', lat: 19.2183, lng: 72.9781 },
     { name: 'Bhopal', lat: 23.2599, lng: 77.4126 },
-    { name: 'Visakhapatnam', lat: 17.6868, lng: 83.2185 }
+    { name: 'Visakhapatnam', lat: 17.6868, lng: 83.2185 },
+    // Gujarat Cities
+    { name: 'Surat', lat: 21.1702, lng: 72.8311 },
+    { name: 'Vadodara', lat: 22.3072, lng: 73.1812 },
+    { name: 'Rajkot', lat: 22.3039, lng: 70.8022 },
+    { name: 'Bhavnagar', lat: 21.7645, lng: 72.1519 },
+    { name: 'Jamnagar', lat: 22.4707, lng: 70.0577 },
+    { name: 'Gandhinagar', lat: 23.2156, lng: 72.6369 },
+    { name: 'Anand', lat: 22.5645, lng: 72.9289 },
+    { name: 'Bharuch', lat: 21.7051, lng: 72.9959 },
+    { name: 'Junagadh', lat: 21.5222, lng: 70.4579 },
+    { name: 'Navsari', lat: 20.9517, lng: 72.9324 },
+    { name: 'Surendranagar', lat: 22.7275, lng: 71.6836 },
+    { name: 'Gandhidham', lat: 23.0833, lng: 70.1333 },
+    { name: 'Veraval', lat: 20.9159, lng: 70.3629 },
+    { name: 'Porbandar', lat: 21.6422, lng: 69.6093 },
+    { name: 'Bhuj', lat: 23.2540, lng: 69.6693 },
+    { name: 'Palanpur', lat: 24.1724, lng: 72.4346 },
+    { name: 'Himmatnagar', lat: 23.5986, lng: 72.9662 },
+    { name: 'Godhra', lat: 22.7772, lng: 73.6203 },
+    { name: 'Morbi', lat: 22.8173, lng: 70.8372 },
+    { name: 'Valsad', lat: 20.6104, lng: 72.9342 },
+    { name: 'Dahod', lat: 22.8312, lng: 74.2535 },
+    { name: 'Nadiad', lat: 22.6939, lng: 72.8616 },
+    { name: 'Patan', lat: 23.8507, lng: 72.1147 },
+    { name: 'Botad', lat: 22.1692, lng: 71.6664 },
+    { name: 'Amreli', lat: 21.6225, lng: 71.2215 },
+    { name: 'Deesa', lat: 24.2676, lng: 72.1797 },
+    { name: 'Jetpur', lat: 21.7489, lng: 70.6234 },
+    { name: 'Gondal', lat: 21.9607, lng: 70.8029 },
+    { name: 'Ankleshwar', lat: 21.6225, lng: 72.9905 },
+    { name: 'Sidhpur', lat: 23.9121, lng: 72.3728 },
+    { name: 'Mahuva', lat: 21.0833, lng: 71.7667 },
+    { name: 'Wadhwan', lat: 22.7000, lng: 71.6833 },
+    { name: 'Lunawada', lat: 23.1284, lng: 73.6103 },
+    { name: 'Santrampur', lat: 23.1722, lng: 73.3277 },
+    { name: 'Kapadvanj', lat: 23.0230, lng: 73.0713 },
+    { name: 'Modasa', lat: 23.4625, lng: 73.2986 },
+    { name: 'Vapi', lat: 20.3714, lng: 72.9047 },
+    { name: 'Bardoli', lat: 21.1229, lng: 72.9714 },
+    { name: 'Vyara', lat: 21.1104, lng: 73.3938 },
+    { name: 'Songadh', lat: 21.1697, lng: 73.5636 },
+    { name: 'The Dangs', lat: 20.7500, lng: 73.7500 },
+    { name: 'Navsari', lat: 20.9517, lng: 72.9324 },
+    { name: 'Valsad', lat: 20.6104, lng: 72.9342 },
+    { name: 'Tapi', lat: 21.1200, lng: 73.4000 }
   ];
 
   if (loading) {
@@ -264,6 +389,70 @@ export default function ExploreEvents() {
               </button>
             </div>
 
+            {/* Location Status */}
+            {userLocation && (
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <div className="flex items-center justify-center mb-2">
+                  <div className="flex items-center bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
+                    <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    Location detected: {userLocation.lat.toFixed(4)}, {userLocation.lng.toFixed(4)}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Manual Location Input */}
+            {!userLocation && (
+              <div className="mt-4 pt-4 border-t border-gray-200">
+                <div className="flex flex-col md:flex-row gap-4 items-center">
+                  <button
+                    onClick={() => setShowManualLocation(!showManualLocation)}
+                    className="text-sm text-purple-600 hover:text-purple-700 underline"
+                  >
+                    {showManualLocation ? 'Hide' : 'Add'} Manual Location
+                  </button>
+                  
+                  {showManualLocation && (
+                    <div className="flex flex-col md:flex-row gap-2 items-center">
+                      <input
+                        type="number"
+                        step="any"
+                        placeholder="Latitude"
+                        value={manualLocation.lat}
+                        onChange={(e) => setManualLocation({ ...manualLocation, lat: e.target.value })}
+                        className="px-3 py-1 border border-gray-300 rounded text-sm w-24"
+                      />
+                      <input
+                        type="number"
+                        step="any"
+                        placeholder="Longitude"
+                        value={manualLocation.lng}
+                        onChange={(e) => setManualLocation({ ...manualLocation, lng: e.target.value })}
+                        className="px-3 py-1 border border-gray-300 rounded text-sm w-24"
+                      />
+                      <button
+                        onClick={() => {
+                          if (manualLocation.lat && manualLocation.lng) {
+                            setUserLocation({
+                              lat: parseFloat(manualLocation.lat),
+                              lng: parseFloat(manualLocation.lng)
+                            });
+                            setShowNearbyOnly(true);
+                            setShowManualLocation(false);
+                          }
+                        }}
+                        className="px-3 py-1 bg-purple-600 text-white rounded text-sm hover:bg-purple-700"
+                      >
+                        Set Location
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Nearby Events Filter */}
             {(userLocation || selectedCity) && (
               <div className="mt-4 pt-4 border-t border-gray-200">
@@ -278,6 +467,7 @@ export default function ExploreEvents() {
                     <span className="text-sm text-gray-700">
                       Show only nearby events
                       {selectedCity && ` (${selectedCity})`}
+                      {userLocation && !selectedCity && ' (Your Location)'}
                     </span>
                   </label>
                   
@@ -336,7 +526,38 @@ export default function ExploreEvents() {
       <div className="max-w-7xl mx-auto px-6 pb-12">
         {mapView ? (
           /* Map View */
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 overflow-hidden">
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 overflow-hidden relative">
+            {/* Map Legend */}
+            <div className="absolute top-4 left-4 z-[1000] bg-white/90 backdrop-blur-sm rounded-lg p-3 shadow-lg border border-white/20">
+              <h4 className="text-sm font-semibold text-gray-800 mb-2">Event Categories</h4>
+              <div className="space-y-1">
+                <div className="flex items-center text-xs">
+                  <div className="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
+                  <span>Technology</span>
+                </div>
+                <div className="flex items-center text-xs">
+                  <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
+                  <span>Business</span>
+                </div>
+                <div className="flex items-center text-xs">
+                  <div className="w-3 h-3 rounded-full bg-pink-500 mr-2"></div>
+                  <span>Social</span>
+                </div>
+                <div className="flex items-center text-xs">
+                  <div className="w-3 h-3 rounded-full bg-yellow-500 mr-2"></div>
+                  <span>Education</span>
+                </div>
+                <div className="flex items-center text-xs">
+                  <div className="w-3 h-3 rounded-full bg-purple-500 mr-2"></div>
+                  <span>Entertainment</span>
+                </div>
+                <div className="flex items-center text-xs">
+                  <div className="w-3 h-3 rounded-full bg-red-500 mr-2"></div>
+                  <span>Sports</span>
+                </div>
+              </div>
+            </div>
+            
             <div className="h-[600px] w-full">
               <MapContainer
                 center={userLocation || [20, 0]}
@@ -375,7 +596,7 @@ export default function ExploreEvents() {
                   <Marker
                     key={event._id}
                     position={[event.coordinates.lat, event.coordinates.lng]}
-                    icon={eventIcon}
+                    icon={createEventIcon(event.category)}
                     eventHandlers={{
                       click: () => setSelectedEvent(event),
                     }}
@@ -396,7 +617,7 @@ export default function ExploreEvents() {
                           </p>
                         )}
                         <Link
-                          to={`/events/${event._id}`}
+                          to={`/event/${event._id}`}
                           className="inline-block bg-purple-600 text-white px-3 py-1 rounded text-sm hover:bg-purple-700 transition-colors"
                         >
                           View Details
@@ -480,7 +701,7 @@ export default function ExploreEvents() {
 
                   <div className="pt-4">
                     <Link
-                      to={`/events/${event._id}`}
+                      to={`/event/${event._id}`}
                       className="w-full block text-center px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-300"
                     >
                       View Details

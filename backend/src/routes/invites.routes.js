@@ -273,10 +273,43 @@ router.post('/:inviteId/resend', authenticate, async (req, res) => {
       });
     } catch (emailError) {
       console.error('Failed to send email:', emailError);
-      res.status(500).json({ message: 'Failed to send email' });
+      // Don't fail the request if email fails, just return success with a warning
+      res.json({ 
+        message: 'Invitation resent successfully (email delivery may be delayed)',
+        lastSentAt: invite.lastSentAt,
+        warning: 'Email delivery failed, but invitation was updated'
+      });
     }
   } catch (error) {
     console.error('Error resending invite:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Delete invitation (protected route)
+router.delete('/:inviteId', authenticate, async (req, res) => {
+  try {
+    const invite = await Invite.findById(req.params.inviteId)
+      .populate('team', 'name owner');
+
+    if (!invite) {
+      return res.status(404).json({ message: 'Invitation not found' });
+    }
+
+    if (!invite.team) {
+      return res.status(404).json({ message: 'Team not found' });
+    }
+
+    // Check if user is team owner
+    if (!invite.team.owner || invite.team.owner.toString() !== req.user.id) {
+      return res.status(403).json({ message: 'Only team owner can delete invitations' });
+    }
+
+    await Invite.findByIdAndDelete(req.params.inviteId);
+
+    res.json({ message: 'Invitation deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting invite:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });

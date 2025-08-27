@@ -25,20 +25,26 @@ export default function Login() {
     setIsLoading(true)
 
     try {
+      console.log('Attempting login with:', form.emailOrUsername)
       const result = await login(form.emailOrUsername, form.password)
+      console.log('Login result:', result)
+      
       if (result.success) {
+        console.log('Login successful, navigating to dashboard for role:', result.user.role)
         // Navigate based on user role
         if (result.user.role === 'admin') {
           navigate('/admin-dashboard')
         } else if (result.user.role === 'organizer') {
           navigate('/organizer-dashboard')
         } else {
-          navigate('/dashboard')
+          navigate('/attendee-dashboard')
         }
       } else {
+        console.log('Login failed:', result.message)
         setError(result.message || 'Login failed')
       }
     } catch (err) {
+      console.error('Login error:', err)
       setError(err.response?.data?.message || 'Login failed')
     } finally {
       setIsLoading(false)

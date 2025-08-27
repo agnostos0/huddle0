@@ -26,11 +26,19 @@ export const AuthProvider = ({ children }) => {
 
   const fetchUser = async () => {
     try {
+      console.log('AuthContext: Fetching user data...');
       const response = await api.get('/auth/me');
+      console.log('AuthContext: User data received:', response.data);
       setUser(response.data.user);
     } catch (error) {
-      console.error('Error fetching user:', error);
-      logout();
+      console.error('AuthContext: Error fetching user:', error);
+      // Only logout if it's a 401 error (unauthorized)
+      if (error.response?.status === 401) {
+        console.log('AuthContext: Unauthorized, logging out');
+        logout();
+      } else {
+        console.log('AuthContext: Other error, not logging out');
+      }
     } finally {
       setLoading(false);
     }
@@ -38,17 +46,22 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (emailOrUsername, password) => {
     try {
+      console.log('AuthContext: Attempting login API call')
       const response = await api.post('/auth/login', { emailOrUsername, password });
+      console.log('AuthContext: Login API response:', response.data);
+      
       const { token: newToken, user: userData } = response.data;
       
+      console.log('AuthContext: Setting token and user')
       setToken(newToken);
       setUser(userData);
       localStorage.setItem('token', newToken);
       localStorage.setItem('user', JSON.stringify(userData));
       
+      console.log('AuthContext: Login successful, returning success')
       return { success: true, user: userData };
     } catch (error) {
-      console.error('Login error:', error);
+      console.error('AuthContext: Login error:', error);
       return { 
         success: false, 
         message: error.response?.data?.message || 'Login failed' 
@@ -117,7 +130,7 @@ export const AuthProvider = ({ children }) => {
       case 'organizer':
         return '/organizer-dashboard';
       default:
-        return '/dashboard';
+        return '/attendee-dashboard';
     }
   };
 

@@ -161,12 +161,6 @@ export default function AdminDashboard() {
             </div>
             <div className="flex space-x-4">
               <button
-                onClick={() => navigate('/dashboard')}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
-              >
-                Back to Dashboard
-              </button>
-              <button
                 onClick={() => navigate('/')}
                 className="px-4 py-2 bg-gray-600 hover:bg-gray-700 rounded-lg transition-colors"
               >

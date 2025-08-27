@@ -13,11 +13,17 @@ export default function Teams() {
   const [selectedTeam, setSelectedTeam] = useState(null)
   const [showInviteForm, setShowInviteForm] = useState(false)
   const [showManualForm, setShowManualForm] = useState(false)
+  const [showUsernameForm, setShowUsernameForm] = useState(false)
+  const [showAutoMatchForm, setShowAutoMatchForm] = useState(false)
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteName, setInviteName] = useState('')
+  const [inviteUsername, setInviteUsername] = useState('')
+  const [inviteReason, setInviteReason] = useState('')
   const [pendingInvites, setPendingInvites] = useState([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('my-teams')
+  const [searchResults, setSearchResults] = useState([])
+  const [autoMatchUsers, setAutoMatchUsers] = useState([])
   const [manualForm, setManualForm] = useState({ 
     name: '', 
     email: '', 
@@ -50,12 +56,20 @@ export default function Teams() {
         console.log('No pending invites or error loading invites')
         setPendingInvites([])
       }
+
+      // Load auto-match users
+      await loadAutoMatchUsers(teamId)
     } catch (e) {
       setError('Failed to load team details')
     }
   }
 
   async function inviteMember(teamId) {
+    if (!user) {
+      setError('Please login to invite members')
+      return
+    }
+    
     try {
       await api.post(`/invites/teams/${teamId}/invite`, { 
         email: inviteEmail, 
@@ -77,12 +91,21 @@ export default function Teams() {
       
       await loadTeamDetails(teamId)
     } catch (e) {
-      setError(e.response?.data?.message || 'Failed to send invitation')
+      if (e.response?.status === 401) {
+        setError('Please login to invite members')
+      } else {
+        setError(e.response?.data?.message || 'Failed to send invitation')
+      }
       setSuccess('')
     }
   }
 
   async function addManualMember(teamId) {
+    if (!user) {
+      setError('Please login to add members')
+      return
+    }
+    
     try {
       await api.post(`/teams/${teamId}/members/manual`, manualForm)
       setManualForm({ name: '', email: '', bio: '', socialLinks: { linkedin: '', twitter: '', github: '', website: '' } })
@@ -101,7 +124,11 @@ export default function Teams() {
       await loadTeamDetails(teamId)
       await load()
     } catch (e) {
-      setError('Failed to add member')
+      if (e.response?.status === 401) {
+        setError('Please login to add members')
+      } else {
+        setError('Failed to add member')
+      }
       setSuccess('')
     }
   }
@@ -123,11 +150,88 @@ export default function Teams() {
 
   async function resendInvite(inviteId) {
     try {
-      await api.post(`/invites/${inviteId}/resend`)
-      setSuccess('Invitation resent successfully!')
+      const response = await api.post(`/invites/${inviteId}/resend`)
+      setSuccess(response.data.warning ? 
+        `Invitation resent successfully! (${response.data.warning})` : 
+        'Invitation resent successfully!'
+      )
       setError('')
     } catch (e) {
       setError(e.response?.data?.message || 'Failed to resend invitation')
+      setSuccess('')
+    }
+  }
+
+  async function deleteInvite(inviteId) {
+    if (!window.confirm('Are you sure you want to delete this invitation?')) {
+      return
+    }
+    
+    try {
+      await api.delete(`/invites/${inviteId}`)
+      setSuccess('Invitation deleted successfully!')
+      setError('')
+      await loadTeamDetails(selectedTeam._id)
+    } catch (e) {
+      setError(e.response?.data?.message || 'Failed to delete invitation')
+      setSuccess('')
+    }
+  }
+
+  async function searchUsersByUsername(username) {
+    if (username.length < 2) {
+      setSearchResults([])
+      return
+    }
+    
+    try {
+      const response = await api.get(`/users/search/username/${username}`)
+      setSearchResults(response.data)
+    } catch (e) {
+      console.error('Error searching users:', e)
+      setSearchResults([])
+    }
+  }
+
+  async function loadAutoMatchUsers(teamId) {
+    try {
+      const response = await api.get(`/users/auto-match/${teamId}`)
+      setAutoMatchUsers(response.data)
+    } catch (e) {
+      console.error('Error loading auto-match users:', e)
+      setAutoMatchUsers([])
+    }
+  }
+
+  async function inviteUserByUsername(teamId) {
+    if (!inviteUsername || !inviteReason) {
+      setError('Please provide both username and reason')
+      return
+    }
+    
+    try {
+      await api.post(`/teams/${teamId}/invite-by-username`, {
+        username: inviteUsername,
+        reason: inviteReason
+      })
+      
+      setInviteUsername('')
+      setInviteReason('')
+      setShowUsernameForm(false)
+      setSuccess('Invitation sent successfully!')
+      setError('')
+      
+      // Trigger confetti
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#8B5CF6', '#3B82F6', '#10B981']
+      })
+      
+      await loadTeamDetails(teamId)
+    } catch (e) {
+      setError(e.response?.data?.message || 'Failed to send invitation')
       setSuccess('')
     }
   }
@@ -150,6 +254,24 @@ export default function Teams() {
   useEffect(() => { 
     load() 
   }, [])
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-500 text-6xl mb-4">🔒</div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Login Required</h2>
+          <p className="text-gray-600 mb-4">Please login to manage teams</p>
+          <button 
+            onClick={() => window.location.href = '/login'}
+            className="bg-purple-600 text-white px-6 py-3 rounded-lg hover:bg-purple-700 transition-colors"
+          >
+            Go to Login
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   if (loading) {
     return (
@@ -186,12 +308,21 @@ export default function Teams() {
             </h1>
             <p className="text-gray-600 mt-1">Manage your teams and collaborate with others</p>
           </div>
-          <Link 
-            to="/teams/create" 
-            className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-300"
-          >
-            + Create Team
-          </Link>
+          {user ? (
+            <Link 
+              to="/teams/create" 
+              className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-300"
+            >
+              + Create Team
+            </Link>
+          ) : (
+            <button 
+              onClick={() => window.location.href = '/login'}
+              className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-300"
+            >
+              + Create Team (Login Required)
+            </button>
+          )}
         </div>
       </div>
 
@@ -324,12 +455,24 @@ export default function Teams() {
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-lg font-semibold text-gray-800">Team Members</h3>
                       {selectedTeam.owner?._id === user?.id && (
-                        <div className="flex space-x-2">
+                        <div className="flex flex-wrap gap-2">
                           <button
                             onClick={() => setShowInviteForm(true)}
                             className="bg-green-600 text-white px-3 py-1 rounded-lg text-sm hover:bg-green-700 transition-colors"
                           >
-                            Invite Member
+                            Invite by Email
+                          </button>
+                          <button
+                            onClick={() => setShowUsernameForm(true)}
+                            className="bg-purple-600 text-white px-3 py-1 rounded-lg text-sm hover:bg-purple-700 transition-colors"
+                          >
+                            Invite by Username
+                          </button>
+                          <button
+                            onClick={() => setShowAutoMatchForm(true)}
+                            className="bg-orange-600 text-white px-3 py-1 rounded-lg text-sm hover:bg-orange-700 transition-colors"
+                          >
+                            Auto-Match
                           </button>
                           <button
                             onClick={() => setShowManualForm(true)}
@@ -375,25 +518,54 @@ export default function Teams() {
                     <div>
                       <h3 className="text-lg font-semibold text-gray-800 mb-4">Pending Invitations</h3>
                       <div className="space-y-3">
-                        {pendingInvites.map((invite) => (
-                          <div key={invite._id} className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <h4 className="font-semibold text-gray-800">{invite.invitedName}</h4>
-                                <p className="text-sm text-gray-600">{invite.email}</p>
-                                <p className="text-xs text-yellow-600">
-                                  Sent {new Date(invite.createdAt).toLocaleDateString()}
-                                </p>
+                        {pendingInvites.map((invite) => {
+                          const expiresAt = new Date(invite.expiresAt)
+                          const isExpired = expiresAt < new Date()
+                          const timeLeft = expiresAt - new Date()
+                          const daysLeft = Math.ceil(timeLeft / (1000 * 60 * 60 * 24))
+                          
+                          return (
+                            <div key={invite._id} className={`border rounded-lg p-4 ${
+                              isExpired 
+                                ? 'bg-red-50 border-red-200' 
+                                : 'bg-yellow-50 border-yellow-200'
+                            }`}>
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <h4 className="font-semibold text-gray-800">{invite.invitedName}</h4>
+                                  <p className="text-sm text-gray-600">{invite.email}</p>
+                                  <p className="text-xs text-gray-500">
+                                    Sent {new Date(invite.createdAt).toLocaleDateString()}
+                                  </p>
+                                  <p className={`text-xs ${
+                                    isExpired ? 'text-red-600' : 'text-yellow-600'
+                                  }`}>
+                                    {isExpired 
+                                      ? 'Expired' 
+                                      : `Expires in ${daysLeft} day${daysLeft !== 1 ? 's' : ''}`
+                                    }
+                                  </p>
+                                </div>
+                                <div className="flex space-x-2">
+                                  {!isExpired && (
+                                    <button
+                                      onClick={() => resendInvite(invite._id)}
+                                      className="bg-yellow-600 text-white px-3 py-1 rounded-lg text-sm hover:bg-yellow-700 transition-colors"
+                                    >
+                                      Resend
+                                    </button>
+                                  )}
+                                  <button
+                                    onClick={() => deleteInvite(invite._id)}
+                                    className="bg-red-600 text-white px-3 py-1 rounded-lg text-sm hover:bg-red-700 transition-colors"
+                                  >
+                                    Delete
+                                  </button>
+                                </div>
                               </div>
-                              <button
-                                onClick={() => resendInvite(invite._id)}
-                                className="bg-yellow-600 text-white px-3 py-1 rounded-lg text-sm hover:bg-yellow-700 transition-colors"
-                              >
-                                Resend
-                              </button>
                             </div>
-                          </div>
-                        ))}
+                          )
+                        })}
                       </div>
                     </div>
                   )}
@@ -467,6 +639,132 @@ export default function Teams() {
       )}
 
       {/* Add Manual Member Modal */}
+      
+      {/* Invite by Username Modal */}
+      {showUsernameForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-md mx-4">
+            <h3 className="text-xl font-semibold text-gray-800 mb-4">Invite by Username</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                <input
+                  type="text"
+                  value={inviteUsername}
+                  onChange={(e) => {
+                    setInviteUsername(e.target.value)
+                    searchUsersByUsername(e.target.value)
+                  }}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="Enter username"
+                />
+                {searchResults.length > 0 && (
+                  <div className="mt-2 max-h-32 overflow-y-auto border border-gray-200 rounded-lg">
+                    {searchResults.map((user) => (
+                      <div
+                        key={user._id}
+                        onClick={() => setInviteUsername(user.username)}
+                        className="p-2 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                      >
+                        <div className="font-medium text-gray-800">{user.username}</div>
+                        <div className="text-sm text-gray-600">{user.name}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Why invite this person?</label>
+                <textarea
+                  value={inviteReason}
+                  onChange={(e) => setInviteReason(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="Tell them why you want them to join your team..."
+                  rows={3}
+                />
+              </div>
+            </div>
+            <div className="flex space-x-3 mt-6">
+              <button
+                onClick={() => setShowUsernameForm(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => inviteUserByUsername(selectedTeam._id)}
+                className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+              >
+                Send Invitation
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Auto-Match Modal */}
+      {showAutoMatchForm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-6 w-full max-w-lg mx-4 max-h-[80vh] overflow-y-auto">
+            <h3 className="text-xl font-semibold text-gray-800 mb-4">Auto-Match Teammates</h3>
+            <p className="text-gray-600 mb-4">Find potential teammates from our community</p>
+            
+            {autoMatchUsers.length > 0 ? (
+              <div className="space-y-3">
+                {autoMatchUsers.map((user) => (
+                  <div key={user._id} className="bg-gray-50 rounded-lg p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 bg-gradient-to-r from-purple-400 to-blue-500 rounded-full flex items-center justify-center">
+                          <span className="text-white font-semibold">
+                            {user.name?.charAt(0) || 'U'}
+                          </span>
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-gray-800">@{user.username}</h4>
+                          <p className="text-sm text-gray-600">{user.name}</p>
+                          {user.bio && (
+                            <p className="text-xs text-gray-500 mt-1">{user.bio}</p>
+                          )}
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setInviteUsername(user.username)
+                          setShowAutoMatchForm(false)
+                          setShowUsernameForm(true)
+                        }}
+                        className="bg-green-600 text-white px-3 py-1 rounded-lg text-sm hover:bg-green-700 transition-colors"
+                      >
+                        Invite
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">No Users Found</h3>
+                <p className="text-gray-600">Try inviting by username or email instead</p>
+              </div>
+            )}
+            
+            <div className="flex space-x-3 mt-6">
+              <button
+                onClick={() => setShowAutoMatchForm(false)}
+                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {showManualForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-2xl p-6 w-full max-w-md mx-4">

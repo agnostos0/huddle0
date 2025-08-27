@@ -6,9 +6,11 @@ import Landing from './pages/Landing.jsx';
 import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
 import Dashboard from './pages/Dashboard.jsx';
+import AttendeeDashboard from './pages/AttendeeDashboard.jsx';
 import OrganizerDashboard from './pages/OrganizerDashboard.jsx';
 import AdminDashboard from './pages/AdminDashboard.jsx';
 import CreateEvent from './pages/CreateEvent.jsx';
+import CreateTeam from './pages/CreateTeam.jsx';
 import EventDetails from './pages/EventDetails.jsx';
 import Teams from './pages/Teams.jsx';
 import InviteAccept from './pages/InviteAccept.jsx';
@@ -35,6 +37,12 @@ function App() {
             </ProtectedRoute>
           } />
           
+          <Route path="/attendee-dashboard" element={
+            <ProtectedRoute>
+              <AttendeeDashboard />
+            </ProtectedRoute>
+          } />
+          
           <Route path="/organizer-dashboard" element={
             <ProtectedRoute requiredRole="organizer">
               <OrganizerDashboard />
@@ -48,7 +56,7 @@ function App() {
           } />
           
           <Route path="/create-event" element={
-            <ProtectedRoute requiredRole="organizer">
+            <ProtectedRoute>
               <CreateEvent />
             </ProtectedRoute>
           } />
@@ -63,6 +71,12 @@ function App() {
           <Route path="/teams" element={
             <ProtectedRoute>
               <Teams />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/teams/create" element={
+            <ProtectedRoute>
+              <CreateTeam />
             </ProtectedRoute>
           } />
           

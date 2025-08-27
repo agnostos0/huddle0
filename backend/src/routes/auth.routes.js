@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { User } from '../models/User.js';
 import { signJwt } from '../utils/jwt.js';
+import { authenticate } from '../middleware/auth.js';
 
 const router = Router();
 
@@ -105,7 +106,7 @@ router.post('/login', async (req, res) => {
 });
 
 // Get current user
-router.get('/me', async (req, res) => {
+router.get('/me', authenticate, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('-password');
     if (!user) {
@@ -134,7 +135,7 @@ router.get('/me', async (req, res) => {
 });
 
 // Update user role (admin only)
-router.patch('/users/:userId/role', async (req, res) => {
+router.patch('/users/:userId/role', authenticate, async (req, res) => {
   try {
     const { userId } = req.params;
     const { role } = req.body;
@@ -176,7 +177,7 @@ router.patch('/users/:userId/role', async (req, res) => {
 });
 
 // Verify organizer (admin only)
-router.patch('/organizers/:userId/verify', async (req, res) => {
+router.patch('/organizers/:userId/verify', authenticate, async (req, res) => {
   try {
     const { userId } = req.params;
     const { isVerified } = req.body;

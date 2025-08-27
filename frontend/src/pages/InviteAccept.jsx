@@ -413,6 +413,17 @@ const InviteAccept = () => {
                     setShowLoginForm(false);
                     setShowRegistrationForm(false);
                   }}
+                  className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                >
+                  Switch Account
+                </button>
+                <button
+                  onClick={() => {
+                    logout();
+                    setShowTeamJoinForm(false);
+                    setShowLoginForm(false);
+                    setShowRegistrationForm(false);
+                  }}
                   className="text-red-600 hover:text-red-800 text-sm font-medium"
                 >
                   Sign Out
@@ -447,6 +458,14 @@ const InviteAccept = () => {
             >
               Create new account
             </button>
+            <div className="text-center">
+              <button
+                onClick={() => navigate('/login')}
+                className="text-blue-600 hover:text-blue-800 text-sm font-medium underline"
+              >
+                Switch to different account
+              </button>
+            </div>
           </div>
         )}
 
@@ -455,15 +474,23 @@ const InviteAccept = () => {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-gray-800">Sign In</h3>
-              <button
-                onClick={() => {
-                  setShowLoginForm(false);
-                  setShowRegistrationForm(true);
-                }}
-                className="text-blue-600 hover:text-blue-800 text-sm"
-              >
-                Need an account?
-              </button>
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={() => navigate('/login')}
+                  className="text-gray-600 hover:text-gray-800 text-sm"
+                >
+                  Switch Account
+                </button>
+                <button
+                  onClick={() => {
+                    setShowLoginForm(false);
+                    setShowRegistrationForm(true);
+                  }}
+                  className="text-blue-600 hover:text-blue-800 text-sm"
+                >
+                  Need an account?
+                </button>
+              </div>
             </div>
             
             <form onSubmit={handleLogin} className="space-y-4">
@@ -524,15 +551,23 @@ const InviteAccept = () => {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-gray-800">Create Account</h3>
-              <button
-                onClick={() => {
-                  setShowRegistrationForm(false);
-                  setShowLoginForm(true);
-                }}
-                className="text-blue-600 hover:text-blue-800 text-sm"
-              >
-                Already have an account?
-              </button>
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={() => navigate('/login')}
+                  className="text-gray-600 hover:text-gray-800 text-sm"
+                >
+                  Switch Account
+                </button>
+                <button
+                  onClick={() => {
+                    setShowRegistrationForm(false);
+                    setShowLoginForm(true);
+                  }}
+                  className="text-blue-600 hover:text-blue-800 text-sm"
+                >
+                  Already have an account?
+                </button>
+              </div>
             </div>
             
             <form onSubmit={handleRegistration} className="space-y-4">

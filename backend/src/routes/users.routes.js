@@ -235,6 +235,51 @@ router.post('/profile-picture', authenticate, async (req, res) => {
   }
 });
 
+// Search users by username
+router.get('/search/username/:username', authenticate, async (req, res) => {
+  try {
+    const { username } = req.params;
+    const users = await User.find({
+      username: { $regex: username, $options: 'i' },
+      _id: { $ne: req.user.id } // Exclude current user
+    })
+    .select('name username email bio socialLinks')
+    .limit(10);
+    
+    res.json(users);
+  } catch (error) {
+    console.error('Error searching users:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Get users for auto-matching (excluding team members)
+router.get('/auto-match/:teamId', authenticate, async (req, res) => {
+  try {
+    const { teamId } = req.params;
+    
+    // Get team members
+    const team = await Team.findById(teamId);
+    if (!team) {
+      return res.status(404).json({ message: 'Team not found' });
+    }
+    
+    // Get users not in the team
+    const users = await User.find({
+      _id: { 
+        $nin: [...team.members, req.user.id] // Exclude team members and current user
+      }
+    })
+    .select('name username email bio socialLinks')
+    .limit(20);
+    
+    res.json(users);
+  } catch (error) {
+    console.error('Error getting auto-match users:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 export default router;
 
 

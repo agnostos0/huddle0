@@ -21,7 +21,7 @@ transporter.verify(function (error, success) {
   }
 });
 
-export const sendInviteEmail = async (invite, teamName, inviterName) => {
+export const sendInviteEmail = async (invite, teamName, inviterName, reason = null) => {
   const inviteUrl = `${config.clientOrigin}/invite/${invite.token}`;
   
   const mailOptions = {
@@ -41,6 +41,13 @@ export const sendInviteEmail = async (invite, teamName, inviterName) => {
           <p style="color: #555; line-height: 1.6; font-size: 16px;">
             <strong>${inviterName}</strong> has invited you to join their team <strong>"${teamName}"</strong> on Eventify.
           </p>
+          
+          ${reason ? `
+          <div style="background: #f0f8ff; border-left: 4px solid #3b82f6; padding: 15px; margin: 20px 0; border-radius: 4px;">
+            <p style="color: #1e40af; font-weight: 600; margin: 0 0 8px 0;">Why they want you to join:</p>
+            <p style="color: #374151; margin: 0; font-style: italic;">"${reason}"</p>
+          </div>
+          ` : ''}
           
           <p style="color: #555; line-height: 1.6; font-size: 16px;">
             Eventify is a platform where teams can create, join, and manage events together. 

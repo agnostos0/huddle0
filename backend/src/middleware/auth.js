@@ -6,7 +6,10 @@ export function authenticate(req, res, next) {
     const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
     if (!token) return res.status(401).json({ message: 'Unauthorized' });
     const decoded = verifyJwt(token);
-    req.user = { id: decoded.id };
+    req.user = { 
+      id: decoded.id,
+      role: decoded.role 
+    };
     next();
   } catch (err) {
     return res.status(401).json({ message: 'Invalid or expired token' });
