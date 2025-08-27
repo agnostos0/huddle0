@@ -17,34 +17,25 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const initializeAuth = async () => {
+    const initializeAuth = () => {
       try {
-        if (token) {
-          // Don't automatically fetch user data - just use stored user
-          const storedUser = localStorage.getItem('user');
-          if (storedUser) {
-            try {
-              const parsedUser = JSON.parse(storedUser);
-              setUser(parsedUser);
-            } catch (e) {
-              console.log('AuthContext: Invalid stored user data, clearing');
-              localStorage.removeItem('user');
-            }
-          }
-        } else {
-          // If no token, try to get user from localStorage as fallback
-          const storedUser = localStorage.getItem('user');
-          if (storedUser) {
-            try {
-              const parsedUser = JSON.parse(storedUser);
-              setUser(parsedUser);
-            } catch (e) {
-              console.log('AuthContext: Invalid stored user data, clearing');
-              localStorage.removeItem('user');
-            }
+        console.log('AuthContext: Initializing...');
+        
+        // Get stored user data
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+          try {
+            const parsedUser = JSON.parse(storedUser);
+            setUser(parsedUser);
+            console.log('AuthContext: User loaded from storage:', parsedUser.name);
+          } catch (e) {
+            console.log('AuthContext: Invalid stored user data, clearing');
+            localStorage.removeItem('user');
           }
         }
+        
         setLoading(false);
+        console.log('AuthContext: Initialization complete');
       } catch (error) {
         console.error('AuthContext: Error during initialization:', error);
         setLoading(false);
@@ -52,7 +43,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     initializeAuth();
-  }, [token]);
+  }, []); // Only run once on mount
 
 
 
