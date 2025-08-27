@@ -30,6 +30,20 @@ router.get('/', authenticate, async (req, res) => {
   res.json(teams);
 });
 
+// Debug route to check all users (for testing)
+router.get('/debug/users', authenticate, async (req, res) => {
+  try {
+    const users = await User.find({}).select('username name email').limit(20);
+    res.json({ 
+      totalUsers: users.length,
+      users: users 
+    });
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    res.status(500).json({ message: 'Failed to fetch users' });
+  }
+});
+
 // Get team details with full member profiles
 router.get('/:id', authenticate, async (req, res) => {
   const team = await Team.findById(req.params.id)
@@ -120,6 +134,9 @@ router.get('/search-users/:username', authenticate, async (req, res) => {
     const { username } = req.params;
     const { teamId } = req.query;
 
+    console.log('Searching for username:', username);
+    console.log('Team ID:', teamId);
+
     if (!username || username.length < 2) {
       return res.json([]);
     }
@@ -133,6 +150,8 @@ router.get('/search-users/:username', authenticate, async (req, res) => {
       }
     }
 
+    console.log('Excluding users:', excludeUsers);
+
     // Search users by username (excluding current user and team members)
     const users = await User.find({
       username: { $regex: username, $options: 'i' },
@@ -142,6 +161,9 @@ router.get('/search-users/:username', authenticate, async (req, res) => {
     })
     .select('name username email bio socialLinks')
     .limit(10);
+
+    console.log('Found users:', users.length);
+    console.log('Users:', users.map(u => ({ username: u.username, name: u.name })));
 
     res.json(users);
   } catch (error) {

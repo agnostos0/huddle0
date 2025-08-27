@@ -18,7 +18,7 @@ import Teams from './pages/Teams.jsx';
 import InviteAccept from './pages/InviteAccept.jsx';
 import EventsMap from './pages/EventsMap.jsx';
 import ExploreEvents from './pages/ExploreEvents.jsx';
-import AdminAccessGuide from './components/AdminAccessGuide.jsx';
+
 import UserProfile from './pages/UserProfile.jsx';
 
 function AppContent() {
@@ -30,7 +30,6 @@ function AppContent() {
 
   return (
     <div className="App">
-      <AdminAccessGuide />
       <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />

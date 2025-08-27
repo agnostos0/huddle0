@@ -184,8 +184,12 @@ export default function Teams() {
       return
     }
     
+    console.log('Frontend searching for username:', username)
+    console.log('Selected team ID:', selectedTeam?._id)
+    
     try {
       const response = await api.get(`/teams/search-users/${username}?teamId=${selectedTeam?._id || ''}`)
+      console.log('Search response:', response.data)
       setSearchResults(response.data)
     } catch (e) {
       console.error('Error searching users:', e)
