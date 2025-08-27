@@ -178,17 +178,17 @@ export default function Teams() {
     }
   }
 
-  async function searchUsersByUsername(username) {
-    if (username.length < 2) {
+  async function searchUsersByUsernameOrEmail(query) {
+    if (query.length < 2) {
       setSearchResults([])
       return
     }
     
-    console.log('Frontend searching for username:', username)
+    console.log('Frontend searching for query:', query)
     console.log('Selected team ID:', selectedTeam?._id)
     
     try {
-      const response = await api.get(`/teams/search-users/${username}?teamId=${selectedTeam?._id || ''}`)
+      const response = await api.get(`/teams/search-users/${query}?teamId=${selectedTeam?._id || ''}`)
       console.log('Search response:', response.data)
       setSearchResults(response.data)
     } catch (e) {
@@ -688,20 +688,20 @@ export default function Teams() {
             {inviteMethod === 'username' && (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Search Username</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Search Username or Email</label>
                   <input
                     type="text"
                     value={inviteUsername}
                     onChange={(e) => {
                       setInviteUsername(e.target.value)
                       if (e.target.value.length >= 2) {
-                        searchUsersByUsername(e.target.value)
+                        searchUsersByUsernameOrEmail(e.target.value)
                       } else {
                         setSearchResults([])
                       }
                     }}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    placeholder="Enter username to search..."
+                    placeholder="Enter username or email to search..."
                   />
                 </div>
                 
@@ -715,8 +715,13 @@ export default function Teams() {
                       >
                         <div className="flex items-center justify-between">
                           <div>
-                            <div className="font-medium text-gray-800">@{user.username}</div>
+                            <div className="font-medium text-gray-800">
+                              {user.username ? `@${user.username}` : user.email}
+                            </div>
                             <div className="text-sm text-gray-600">{user.name}</div>
+                            {user.username && user.email && (
+                              <div className="text-xs text-gray-500">{user.email}</div>
+                            )}
                             {user.bio && (
                               <div className="text-xs text-gray-500 mt-1">{user.bio}</div>
                             )}
@@ -746,7 +751,7 @@ export default function Teams() {
                 
                 {inviteUsername && searchResults.length === 0 && inviteUsername.length >= 2 && (
                   <div className="text-center py-4 text-gray-500">
-                    No users found with that username
+                    No users found with that username or email
                   </div>
                 )}
 

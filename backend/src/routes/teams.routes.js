@@ -128,16 +128,16 @@ router.delete('/:id', authenticate, async (req, res) => {
   }
 });
 
-// Search users by username for team invitation
-router.get('/search-users/:username', authenticate, async (req, res) => {
+// Search users by username or email for team invitation
+router.get('/search-users/:query', authenticate, async (req, res) => {
   try {
-    const { username } = req.params;
+    const { query } = req.params;
     const { teamId } = req.query;
 
-    console.log('Searching for username:', username);
+    console.log('Searching for query:', query);
     console.log('Team ID:', teamId);
 
-    if (!username || username.length < 2) {
+    if (!query || query.length < 2) {
       return res.json([]);
     }
 
@@ -152,9 +152,12 @@ router.get('/search-users/:username', authenticate, async (req, res) => {
 
     console.log('Excluding users:', excludeUsers);
 
-    // Search users by username (excluding current user and team members)
+    // Search users by username OR email (excluding current user and team members)
     const users = await User.find({
-      username: { $regex: username, $options: 'i' },
+      $or: [
+        { username: { $regex: query, $options: 'i' } },
+        { email: { $regex: query, $options: 'i' } }
+      ],
       _id: { 
         $nin: [req.user.id, ...excludeUsers]
       }
@@ -163,7 +166,7 @@ router.get('/search-users/:username', authenticate, async (req, res) => {
     .limit(10);
 
     console.log('Found users:', users.length);
-    console.log('Users:', users.map(u => ({ username: u.username, name: u.name })));
+    console.log('Users:', users.map(u => ({ username: u.username, email: u.email, name: u.name })));
 
     res.json(users);
   } catch (error) {
