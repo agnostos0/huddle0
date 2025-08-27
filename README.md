@@ -151,10 +151,11 @@ npm run dev
 - **Real-time Location**: Browser geolocation integration
 
 ### **📧 Email System**
-- **Team Invitations**: Beautiful email templates
-- **Invitation Management**: Accept, decline, resend invitations
-- **Email Validation**: Secure invitation token system
-- **SMTP Integration**: Gmail SMTP support
+- **Team Invitations**: Beautiful email templates with custom invitation reasons
+- **Invitation Management**: Accept, decline, resend, and delete invitations
+- **Email Validation**: Secure invitation token system with expiration
+- **SMTP Integration**: Gmail SMTP support with error handling
+- **Invitation Tracking**: View invitation status and expiration times
 
 ## 🛠️ **Technical Architecture**
 
@@ -230,6 +231,32 @@ npm run dev
 
 ## 🎯 **Key Features in Detail**
 
+### **🆕 Latest Features (v2.0)**
+
+#### **Auto Team Matching System**
+- **Smart Matching**: Find potential teammates based on availability and interests
+- **Community Discovery**: Browse users who are not already in your team
+- **One-Click Invitation**: Send invitations directly from the auto-match interface
+- **User Profiles**: View user bios and social links before inviting
+
+#### **Username-Based Invitations**
+- **Real-time Search**: Search users by username with instant results
+- **User Verification**: Ensure you're inviting the right person
+- **Custom Invitation Reasons**: Add personal messages explaining why you want them to join
+- **Email Integration**: Automatic email notifications with custom reasons
+
+#### **Enhanced Invitation Management**
+- **Expiration Tracking**: View when invitations expire with countdown timers
+- **Bulk Actions**: Resend or delete multiple invitations
+- **Status Indicators**: Visual indicators for pending, expired, and accepted invitations
+- **Invitation History**: Track all invitation activities
+
+#### **Improved User Experience**
+- **Confetti Animations**: Celebrate successful team actions
+- **Responsive Design**: Fully responsive interface for all devices
+- **Loading States**: Smooth loading indicators for better UX
+- **Error Handling**: Comprehensive error messages and recovery options
+
 ### **1. Event Creation & Management**
 - **Rich Event Details**: Title, description, date, location, category
 - **Multiple Photos**: Upload and manage event images
@@ -242,7 +269,10 @@ npm run dev
 ### **2. Team Collaboration**
 - **Team Creation**: Create teams with descriptions and privacy settings
 - **Member Management**: Invite, accept, and manage team members
-- **Email Invitations**: Send beautiful invitation emails
+- **Email Invitations**: Send beautiful invitation emails with custom reasons
+- **Username-based Invitations**: Invite users by username with search functionality
+- **Auto Team Matching**: Find potential teammates from the community
+- **Invitation Management**: View expiration times, resend, and delete invitations
 - **Team Analytics**: Track team performance and participation
 - **Role-based Permissions**: Different access levels for team members
 
@@ -292,6 +322,12 @@ npm run dev
 - `GET /api/teams/:id` - Get team details
 - `PUT /api/teams/:id` - Update team
 - `DELETE /api/teams/:id` - Delete team
+- `POST /api/teams/:id/invite-by-username` - Invite user by username
+- `DELETE /api/teams/:id/members/:userId` - Remove team member
+
+### **Users**
+- `GET /api/users/search/username/:username` - Search users by username
+- `GET /api/users/auto-match/:teamId` - Get users for auto-matching
 
 ### **Invitations**
 - `POST /api/invites` - Send team invitation
