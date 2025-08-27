@@ -37,7 +37,7 @@ export default function Login() {
         } else if (result.user.role === 'organizer') {
           navigate('/organizer-dashboard')
         } else {
-          navigate('/attendee-dashboard')
+          navigate('/dashboard')
         }
       } else {
         console.log('Login failed:', result.message)

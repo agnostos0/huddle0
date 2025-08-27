@@ -124,7 +124,7 @@ export default function OrganizerDashboard() {
                 + Create New Event
               </Link>
               <button
-                onClick={() => navigate('/attendee-dashboard')}
+                onClick={() => navigate('/dashboard')}
                 className="px-6 py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 transform hover:scale-105 transition-all duration-300"
               >
                 Switch to Attendee Mode

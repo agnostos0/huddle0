@@ -181,7 +181,7 @@ export const AuthProvider = ({ children }) => {
       case 'organizer':
         return '/organizer-dashboard';
       default:
-        return '/attendee-dashboard';
+        return '/dashboard';
     }
   };
 

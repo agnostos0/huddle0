@@ -8,7 +8,6 @@ import Landing from './pages/Landing.jsx';
 import Login from './pages/Login.jsx';
 import Register from './pages/Register.jsx';
 import Dashboard from './pages/Dashboard.jsx';
-import AttendeeDashboard from './pages/AttendeeDashboard.jsx';
 import OrganizerDashboard from './pages/OrganizerDashboard.jsx';
 import AdminDashboard from './pages/AdminDashboard.jsx';
 import CreateEvent from './pages/CreateEvent.jsx';
@@ -40,12 +39,6 @@ function AppContent() {
           <Route path="/dashboard" element={
             <ProtectedRoute>
               <Dashboard />
-            </ProtectedRoute>
-          } />
-          
-          <Route path="/attendee-dashboard" element={
-            <ProtectedRoute>
-              <AttendeeDashboard />
             </ProtectedRoute>
           } />
           
