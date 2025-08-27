@@ -139,26 +139,83 @@ router.delete('/:id', authenticate, async (req, res) => {
 
 // Join event
 router.post('/:id/join', authenticate, async (req, res) => {
-  const event = await Event.findById(req.params.id);
-  if (!event) return res.status(404).json({ message: 'Not found' });
-  if (event.organizer.toString() === req.user.id) return res.status(400).json({ message: 'Organizer cannot join' });
-  const { teamId } = req.body || {};
-  if (teamId) {
-    const team = await Team.findById(teamId);
-    if (!team) return res.status(404).json({ message: 'Team not found' });
-    // Add all team members who are not already participants
-    const current = new Set(event.participants.map((p) => p.toString()));
-    for (const memberId of team.members.map((m) => m.toString())) {
-      if (!current.has(memberId)) event.participants.push(memberId);
-    }
-    await event.save();
-  } else {
-    if (!event.participants.some((p) => p.toString() === req.user.id)) {
-      event.participants.push(req.user.id);
+  try {
+    const event = await Event.findById(req.params.id);
+    if (!event) return res.status(404).json({ message: 'Not found' });
+    if (event.organizer.toString() === req.user.id) return res.status(400).json({ message: 'Organizer cannot join' });
+    
+    const { teamId, autoMatch } = req.body || {};
+    
+    if (teamId) {
+      // Join with specific team
+      const team = await Team.findById(teamId);
+      if (!team) return res.status(404).json({ message: 'Team not found' });
+      
+      // Check if user is a member of the team
+      if (!team.members.some(m => m.toString() === req.user.id)) {
+        return res.status(403).json({ message: 'You can only join with teams you are a member of' });
+      }
+      
+      // Add all team members who are not already participants
+      const current = new Set(event.participants.map((p) => p.toString()));
+      for (const memberId of team.members.map((m) => m.toString())) {
+        if (!current.has(memberId)) event.participants.push(memberId);
+      }
       await event.save();
+      
+    } else if (autoMatch) {
+      // Auto-match logic: find other solo participants and create/join a team
+      
+      // Find existing auto-match team for this event
+      let autoMatchTeam = null;
+      if (event.teams && event.teams.length > 0) {
+        // Get all teams for this event
+        const eventTeams = await Team.find({ _id: { $in: event.teams } });
+        autoMatchTeam = eventTeams.find(team => 
+          team.name.includes('Auto-Match') && team.members.length < 4
+        );
+      }
+      
+      if (!autoMatchTeam) {
+        // Create new auto-match team
+        autoMatchTeam = await Team.create({
+          name: `Auto-Match Team - ${event.title}`,
+          description: 'Automatically created team for solo participants',
+          owner: req.user.id,
+          members: [req.user.id],
+          isAutoMatch: true
+        });
+        
+        if (!event.teams) event.teams = [];
+        event.teams.push(autoMatchTeam._id);
+      } else {
+        // Add user to existing auto-match team
+        if (!autoMatchTeam.members.some(m => m.toString() === req.user.id)) {
+          autoMatchTeam.members.push(req.user.id);
+          await autoMatchTeam.save();
+        }
+      }
+      
+      // Add user to event participants
+      if (!event.participants.some((p) => p.toString() === req.user.id)) {
+        event.participants.push(req.user.id);
+      }
+      
+      await event.save();
+      
+    } else {
+      // Join as individual
+      if (!event.participants.some((p) => p.toString() === req.user.id)) {
+        event.participants.push(req.user.id);
+        await event.save();
+      }
     }
+    
+    res.json(event);
+  } catch (error) {
+    console.error('Join event error:', error);
+    res.status(500).json({ message: 'Failed to join event' });
   }
-  res.json(event);
 });
 
 // Leave event

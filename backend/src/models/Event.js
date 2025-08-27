@@ -11,6 +11,7 @@ const eventSchema = new mongoose.Schema({
   },
   organizer: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   participants: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+  teams: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Team' }],
   maxParticipants: { type: Number, default: 0 },
   category: { type: String, default: 'General' },
   tags: [{ type: String, trim: true }],
