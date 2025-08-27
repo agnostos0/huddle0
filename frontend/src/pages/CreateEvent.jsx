@@ -79,6 +79,7 @@ export default function CreateEvent() {
     setIsSubmitting(true)
 
     try {
+      console.log('CreateEvent: Starting event creation...')
       const payload = { 
         ...form, 
         date: new Date(form.date).toISOString(),
@@ -87,7 +88,9 @@ export default function CreateEvent() {
         coverPhoto: form.coverPhoto
       }
       
+      console.log('CreateEvent: Sending payload:', payload)
       const { data } = await api.post('/events', payload)
+      console.log('CreateEvent: Event created successfully:', data)
       
       // Trigger confetti celebration
       confetti({

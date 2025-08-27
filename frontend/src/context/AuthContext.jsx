@@ -78,8 +78,8 @@ export const AuthProvider = ({ children }) => {
         console.log('AuthContext: Network error after retries, clearing token and redirecting to login');
         logout();
       } else {
-        console.log('AuthContext: Other error, clearing token for safety');
-        logout();
+        console.log('AuthContext: Other error, but not logging out automatically');
+        // Don't automatically logout for other errors
       }
     } finally {
       if (retryCount === 0) {
