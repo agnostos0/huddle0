@@ -26,9 +26,9 @@ Add these variables in Railway dashboard:
 - [ ] `CLIENT_ORIGIN` = `https://your-frontend.vercel.app` (update after frontend deployment)
 - [ ] `SMTP_HOST` = `smtp.gmail.com`
 - [ ] `SMTP_PORT` = `587`
-- [ ] `SMTP_USER` = `princetagadiya11@gmail.com`
-- [ ] `SMTP_PASS` = `your_gmail_app_password`
-- [ ] `EMAIL_FROM` = `Eventify <princetagadiya11@gmail.com>`
+- [ ] `SMTP_USER` = `princetagadiya99@gmail.com`
+- [ ] `SMTP_PASS` = `udnr jcxw jfdo mgro`
+- [ ] `EMAIL_FROM` = `Eventify <princetagadiya99@gmail.com>`
 
 ### Step 3: Get Backend URL
 - [ ] Copy the Railway deployment URL (e.g., `https://your-app.railway.app`)

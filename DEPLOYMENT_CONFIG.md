@@ -13,9 +13,9 @@ JWT_SECRET=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFt
 CLIENT_ORIGIN=https://your-frontend.vercel.app
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
-SMTP_USER=princetagadiya11@gmail.com
-SMTP_PASS=YOUR_GMAIL_APP_PASSWORD_HERE
-EMAIL_FROM=Eventify <princetagadiya11@gmail.com>
+SMTP_USER=princetagadiya99@gmail.com
+SMTP_PASS=udnr jcxw jfdo mgro
+EMAIL_FROM=Eventify <princetagadiya99@gmail.com>
 ```
 
 ### Frontend Environment Variables (Vercel)

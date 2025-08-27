@@ -32,9 +32,9 @@ JWT_SECRET=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFt
 CLIENT_ORIGIN=https://your-frontend-domain.vercel.app
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
-SMTP_USER=princetagadiya11@gmail.com
-SMTP_PASS=your_app_password
-EMAIL_FROM=Eventify <princetagadiya11@gmail.com>
+SMTP_USER=princetagadiya99@gmail.com
+SMTP_PASS=udnr jcxw jfdo mgro
+EMAIL_FROM=Eventify <princetagadiya99@gmail.com>
 ```
 
 ### 1.3 Gmail SMTP Setup
