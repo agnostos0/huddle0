@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate, Link, useLocation } from 'react-router-dom'
 import api from '../lib/api.js'
 import { useAuth } from '../context/AuthContext.jsx'
+import { testApiConnection } from '../utils/testApi.js'
 
 export default function Login() {
   const { login } = useAuth()
@@ -11,6 +12,7 @@ export default function Login() {
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [debugInfo, setDebugInfo] = useState(null)
   const [passwordCriteria, setPasswordCriteria] = useState({
     minLength: false,
     hasUppercase: false,
@@ -19,6 +21,12 @@ export default function Login() {
     hasSpecial: false
   })
   const [showPasswordChecklist, setShowPasswordChecklist] = useState(false)
+
+  const testConnection = async () => {
+    setDebugInfo('Testing connection...')
+    const result = await testApiConnection()
+    setDebugInfo(JSON.stringify(result, null, 2))
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -59,7 +67,17 @@ export default function Login() {
       }
     } catch (err) {
       console.error('Login error:', err)
-      setError(err.response?.data?.message || 'Login failed')
+      
+      // Handle different types of errors
+      if (err.isNetworkError) {
+        setError('Network error. Please check your internet connection and try again.')
+      } else if (err.isCorsError) {
+        setError('Connection error. Please check if the server is accessible.')
+      } else if (err.response?.data?.message) {
+        setError(err.response.data.message)
+      } else {
+        setError(err.message || 'Login failed. Please try again.')
+      }
     } finally {
       setIsLoading(false)
     }
@@ -210,6 +228,28 @@ export default function Login() {
               </Link>
             </p>
           </div>
+
+          {/* Debug Section - Only show in development */}
+          {import.meta.env.DEV && (
+            <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+              <h3 className="text-sm font-semibold text-gray-700 mb-2">Debug Info</h3>
+              <div className="text-xs text-gray-600 mb-2">
+                API URL: {import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api'}
+              </div>
+              <button
+                type="button"
+                onClick={testConnection}
+                className="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600"
+              >
+                Test Connection
+              </button>
+              {debugInfo && (
+                <pre className="mt-2 text-xs bg-white p-2 rounded border overflow-auto max-h-32">
+                  {debugInfo}
+                </pre>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Trust Indicators */}

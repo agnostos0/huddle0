@@ -15,13 +15,16 @@ import paymentRoutes from './routes/payments.routes.js';
 
 const app = express();
 
-// Allow multiple origins for development
+// Allow multiple origins for development and production
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:5174', 
   'http://localhost:5175',
   'http://localhost:5176',
   'http://localhost:5177',
+  'https://eventify-frontend.vercel.app',
+  'https://eventify-frontend-git-main.vercel.app',
+  'https://eventify-frontend-git-develop.vercel.app',
   env.clientOrigin
 ].filter(Boolean);
 
@@ -29,13 +32,19 @@ app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
+    
+    // Check if origin is in allowed list
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
+      console.log('CORS: Blocked origin:', origin);
+      console.log('CORS: Allowed origins:', allowedOrigins);
       callback(new Error('Not allowed by CORS'));
     }
   },
-  credentials: true 
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 
 app.use(helmet());

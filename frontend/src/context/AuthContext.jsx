@@ -68,9 +68,34 @@ export const AuthProvider = ({ children }) => {
       return { success: true, user: userData };
     } catch (error) {
       console.error('AuthContext: Login error:', error);
+      
+      // Handle specific error types
+      if (error.isNetworkError) {
+        return { 
+          success: false, 
+          message: 'Network error. Please check your internet connection and try again.' 
+        };
+      }
+      
+      if (error.isCorsError) {
+        return { 
+          success: false, 
+          message: 'Connection error. Please check if the server is accessible.' 
+        };
+      }
+      
+      // Handle API errors
+      if (error.response?.data?.message) {
+        return { 
+          success: false, 
+          message: error.response.data.message 
+        };
+      }
+      
+      // Handle generic errors
       return { 
         success: false, 
-        message: error.response?.data?.message || 'Login failed' 
+        message: error.message || 'Login failed. Please try again.' 
       };
     }
   };
