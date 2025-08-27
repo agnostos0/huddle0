@@ -32,7 +32,7 @@ router.post('/register', async (req, res) => {
       email,
       username,
       password,
-      contactNumber: contactNumber || '0000000000', // Default if not provided
+      contactNumber: contactNumber || undefined, // Let the model handle the default
       role
     });
 

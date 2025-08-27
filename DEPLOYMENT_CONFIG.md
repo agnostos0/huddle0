@@ -10,7 +10,7 @@ Copy and paste these exact values into Railway:
 PORT=4000
 MONGODB_URI=mongodb+srv://princetagadiya11:LlFxXfXU82tFFJN4@cluster0.ybpu75u.mongodb.net/eventify?retryWrites=true&w=majority
 JWT_SECRET=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiYWRtaW4iOnRydWUsImlhdCI6MTUxNjIzOTAyMn0.KMUFsIDTnFmyG3nMiGM6H9FNFUROf3wh7SmqJp-QV30
-CLIENT_ORIGIN=https://your-frontend.vercel.app
+CLIENT_ORIGIN=https://eventify-steel.vercel.app/
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=princetagadiya99@gmail.com
@@ -36,11 +36,11 @@ You need to generate an app password for your Gmail account:
 3. Enable 2-Step Verification if not already enabled
 4. Go to "App passwords"
 5. Generate a new app password for "Mail"
-6. Replace `YOUR_GMAIL_APP_PASSWORD_HERE` with the generated password
+6. Replace `udnr jcxw jfdo mgro` with the generated password
 
 ### 2. Frontend URL (After Vercel Deployment)
 After you deploy to Vercel, you'll get a URL like:
-`https://eventify-frontend.vercel.app`
+`https://eventify-steel.vercel.app/`
 
 Then update:
 - `CLIENT_ORIGIN` in Railway with your Vercel URL
@@ -48,10 +48,10 @@ Then update:
 
 ### 3. Backend URL (After Railway Deployment)
 After you deploy to Railway, you'll get a URL like:
-`https://eventify-backend.railway.app`
+`eventify-production-ea1c.up.railway.app`
 
 Then update:
-- `VITE_API_BASE_URL` in Vercel with: `https://eventify-backend.railway.app/api`
+- `VITE_API_BASE_URL` in Vercel with: `eventify-production-ea1c.up.railway.app/api`
 
 ## 🎯 Quick Deployment Steps
 
