@@ -40,12 +40,6 @@ export default function Navbar() {
             >
               Explore Events
             </Link>
-            <Link 
-              to="/events/map" 
-              className="text-gray-700 hover:text-purple-600 transition-colors duration-300"
-            >
-              Event Map
-            </Link>
             {user && (
               <Link 
                 to="/teams" 
@@ -171,12 +165,6 @@ export default function Navbar() {
             className="block text-gray-700 hover:text-purple-600 transition-colors duration-300"
           >
             Explore Events
-          </Link>
-          <Link 
-            to="/events/map" 
-            className="block text-gray-700 hover:text-purple-600 transition-colors duration-300"
-          >
-            Event Map
           </Link>
           {user && (
             <>
