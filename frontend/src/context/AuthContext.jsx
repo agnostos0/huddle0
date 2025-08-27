@@ -150,7 +150,6 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
-    refreshAuth,
     updateUser,
     hasPermission,
     isOrganizer,
