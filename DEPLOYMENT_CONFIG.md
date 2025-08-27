@@ -23,7 +23,7 @@ EMAIL_FROM="Eventify <princetagadiya99@gmail.com>"
 Copy and paste this into Vercel:
 
 ```
-VITE_API_BASE_URL=https://your-backend.railway.app/api
+VITE_API_BASE_URL=https://eventify-production-ea1c.up.railway.app/api
 ```
 
 ## 🔧 What You Still Need to Provide
