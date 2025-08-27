@@ -4,11 +4,25 @@ import { Event } from '../models/Event.js';
 import { Team } from '../models/Team.js';
 import { Invite } from '../models/Invite.js';
 import { signJwt } from '../utils/jwt.js';
+import { authenticate } from '../middleware/auth.js';
 
 const router = Router();
 
+// Helper function to check if user is admin
+const requireAdmin = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user || user.role !== 'admin') {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
+    next();
+  } catch (error) {
+    res.status(500).json({ message: 'Failed to verify admin status' });
+  }
+};
+
 // Get all users
-router.get('/users', async (req, res) => {
+router.get('/users', authenticate, requireAdmin, async (req, res) => {
   try {
     const users = await User.find({})
       .select('-password')
@@ -204,6 +218,36 @@ router.post('/users/:userId/:action', async (req, res) => {
     res.json({ message: `User ${action}d successfully`, user });
   } catch (error) {
     res.status(500).json({ message: `Failed to ${req.params.action} user` });
+  }
+});
+
+// Update user role
+router.put('/users/:userId/role', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { role } = req.body;
+    
+    if (!['user', 'organizer', 'admin'].includes(role)) {
+      return res.status(400).json({ message: 'Invalid role. Must be user, organizer, or admin' });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { role },
+      { new: true }
+    ).select('-password');
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.json({ 
+      message: `User role updated to ${role} successfully`, 
+      user 
+    });
+  } catch (error) {
+    console.error('Update user role error:', error);
+    res.status(500).json({ message: 'Failed to update user role' });
   }
 });
 

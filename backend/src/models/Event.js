@@ -5,6 +5,7 @@ const eventSchema = new mongoose.Schema({
   description: { type: String, required: true },
   date: { type: Date, required: true },
   location: { type: String, required: true },
+  googleLocationLink: { type: String },
   coordinates: {
     lat: { type: Number },
     lng: { type: Number }
@@ -13,6 +14,11 @@ const eventSchema = new mongoose.Schema({
   participants: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   teams: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Team' }],
   maxParticipants: { type: Number, default: 0 },
+  teamRequirements: {
+    teamSize: { type: Number, default: 0 },
+    girlsRequired: { type: Number, default: 0 },
+    boysRequired: { type: Number, default: 0 }
+  },
   category: { type: String, default: 'General' },
   tags: [{ type: String, trim: true }],
   photos: [{ type: String }], // Array of photo URLs
@@ -26,6 +32,13 @@ const eventSchema = new mongoose.Schema({
   isPublic: { type: Boolean, default: true },
   price: { type: Number, default: 0 },
   currency: { type: String, default: 'USD' },
+  pricing: {
+    individual: { type: Number, default: 0 },
+    teamLeader: { type: Number, default: 0 },
+    teamMember: { type: Number, default: 0 },
+    malePrice: { type: Number, default: 0 },
+    femalePrice: { type: Number, default: 0 }
+  },
   eventType: { type: String, enum: ['in-person', 'virtual', 'hybrid'], default: 'in-person' },
   virtualMeetingLink: { type: String },
   contactEmail: { type: String },

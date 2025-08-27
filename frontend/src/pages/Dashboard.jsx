@@ -201,7 +201,7 @@ export default function Dashboard() {
             </div>
             <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
               <Link
-                to="/create"
+                to="/create-event"
                 className="px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-300 text-sm sm:text-base text-center"
               >
                 + Create Event
@@ -348,7 +348,7 @@ export default function Dashboard() {
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-2xl font-bold text-gray-800">My Events</h2>
               <Link
-                to="/create"
+                to="/create-event"
                 className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-300"
               >
                 + New Event
@@ -386,7 +386,7 @@ export default function Dashboard() {
                   <div className="text-4xl mb-4">🎉</div>
                   <p className="text-gray-600 mb-4">You haven't created any events yet</p>
                   <Link
-                    to="/create"
+                    to="/create-event"
                     className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-300"
                   >
                     Create Your First Event

@@ -17,6 +17,7 @@ import Teams from './pages/Teams.jsx';
 import InviteAccept from './pages/InviteAccept.jsx';
 import EventsMap from './pages/EventsMap.jsx';
 import ExploreEvents from './pages/ExploreEvents.jsx';
+import EventOrganizerDashboard from './pages/EventOrganizerDashboard.jsx';
 
 import UserProfile from './pages/UserProfile.jsx';
 
@@ -61,6 +62,11 @@ function AppContent() {
           } />
           
           <Route path="/event/:id" element={<EventDetails />} />
+          <Route path="/event/:eventId/organizer" element={
+            <ProtectedRoute>
+              <EventOrganizerDashboard />
+            </ProtectedRoute>
+          } />
           <Route path="/event/:id/edit" element={
             <ProtectedRoute requiredRole="organizer">
               <CreateEvent />

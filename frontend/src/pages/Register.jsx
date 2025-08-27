@@ -13,6 +13,7 @@ export default function Register() {
     username: '',
     password: '',
     confirmPassword: '',
+    gender: 'male',
     role: 'user'
   });
   const [error, setError] = useState('');
@@ -101,6 +102,7 @@ export default function Register() {
         email: formData.email,
         username: formData.username,
         password: formData.password,
+        gender: formData.gender,
         role: formData.role
       });
 
@@ -230,6 +232,22 @@ export default function Register() {
                 placeholder="Enter your email"
                 required
               />
+            </div>
+
+            {/* Gender */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Gender *</label>
+              <select
+                name="gender"
+                value={formData.gender}
+                onChange={handleInputChange}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300"
+                required
+              >
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="other">Other</option>
+              </select>
             </div>
 
             {/* Username */}

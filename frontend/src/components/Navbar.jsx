@@ -55,14 +55,12 @@ export default function Navbar() {
             {user ? (
               <>
                 {/* Quick Actions */}
-                {isOrganizer() && (
-                  <Link
-                    to="/create-event"
-                    className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-300 text-sm"
-                  >
-                    + Create Event
-                  </Link>
-                )}
+                <Link
+                  to="/create-event"
+                  className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-300 text-sm"
+                >
+                  + Create Event
+                </Link>
 
                 {/* Dashboard Button */}
                 <button
@@ -174,14 +172,12 @@ export default function Navbar() {
               >
                 Teams
               </Link>
-              {isOrganizer() && (
-                <Link
-                  to="/create-event"
-                  className="block px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg text-center"
-                >
-                  + Create Event
-                </Link>
-              )}
+              <Link
+                to="/create-event"
+                className="block px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg text-center"
+              >
+                + Create Event
+              </Link>
             </>
           )}
         </div>
