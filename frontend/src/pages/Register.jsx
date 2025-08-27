@@ -130,7 +130,7 @@ export default function Register() {
     
     setIsCheckingUsername(true);
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://eventify-production-ea1c.up.railway.app/api'}/auth/check-username/${username}`);
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api'}/auth/check-username/${username}`);
       const data = await response.json();
       
       setUsernameCriteria(prev => ({
