@@ -1,15 +1,23 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import api from '../lib/api.js'
 import { useAuth } from '../context/AuthContext.jsx'
 
 export default function Login() {
-  const { setToken, setUser } = useAuth()
+  const { login } = useAuth()
   const navigate = useNavigate()
   const [form, setForm] = useState({ emailOrUsername: '', password: '' })
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [passwordCriteria, setPasswordCriteria] = useState({
+    minLength: false,
+    hasUppercase: false,
+    hasLowercase: false,
+    hasNumber: false,
+    hasSpecial: false
+  })
+  const [showPasswordChecklist, setShowPasswordChecklist] = useState(false)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -17,10 +25,19 @@ export default function Login() {
     setIsLoading(true)
 
     try {
-      const response = await api.post('/auth/login', form)
-      setToken(response.data.token)
-      setUser(response.data.user)
-      navigate('/dashboard')
+      const result = await login(form.emailOrUsername, form.password)
+      if (result.success) {
+        // Navigate based on user role
+        if (result.user.role === 'admin') {
+          navigate('/admin-dashboard')
+        } else if (result.user.role === 'organizer') {
+          navigate('/organizer-dashboard')
+        } else {
+          navigate('/dashboard')
+        }
+      } else {
+        setError(result.message || 'Login failed')
+      }
     } catch (err) {
       setError(err.response?.data?.message || 'Login failed')
     } finally {

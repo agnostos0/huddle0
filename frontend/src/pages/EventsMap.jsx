@@ -83,7 +83,7 @@ export default function EventsMap() {
             </Link>
             <div className="flex space-x-4">
               <Link 
-                to="/events" 
+                to="/explore" 
                 className="px-4 py-2 text-gray-700 hover:text-purple-600 transition-colors duration-300"
               >
                 List View

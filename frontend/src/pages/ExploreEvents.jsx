@@ -40,6 +40,8 @@ export default function ExploreEvents() {
   const [radius, setRadius] = useState(10); // km
   const [showNearbyOnly, setShowNearbyOnly] = useState(false);
   const [mapView, setMapView] = useState(true);
+  const [selectedCity, setSelectedCity] = useState('');
+  const [cityCoordinates, setCityCoordinates] = useState(null);
 
   useEffect(() => {
     fetchEvents();
@@ -103,18 +105,49 @@ export default function ExploreEvents() {
     const matchesCategory = filterCategory === 'all' || event.category === filterCategory;
     
     let matchesLocation = true;
-    if (showNearbyOnly && userLocation) {
-      const distance = calculateDistance(
-        userLocation.lat, userLocation.lng,
-        event.coordinates.lat, event.coordinates.lng
-      );
-      matchesLocation = distance <= radius;
+    if (showNearbyOnly) {
+      let referenceLocation = userLocation;
+      if (selectedCity && cityCoordinates) {
+        referenceLocation = cityCoordinates;
+      }
+      
+      if (referenceLocation) {
+        const distance = calculateDistance(
+          referenceLocation.lat, referenceLocation.lng,
+          event.coordinates.lat, event.coordinates.lng
+        );
+        matchesLocation = distance <= radius;
+      }
     }
     
     return matchesSearch && matchesCategory && matchesLocation;
   });
 
   const categories = ['all', 'technology', 'business', 'social', 'education', 'entertainment', 'sports'];
+  
+  // Popular cities with coordinates
+  const popularCities = [
+    { name: 'New York', lat: 40.7128, lng: -74.0060 },
+    { name: 'London', lat: 51.5074, lng: -0.1278 },
+    { name: 'Tokyo', lat: 35.6762, lng: 139.6503 },
+    { name: 'Paris', lat: 48.8566, lng: 2.3522 },
+    { name: 'Mumbai', lat: 19.0760, lng: 72.8777 },
+    { name: 'Delhi', lat: 28.7041, lng: 77.1025 },
+    { name: 'Bangalore', lat: 12.9716, lng: 77.5946 },
+    { name: 'Chennai', lat: 13.0827, lng: 80.2707 },
+    { name: 'Kolkata', lat: 22.5726, lng: 88.3639 },
+    { name: 'Hyderabad', lat: 17.3850, lng: 78.4867 },
+    { name: 'Pune', lat: 18.5204, lng: 73.8567 },
+    { name: 'Ahmedabad', lat: 23.0225, lng: 72.5714 },
+    { name: 'Jaipur', lat: 26.9124, lng: 75.7873 },
+    { name: 'Lucknow', lat: 26.8467, lng: 80.9462 },
+    { name: 'Kanpur', lat: 26.4499, lng: 80.3319 },
+    { name: 'Nagpur', lat: 21.1458, lng: 79.0882 },
+    { name: 'Indore', lat: 22.7196, lng: 75.8577 },
+    { name: 'Thane', lat: 19.2183, lng: 72.9781 },
+    { name: 'Bhopal', lat: 23.2599, lng: 77.4126 },
+    { name: 'Visakhapatnam', lat: 17.6868, lng: 83.2185 }
+  ];
 
   if (loading) {
     return (
@@ -181,6 +214,31 @@ export default function ExploreEvents() {
                 </select>
               </div>
 
+              <div className="md:w-48">
+                <select
+                  value={selectedCity}
+                  onChange={(e) => {
+                    const city = e.target.value;
+                    setSelectedCity(city);
+                    if (city) {
+                      const cityData = popularCities.find(c => c.name === city);
+                      setCityCoordinates(cityData);
+                      setShowNearbyOnly(true);
+                    } else {
+                      setCityCoordinates(null);
+                    }
+                  }}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                >
+                  <option value="">Select City</option>
+                  {popularCities.map(city => (
+                    <option key={city.name} value={city.name}>
+                      {city.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               <button
                 onClick={detectUserLocation}
                 disabled={isDetectingLocation}
@@ -207,7 +265,7 @@ export default function ExploreEvents() {
             </div>
 
             {/* Nearby Events Filter */}
-            {userLocation && (
+            {(userLocation || selectedCity) && (
               <div className="mt-4 pt-4 border-t border-gray-200">
                 <div className="flex flex-col md:flex-row gap-4 items-center">
                   <label className="flex items-center">
@@ -217,7 +275,10 @@ export default function ExploreEvents() {
                       onChange={(e) => setShowNearbyOnly(e.target.checked)}
                       className="mr-2 rounded text-purple-600 focus:ring-purple-500"
                     />
-                    <span className="text-sm text-gray-700">Show only nearby events</span>
+                    <span className="text-sm text-gray-700">
+                      Show only nearby events
+                      {selectedCity && ` (${selectedCity})`}
+                    </span>
                   </label>
                   
                   {showNearbyOnly && (

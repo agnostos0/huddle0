@@ -142,7 +142,7 @@ export default function Landing() {
   }, [])
 
   const handleExploreEvents = () => {
-    navigate('/events')
+    navigate('/explore')
   }
 
   return (
@@ -368,7 +368,7 @@ export default function Landing() {
                 Get Started Free
               </Link>
               <Link
-                to="/events"
+                to="/explore"
                 className="px-8 py-4 border-2 border-white text-white text-lg font-semibold rounded-xl hover:bg-white hover:text-purple-600 transform hover:scale-105 transition-all duration-300"
               >
                 Explore Events

@@ -91,6 +91,49 @@ router.get('/analytics', async (req, res) => {
   }
 });
 
+// Create admin account
+router.post('/create-admin', async (req, res) => {
+  try {
+    const { name, email, username, password } = req.body;
+
+    // Check if user already exists
+    const existingUser = await User.findOne({
+      $or: [{ email }, { username }]
+    });
+
+    if (existingUser) {
+      return res.status(400).json({
+        message: existingUser.email === email ? 'Email already registered' : 'Username already taken'
+      });
+    }
+
+    // Create admin user
+    const adminUser = new User({
+      name,
+      email,
+      username,
+      password,
+      role: 'admin'
+    });
+
+    await adminUser.save();
+
+    res.status(201).json({
+      message: 'Admin account created successfully',
+      user: {
+        id: adminUser._id,
+        name: adminUser.name,
+        email: adminUser.email,
+        username: adminUser.username,
+        role: adminUser.role
+      }
+    });
+  } catch (error) {
+    console.error('Create admin error:', error);
+    res.status(500).json({ message: 'Failed to create admin account' });
+  }
+});
+
 // Activate/Deactivate user
 router.post('/users/:userId/:action', async (req, res) => {
   try {

@@ -1,267 +1,379 @@
-# Eventify - Team Event Management Platform
+# 🎉 Eventify - Comprehensive Event Management Platform
 
-A full-stack MERN (MongoDB, Express.js, React, Node.js) web application for creating, managing, and participating in events as teams.
+A full-stack MERN application for creating, managing, and participating in events with advanced team collaboration features, role-based access control, and interactive maps.
 
-## 🚀 Features
+![Eventify Platform](https://img.shields.io/badge/Eventify-Platform-blue?style=for-the-badge&logo=react)
+![MERN Stack](https://img.shields.io/badge/MERN-Stack-green?style=for-the-badge)
+![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue?style=for-the-badge&logo=typescript)
 
-### Core Features
-- **User Authentication**: Sign up, login, and logout with JWT
-- **Event Management**: Create, edit, delete, and join events
-- **Team Collaboration**: Create teams and invite members via email
-- **Dashboard**: View your events, joined events, and all available events
-- **Real-time Updates**: Live updates for event participants and team members
+## 🌟 Features Overview
 
-### Team Features
-- **Team Creation**: Create teams with custom names and descriptions
-- **Email Invitations**: Send secure email invitations to join teams
-- **Member Management**: Add/remove team members with detailed profiles
-- **Social Profiles**: Team members can add bio and social links
-- **Team Participation**: Join events as a team with team name display
+### 🎯 **Core Features**
+- **Multi-Role Platform**: User, Organizer, and Admin roles with distinct dashboards
+- **Event Management**: Create, edit, delete, and manage events with rich details
+- **Team Collaboration**: Build teams, invite members, and participate as teams
+- **Interactive Maps**: World map with event markers and location-based filtering
+- **Real-time Analytics**: View counts, participant tracking, and engagement metrics
+- **Email Invitations**: Beautiful invitation system with email notifications
+- **Responsive Design**: Modern UI with animations and mobile-first approach
 
-### Email System
-- **Gmail SMTP Integration**: Professional email invitations
-- **Secure Tokens**: 32-character secure tokens for invite links
-- **Beautiful Templates**: HTML email templates with Eventify branding
-- **Auto-expiration**: Invites expire after 7 days
+### 👥 **Role-Based Access Control (RBAC)**
 
-## 🛠️ Tech Stack
+#### **👤 User (Event Attendee)**
+- Browse and search events
+- Join/leave events individually or as a team
+- Create and manage personal teams
+- View event details and participant lists
+- Access personal dashboard with event history
 
-### Backend
-- **Node.js** with Express.js
-- **MongoDB** with Mongoose ODM
-- **JWT** for authentication
-- **Nodemailer** for email functionality
-- **CORS** enabled for cross-origin requests
+#### **🎪 Organizer (Event Host)**
+- All User features plus:
+- Create and manage events with rich details
+- Upload multiple event photos
+- Set event categories and tags
+- Manage event participants
+- View event analytics and insights
+- Access organizer dashboard
 
-### Frontend
-- **React** with React Router
-- **Vite** for fast development and building
-- **TailwindCSS** for styling
-- **Axios** for API calls
-- **Context API** for state management
+#### **⚡ Admin (Platform Administrator)**
+- All Organizer features plus:
+- Manage all users, events, and teams
+- View platform-wide analytics
+- Impersonate any user account
+- Moderate content and manage reports
+- Access admin dashboard with dark mode UI
 
-### Database
-- **MongoDB Atlas** for cloud database
-- **Mongoose** schemas for data modeling
-
-## 📁 Project Structure
-
-```
-huddle/
-├── backend/
-│   ├── src/
-│   │   ├── config/
-│   │   │   └── env.js
-│   │   ├── db/
-│   │   │   └── mongoose.js
-│   │   ├── middleware/
-│   │   │   └── auth.js
-│   │   ├── models/
-│   │   │   ├── Event.js
-│   │   │   ├── Invite.js
-│   │   │   ├── Team.js
-│   │   │   └── User.js
-│   │   ├── routes/
-│   │   │   ├── auth.routes.js
-│   │   │   ├── events.routes.js
-│   │   │   ├── invites.routes.js
-│   │   │   ├── teams.routes.js
-│   │   │   └── users.routes.js
-│   │   ├── utils/
-│   │   │   ├── email.js
-│   │   │   └── jwt.js
-│   │   └── server.js
-│   ├── package.json
-│   └── .env
-├── frontend/
-│   ├── src/
-│   │   ├── components/
-│   │   │   └── Navbar.jsx
-│   │   ├── context/
-│   │   │   └── AuthContext.jsx
-│   │   ├── lib/
-│   │   │   └── api.js
-│   │   ├── pages/
-│   │   │   ├── CreateEvent.jsx
-│   │   │   ├── CreateTeam.jsx
-│   │   │   ├── Dashboard.jsx
-│   │   │   ├── EventDetails.jsx
-│   │   │   ├── InviteAccept.jsx
-│   │   │   ├── Landing.jsx
-│   │   │   ├── Login.jsx
-│   │   │   ├── Register.jsx
-│   │   │   └── Teams.jsx
-│   │   ├── App.jsx
-│   │   ├── index.css
-│   │   └── main.jsx
-│   ├── package.json
-│   ├── vite.config.js
-│   └── tailwind.config.js
-└── README.md
-```
-
-## 🚀 Getting Started
+## 🚀 **Getting Started**
 
 ### Prerequisites
 - Node.js (v16 or higher)
+- MongoDB (local or Atlas)
 - npm or yarn
-- MongoDB Atlas account (or local MongoDB)
-- Gmail account with App Password for SMTP
 
 ### Installation
 
 1. **Clone the repository**
-   ```bash
-   git clone <your-repo-url>
-   cd huddle
-   ```
+```bash
+git clone https://github.com/yourusername/eventify.git
+cd eventify
+```
 
-2. **Backend Setup**
-   ```bash
-   cd backend
-   npm install
-   ```
+2. **Install dependencies**
+```bash
+# Backend dependencies
+cd backend
+npm install
 
-3. **Frontend Setup**
-   ```bash
-   cd ../frontend
-   npm install
-   ```
+# Frontend dependencies
+cd ../frontend
+npm install
+```
 
-4. **Environment Configuration**
+3. **Environment Setup**
 
-   Create `.env` file in the backend directory:
-   ```env
-   PORT=4000
-   MONGODB_URI=your_mongodb_connection_string
-   JWT_SECRET=your_jwt_secret_key
-   CLIENT_ORIGIN=http://localhost:5176
-   
-   # Gmail SMTP Configuration
-   SMTP_HOST=smtp.gmail.com
-   SMTP_PORT=587
-   SMTP_USER=your_gmail@gmail.com
-   SMTP_PASS=your_app_password
-   EMAIL_FROM="Eventify <your_gmail@gmail.com>"
-   ```
+Create `.env` files in both backend and frontend directories:
 
-5. **Start the Application**
+**Backend (.env)**
+```env
+PORT=4000
+MONGODB_URI=mongodb://localhost:27017/eventify
+JWT_SECRET=your_jwt_secret_here
+CLIENT_ORIGIN=http://localhost:5175
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your_email@gmail.com
+SMTP_PASS=your_app_password
+```
 
-   **Backend:**
-   ```bash
-   cd backend
-   npm run dev
-   ```
+**Frontend (.env)**
+```env
+VITE_API_BASE_URL=http://localhost:4000/api
+```
 
-   **Frontend:**
-   ```bash
-   cd frontend
-   npm run dev
-   ```
+4. **Start the application**
+```bash
+# Start backend (from backend directory)
+npm start
 
-6. **Access the Application**
-   - Frontend: http://localhost:5176
-   - Backend API: http://localhost:4000
+# Start frontend (from frontend directory)
+npm run dev
+```
 
-## 📧 Email Setup
+5. **Access the application**
+- Frontend: http://localhost:5175
+- Backend API: http://localhost:4000
 
-### Gmail SMTP Configuration
-1. Enable 2-Step Verification on your Gmail account
-2. Generate an App Password:
-   - Go to Google Account → Security → App passwords
-   - Select "Mail" and "Other"
-   - Copy the 16-character password
-3. Use the app password in your `.env` file
+## 🎨 **User Interface Features**
 
-## 🔧 API Endpoints
+### **🏠 Landing Page**
+- Animated hero section with gradient backgrounds
+- Feature carousel with smooth transitions
+- How-to-use guide with step-by-step instructions
+- Statistics showcase
+- Call-to-action sections
+- Responsive design with mobile optimization
 
-### Authentication
+### **🔐 Authentication**
+- **Login Page**: Email/username login with show/hide password
+- **Registration Page**: Role selection with animated password validation
+- **Password Strength**: Real-time password criteria checking
+- **JWT Authentication**: Secure token-based authentication
+- **Role-based Redirects**: Automatic navigation to appropriate dashboard
+
+### **📊 Dashboards**
+
+#### **User Dashboard**
+- Personal event overview
+- Recent activities
+- Team management
+- Event recommendations
+- Quick actions
+
+#### **Organizer Dashboard**
+- Event creation and management
+- Analytics and insights
+- Participant tracking
+- Event performance metrics
+- Organizer profile management
+
+#### **Admin Dashboard**
+- Dark mode interface
+- User management with impersonation
+- Event moderation
+- Platform analytics
+- Content management tools
+
+### **🗺️ Interactive Maps**
+- **World Events Map**: Global event visualization
+- **Location Picker**: Dynamic location selection with coordinates
+- **City-based Filtering**: 20+ popular cities with distance calculation
+- **Nearby Events**: Radius-based event discovery
+- **Real-time Location**: Browser geolocation integration
+
+### **📧 Email System**
+- **Team Invitations**: Beautiful email templates
+- **Invitation Management**: Accept, decline, resend invitations
+- **Email Validation**: Secure invitation token system
+- **SMTP Integration**: Gmail SMTP support
+
+## 🛠️ **Technical Architecture**
+
+### **Frontend (React + Vite)**
+- **React 18**: Latest React features with hooks
+- **Vite**: Fast development and build tool
+- **React Router**: Client-side routing
+- **TailwindCSS**: Utility-first CSS framework
+- **Axios**: HTTP client for API calls
+- **React Leaflet**: Interactive maps
+- **Canvas Confetti**: Celebration animations
+
+### **Backend (Node.js + Express)**
+- **Express.js**: Web application framework
+- **MongoDB**: NoSQL database with Mongoose ODM
+- **JWT**: JSON Web Token authentication
+- **bcryptjs**: Password hashing
+- **Nodemailer**: Email sending
+- **CORS**: Cross-origin resource sharing
+- **Helmet**: Security middleware
+
+### **Database Schema**
+
+#### **User Model**
+```javascript
+{
+  name: String,
+  email: String (unique),
+  username: String (unique),
+  password: String (hashed),
+  role: Enum ['user', 'organizer', 'admin'],
+  isActive: Boolean,
+  profilePicture: String,
+  bio: String,
+  socialLinks: Object,
+  organizerProfile: Object,
+  preferences: Object
+}
+```
+
+#### **Event Model**
+```javascript
+{
+  title: String,
+  description: String,
+  date: Date,
+  location: String,
+  coordinates: { lat: Number, lng: Number },
+  category: String,
+  organizer: ObjectId (ref: User),
+  participants: [ObjectId],
+  teams: [ObjectId],
+  photos: [String],
+  tags: [String],
+  price: Number,
+  currency: String,
+  views: Number,
+  viewHistory: [Object]
+}
+```
+
+#### **Team Model**
+```javascript
+{
+  name: String,
+  description: String,
+  owner: ObjectId (ref: User),
+  members: [ObjectId],
+  events: [ObjectId],
+  isPublic: Boolean
+}
+```
+
+## 🎯 **Key Features in Detail**
+
+### **1. Event Creation & Management**
+- **Rich Event Details**: Title, description, date, location, category
+- **Multiple Photos**: Upload and manage event images
+- **Location Picker**: Interactive map for precise location selection
+- **Tags & Categories**: Organize events with tags and categories
+- **Pricing Options**: Set event prices with currency support
+- **Participant Limits**: Control event capacity
+- **Team Participation**: Allow team-based event participation
+
+### **2. Team Collaboration**
+- **Team Creation**: Create teams with descriptions and privacy settings
+- **Member Management**: Invite, accept, and manage team members
+- **Email Invitations**: Send beautiful invitation emails
+- **Team Analytics**: Track team performance and participation
+- **Role-based Permissions**: Different access levels for team members
+
+### **3. Location & Maps**
+- **Interactive Maps**: Leaflet-based map integration
+- **City Selection**: 20+ popular cities with coordinates
+- **Distance Calculation**: Real-time distance calculation
+- **Radius Filtering**: Find events within specified radius
+- **Location Detection**: Browser geolocation support
+- **Coordinate Storage**: Precise location tracking
+
+### **4. Analytics & Insights**
+- **View Tracking**: Real-time event view counting
+- **Participant Analytics**: Track event participation
+- **Team Performance**: Monitor team engagement
+- **User Activity**: Track user behavior and preferences
+- **Event Performance**: Measure event success metrics
+
+### **5. Admin Features**
+- **User Management**: View, edit, and manage all users
+- **Event Moderation**: Review and moderate event content
+- **Impersonation**: Login as any user for support
+- **Platform Analytics**: System-wide statistics
+- **Content Management**: Manage inappropriate content
+- **Account Management**: Activate/deactivate user accounts
+
+## 🔧 **API Endpoints**
+
+### **Authentication**
 - `POST /api/auth/register` - User registration
 - `POST /api/auth/login` - User login
 - `GET /api/auth/me` - Get current user
 
-### Events
+### **Events**
 - `GET /api/events` - Get all events
 - `POST /api/events` - Create new event
 - `GET /api/events/:id` - Get event details
 - `PUT /api/events/:id` - Update event
 - `DELETE /api/events/:id` - Delete event
 - `POST /api/events/:id/join` - Join event
-- `DELETE /api/events/:id/leave` - Leave event
+- `POST /api/events/:id/leave` - Leave event
+- `POST /api/events/:id/view` - Record event view
 
-### Teams
-- `GET /api/teams/mine` - Get user's teams
+### **Teams**
+- `GET /api/teams` - Get user's teams
 - `POST /api/teams` - Create team
 - `GET /api/teams/:id` - Get team details
-- `POST /api/teams/:id/members/manual` - Add member manually
-- `DELETE /api/teams/:id/members/:userId` - Remove member
+- `PUT /api/teams/:id` - Update team
+- `DELETE /api/teams/:id` - Delete team
 
-### Invitations
-- `POST /api/invites/teams/:teamId/invite` - Send email invitation
-- `GET /api/invites/:token` - Get invite details
-- `POST /api/invites/:token/accept` - Accept invitation
-- `GET /api/invites/teams/:teamId/invites` - List pending invites
+### **Invitations**
+- `POST /api/invites` - Send team invitation
+- `GET /api/invites/:token` - Get invitation details
+- `POST /api/invites/:token/join` - Accept invitation
+- `DELETE /api/invites/:id` - Delete invitation
 
-### Users
-- `GET /api/users/:id/events` - Get user's created events
-- `GET /api/users/:id/joined` - Get user's joined events
+### **Admin**
+- `GET /api/admin/users` - Get all users
+- `GET /api/admin/events` - Get all events
+- `GET /api/admin/teams` - Get all teams
+- `GET /api/admin/analytics` - Get platform analytics
+- `POST /api/admin/impersonate/:userId` - Impersonate user
+- `DELETE /api/admin/clear-database` - Clear all data
 
-## 🎨 Features in Detail
+## 🎨 **UI/UX Features**
 
-### Team Invitation Flow
-1. Team owner clicks "Invite" button
-2. Enters email address of invitee
-3. System sends beautiful HTML email with secure invite link
-4. Invitee clicks link and fills out profile form
-5. User is automatically added to team and logged in
+### **Animations & Effects**
+- **Scroll Animations**: Intersection Observer-based animations
+- **Confetti Effects**: Celebration animations for milestones
+- **Loading States**: Smooth loading indicators
+- **Hover Effects**: Interactive hover animations
+- **Transitions**: Smooth page and component transitions
 
-### Event Participation
-- Users can join events individually or as a team
-- Team participation shows team name in event participants
-- Click on team names to see team member details
-- Click on member cards to see social links and bio
+### **Responsive Design**
+- **Mobile-First**: Optimized for mobile devices
+- **Tablet Support**: Responsive tablet layouts
+- **Desktop Experience**: Enhanced desktop interfaces
+- **Touch-Friendly**: Optimized for touch interactions
 
-### Dashboard Features
-- **My Events**: Events created by the user
-- **Joined Events**: Events the user has joined
-- **All Events**: Browse all available events
-- **My Teams**: Manage teams and send invitations
+### **Accessibility**
+- **Keyboard Navigation**: Full keyboard support
+- **Screen Reader**: ARIA labels and semantic HTML
+- **Color Contrast**: High contrast color schemes
+- **Focus Management**: Proper focus indicators
 
-## 🔒 Security Features
-- JWT-based authentication
-- Password hashing with bcrypt
-- CORS protection
-- Input validation and sanitization
-- Secure email tokens with expiration
+## 🚀 **Deployment**
 
-## 🚀 Deployment
+### **Frontend Deployment (Vercel)**
+```bash
+npm run build
+vercel --prod
+```
 
-### Backend Deployment
-- Deploy to platforms like Heroku, Railway, or DigitalOcean
-- Set environment variables in production
-- Use production MongoDB instance
+### **Backend Deployment (Heroku)**
+```bash
+heroku create your-app-name
+git push heroku main
+```
 
-### Frontend Deployment
-- Build with `npm run build`
-- Deploy to Vercel, Netlify, or similar platforms
-- Update API base URL for production
+### **Database Deployment (MongoDB Atlas)**
+1. Create MongoDB Atlas cluster
+2. Update connection string in environment variables
+3. Configure IP whitelist
 
-## 🤝 Contributing
+## 🤝 **Contributing**
 
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-## 📝 License
+## 📝 **License**
 
-This project is licensed under the MIT License.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 👨‍💻 Author
+## 🙏 **Acknowledgments**
 
-Created by Prince Tagadiya
+- **React Team** for the amazing framework
+- **TailwindCSS** for the utility-first CSS framework
+- **Leaflet** for the interactive maps
+- **MongoDB** for the database solution
+- **Express.js** for the backend framework
+
+## 📞 **Support**
+
+For support and questions:
+- Create an issue in the GitHub repository
+- Email: support@eventify.com
+- Documentation: [docs.eventify.com](https://docs.eventify.com)
 
 ---
 
-**Eventify** - Bringing teams together through events! 🎉
+**Made with ❤️ by the Eventify Team**
