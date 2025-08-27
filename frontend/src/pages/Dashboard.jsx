@@ -191,31 +191,31 @@ export default function Dashboard() {
 
       {/* Header */}
       <div className="bg-white/80 backdrop-blur-sm border-b border-white/20 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-6 py-6">
-          <div className="flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+              <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
                 Welcome back, {user.name}! 👋
               </h1>
-              <p className="text-gray-600 mt-1">Here's what's happening with your events and teams</p>
+              <p className="text-gray-600 mt-1 text-sm sm:text-base">Here's what's happening with your events and teams</p>
             </div>
-            <div className="flex space-x-3">
+            <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
               <Link
                 to="/create"
-                className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-300"
+                className="px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-300 text-sm sm:text-base text-center"
               >
                 + Create Event
               </Link>
               <Link
                 to="/teams/create"
-                className="px-6 py-3 border-2 border-purple-600 text-purple-600 rounded-xl hover:bg-purple-600 hover:text-white transform hover:scale-105 transition-all duration-300"
+                className="px-4 sm:px-6 py-2 sm:py-3 border-2 border-purple-600 text-purple-600 rounded-xl hover:bg-purple-600 hover:text-white transform hover:scale-105 transition-all duration-300 text-sm sm:text-base text-center"
               >
                 + Create Team
               </Link>
               {user.email === 'admin@eventify.com' && (
                 <Link
                   to="/admin"
-                  className="px-6 py-3 bg-gradient-to-r from-red-600 to-purple-600 text-white rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-300"
+                  className="px-4 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-red-600 to-purple-600 text-white rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-300 text-sm sm:text-base text-center"
                 >
                   🔧 Admin Panel
                 </Link>

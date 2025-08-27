@@ -33,14 +33,22 @@ router.get('/', authenticate, async (req, res) => {
 // Debug route to check all users (for testing)
 router.get('/debug/users', authenticate, async (req, res) => {
   try {
-    const users = await User.find({}).select('username name email').limit(20);
+    const allUsers = await User.find({}).select('username name email _id').limit(20);
+    const currentUser = await User.findById(req.user.id).select('username name email _id');
+    
+    console.log('Current user:', currentUser);
+    console.log('All users in database:', allUsers.length);
+    console.log('Users:', allUsers.map(u => ({ id: u._id, username: u.username, email: u.email, name: u.name })));
+    
     res.json({ 
-      totalUsers: users.length,
-      users: users 
+      currentUser,
+      totalUsers: allUsers.length,
+      users: allUsers,
+      message: 'Debug info logged to console'
     });
   } catch (error) {
     console.error('Error fetching users:', error);
-    res.status(500).json({ message: 'Failed to fetch users' });
+    res.status(500).json({ message: 'Failed to fetch users', error: error.message });
   }
 });
 
@@ -152,18 +160,36 @@ router.get('/search-users/:query', authenticate, async (req, res) => {
 
     console.log('Excluding users:', excludeUsers);
 
-    // Search users by username OR email (excluding current user and team members)
-    const users = await User.find({
+    // First, let's search without exclusions to see what we find
+    const allMatchingUsers = await User.find({
       $or: [
         { username: { $regex: query, $options: 'i' } },
         { email: { $regex: query, $options: 'i' } }
-      ],
-      _id: { 
-        $nin: [req.user.id, ...excludeUsers]
-      }
+      ]
     })
-    .select('name username email bio socialLinks')
-    .limit(10);
+    .select('name username email bio socialLinks _id')
+    .limit(20);
+
+    console.log('All matching users before exclusions:', allMatchingUsers.length);
+    console.log('Matching users:', allMatchingUsers.map(u => ({ id: u._id, username: u.username, email: u.email, name: u.name })));
+
+    // Now filter out current user and team members
+    const users = allMatchingUsers.filter(user => {
+      const userId = user._id.toString();
+      const isCurrentUser = userId === req.user.id;
+      const isTeamMember = excludeUsers.includes(userId);
+      
+      if (isCurrentUser) {
+        console.log('Excluding current user:', user.username || user.email);
+      }
+      if (isTeamMember) {
+        console.log('Excluding team member:', user.username || user.email);
+      }
+      
+      return !isCurrentUser && !isTeamMember;
+    });
+
+    console.log('Final filtered users:', users.length);
 
     console.log('Found users:', users.length);
     console.log('Users:', users.map(u => ({ username: u.username, email: u.email, name: u.name })));

@@ -111,10 +111,7 @@ export const NotificationProvider = ({ children }) => {
     }
   };
 
-  // Close current popup
-  const closePopup = () => {
-    setCurrentPopup(null);
-  };
+
 
   // Load notifications when user changes
   useEffect(() => {
@@ -139,8 +136,7 @@ export const NotificationProvider = ({ children }) => {
     loadNotifications,
     markAsRead,
     acceptInvitation,
-    declineInvitation,
-    closePopup
+    declineInvitation
   };
 
   return (
@@ -153,7 +149,6 @@ export const NotificationProvider = ({ children }) => {
           notification={currentPopup}
           onAccept={acceptInvitation}
           onDecline={declineInvitation}
-          onClose={closePopup}
         />
       )}
     </NotificationContext.Provider>
