@@ -1,92 +1,215 @@
 import { Router } from 'express';
-import bcrypt from 'bcryptjs';
 import { User } from '../models/User.js';
 import { signJwt } from '../utils/jwt.js';
 
 const router = Router();
 
+// Register
 router.post('/register', async (req, res) => {
   try {
-    const { name, username, email, password } = req.body;
-    if (!name || !username || !email || !password) return res.status(400).json({ message: 'Missing fields' });
-    
-    const existingEmail = await User.findOne({ email });
-    if (existingEmail) return res.status(409).json({ message: 'Email already registered' });
-    
-    const existingUsername = await User.findOne({ username });
-    if (existingUsername) return res.status(409).json({ message: 'Username already taken' });
-    
-    const hashed = await bcrypt.hash(password, 10);
-    const user = await User.create({ name, username, email, password: hashed });
-    const token = signJwt({ id: user._id.toString() });
-    res.status(201).json({ 
-      token, 
-      user: { 
-        id: user._id, 
-        name: user.name, 
-        username: user.username,
-        email: user.email 
-      } 
+    const { name, email, username, password, role = 'user' } = req.body;
+
+    // Check if user already exists
+    const existingUser = await User.findOne({
+      $or: [{ email }, { username }]
     });
-  } catch (err) {
-    console.error('Registration error:', err);
+
+    if (existingUser) {
+      return res.status(400).json({
+        message: existingUser.email === email ? 'Email already registered' : 'Username already taken'
+      });
+    }
+
+    // Validate role (only allow user and organizer roles during registration)
+    if (!['user', 'organizer'].includes(role)) {
+      return res.status(400).json({ message: 'Invalid role' });
+    }
+
+    // Create user
+    const user = new User({
+      name,
+      email,
+      username,
+      password,
+      role
+    });
+
+    await user.save();
+
+    // Generate token
+    const token = signJwt({ id: user._id.toString(), role: user.role });
+
+    res.status(201).json({
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        username: user.username,
+        role: user.role
+      }
+    });
+  } catch (error) {
+    console.error('Registration error:', error);
     res.status(500).json({ message: 'Registration failed' });
   }
 });
 
+// Login
 router.post('/login', async (req, res) => {
   try {
     const { emailOrUsername, password } = req.body;
-    if (!emailOrUsername || !password) return res.status(400).json({ message: 'Missing fields' });
-    
+
+    // Find user by email or username
     const user = await User.findOne({
       $or: [
-        { email: emailOrUsername.toLowerCase() },
-        { username: emailOrUsername.toLowerCase() }
+        { email: emailOrUsername },
+        { username: emailOrUsername }
       ]
     });
-    
-    if (!user) return res.status(401).json({ message: 'Invalid credentials' });
-    const valid = await bcrypt.compare(password, user.password);
-    if (!valid) return res.status(401).json({ message: 'Invalid credentials' });
-    const token = signJwt({ id: user._id.toString() });
-    res.json({ 
-      token, 
-      user: { 
-        id: user._id, 
-        name: user.name, 
+
+    if (!user) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    // Check if user is active
+    if (!user.isActive) {
+      return res.status(401).json({ message: 'Account is deactivated' });
+    }
+
+    // Check password
+    const isPasswordValid = await user.comparePassword(password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+
+    // Generate token with role
+    const token = signJwt({ id: user._id.toString(), role: user.role });
+
+    res.json({
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
         username: user.username,
-        email: user.email 
-      } 
+        role: user.role,
+        isOrganizer: user.isOrganizer(),
+        isAdmin: user.isAdmin()
+      }
     });
-  } catch (err) {
-    console.error('Login error:', err);
+  } catch (error) {
+    console.error('Login error:', error);
     res.status(500).json({ message: 'Login failed' });
   }
 });
 
-// Check username availability
-router.get('/check-username/:username', async (req, res) => {
+// Get current user
+router.get('/me', async (req, res) => {
   try {
-    const { username } = req.params;
-    
-    if (!username || username.length < 3) {
-      return res.json({ available: false, message: 'Username must be at least 3 characters' });
+    const user = await User.findById(req.user.id).select('-password');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
     }
-    
-    if (!/^[a-zA-Z0-9_]+$/.test(username)) {
-      return res.json({ available: false, message: 'Username can only contain letters, numbers, and underscores' });
+
+    res.json({
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        username: user.username,
+        role: user.role,
+        isOrganizer: user.isOrganizer(),
+        isAdmin: user.isAdmin(),
+        profilePicture: user.profilePicture,
+        bio: user.bio,
+        socialLinks: user.socialLinks,
+        organizerProfile: user.organizerProfile
+      }
+    });
+  } catch (error) {
+    console.error('Get user error:', error);
+    res.status(500).json({ message: 'Failed to get user' });
+  }
+});
+
+// Update user role (admin only)
+router.patch('/users/:userId/role', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { role } = req.body;
+
+    // Check if current user is admin
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Access denied' });
     }
-    
-    const existingUser = await User.findOne({ username: username.toLowerCase() });
-    
-    if (existingUser) {
-      return res.json({ available: false, message: 'Username is already taken' });
+
+    // Validate role
+    if (!['user', 'organizer', 'admin'].includes(role)) {
+      return res.status(400).json({ message: 'Invalid role' });
     }
-    
-    res.json({ available: true, message: 'Username is available' });
-  } catch (err) {
-    res.status(500).json({ message: 'Server error' });
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { role },
+      { new: true }
+    ).select('-password');
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.json({
+      message: 'User role updated successfully',
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        username: user.username,
+        role: user.role
+      }
+    });
+  } catch (error) {
+    console.error('Update role error:', error);
+    res.status(500).json({ message: 'Failed to update user role' });
+  }
+});
+
+// Verify organizer (admin only)
+router.patch('/organizers/:userId/verify', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { isVerified } = req.body;
+
+    // Check if current user is admin
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { 'organizerProfile.isVerified': isVerified },
+      { new: true }
+    ).select('-password');
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.json({
+      message: `Organizer ${isVerified ? 'verified' : 'unverified'} successfully`,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        username: user.username,
+        role: user.role,
+        organizerProfile: user.organizerProfile
+      }
+    });
+  } catch (error) {
+    console.error('Verify organizer error:', error);
+    res.status(500).json({ message: 'Failed to verify organizer' });
   }
 });
 
