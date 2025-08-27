@@ -26,6 +26,14 @@ export default function Register() {
     hasNumber: false,
     hasSpecial: false
   });
+  const [usernameCriteria, setUsernameCriteria] = useState({
+    minLength: false,
+    noSpaces: false,
+    noCapital: false,
+    validChars: false,
+    isAvailable: false
+  });
+  const [isCheckingUsername, setIsCheckingUsername] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -41,6 +49,25 @@ export default function Register() {
         hasSpecial: /[!@#$%^&*(),.?":{}|<>]/.test(value)
       });
     }
+    
+    // Update username criteria when username changes
+    if (name === 'username') {
+      const username = value.toLowerCase(); // Convert to lowercase
+      setFormData(prev => ({ ...prev, username })); // Update with lowercase
+      
+      setUsernameCriteria({
+        minLength: username.length >= 3,
+        noSpaces: !/\s/.test(username),
+        noCapital: !/[A-Z]/.test(username),
+        validChars: /^[a-z0-9_]+$/.test(username),
+        isAvailable: false // Reset availability check
+      });
+      
+      // Check username availability if criteria are met
+      if (username.length >= 3 && !/\s/.test(username) && /^[a-z0-9_]+$/.test(username)) {
+        checkUsernameAvailability(username);
+      }
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -55,6 +82,11 @@ export default function Register() {
 
     if (!Object.values(passwordCriteria).every(Boolean)) {
       setError('Please meet all password requirements');
+      return;
+    }
+
+    if (!Object.values(usernameCriteria).every(Boolean)) {
+      setError('Please meet all username requirements');
       return;
     }
 
@@ -89,6 +121,46 @@ export default function Register() {
       setIsSubmitting(false);
     }
   };
+
+  const checkUsernameAvailability = async (username) => {
+    if (username.length < 3) return;
+    
+    setIsCheckingUsername(true);
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'https://eventify-production-ea1c.up.railway.app/api'}/auth/check-username/${username}`);
+      const data = await response.json();
+      
+      setUsernameCriteria(prev => ({
+        ...prev,
+        isAvailable: data.available
+      }));
+    } catch (error) {
+      console.error('Error checking username availability:', error);
+      setUsernameCriteria(prev => ({
+        ...prev,
+        isAvailable: false
+      }));
+    } finally {
+      setIsCheckingUsername(false);
+    }
+  };
+
+  const UsernameChecklistItem = ({ met, text, loading = false }) => (
+    <div className={`flex items-center space-x-2 text-sm ${met ? 'text-green-600' : 'text-gray-500'}`}>
+      <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
+        met ? 'border-green-500 bg-green-500' : 'border-gray-300'
+      }`}>
+        {loading ? (
+          <div className="w-2 h-2 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+        ) : met ? (
+          <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+          </svg>
+        ) : null}
+      </div>
+      <span>{text}</span>
+    </div>
+  );
 
   const PasswordChecklistItem = ({ met, text }) => (
     <div className={`flex items-center space-x-2 text-sm ${met ? 'text-green-600' : 'text-gray-500'}`}>
@@ -166,9 +238,22 @@ export default function Register() {
                 value={formData.username}
                 onChange={handleInputChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300"
-                placeholder="Choose a username"
+                placeholder="Choose a username (lowercase, no spaces)"
                 required
               />
+              
+              {/* Username Requirements */}
+              <div className="mt-3 space-y-2">
+                <UsernameChecklistItem met={usernameCriteria.minLength} text="At least 3 characters" />
+                <UsernameChecklistItem met={usernameCriteria.noSpaces} text="No spaces allowed" />
+                <UsernameChecklistItem met={usernameCriteria.noCapital} text="No capital letters" />
+                <UsernameChecklistItem met={usernameCriteria.validChars} text="Only letters, numbers, and underscore" />
+                <UsernameChecklistItem 
+                  met={usernameCriteria.isAvailable} 
+                  text="Username is available" 
+                  loading={isCheckingUsername}
+                />
+              </div>
             </div>
 
 

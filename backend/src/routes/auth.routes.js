@@ -215,6 +215,70 @@ router.patch('/organizers/:userId/verify', authenticate, async (req, res) => {
   }
 });
 
+// Check username availability
+router.get('/check-username/:username', async (req, res) => {
+  try {
+    const { username } = req.params;
+    
+    // Check if username exists
+    const existingUser = await User.findOne({ username: username.toLowerCase() });
+    
+    res.json({
+      available: !existingUser,
+      username: username.toLowerCase()
+    });
+  } catch (error) {
+    console.error('Check username error:', error);
+    res.status(500).json({ message: 'Error checking username availability' });
+  }
+});
+
+// Create admin user (for development only)
+router.post('/create-admin', async (req, res) => {
+  try {
+    const { name, email, username, password } = req.body;
+
+    // Check if user already exists
+    const existingUser = await User.findOne({
+      $or: [{ email }, { username }]
+    });
+
+    if (existingUser) {
+      return res.status(400).json({
+        message: existingUser.email === email ? 'Email already registered' : 'Username already taken'
+      });
+    }
+
+    // Create admin user
+    const user = new User({
+      name,
+      email,
+      username,
+      password,
+      role: 'admin'
+    });
+
+    await user.save();
+
+    // Generate token
+    const token = signJwt({ id: user._id.toString(), role: user.role });
+
+    res.status(201).json({
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        username: user.username,
+        role: user.role
+      }
+    });
+  } catch (error) {
+    console.error('Admin creation error:', error);
+    res.status(500).json({ message: 'Admin creation failed' });
+  }
+});
+
 export default router;
 
 
