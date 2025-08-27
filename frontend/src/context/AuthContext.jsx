@@ -19,7 +19,14 @@ export function AuthProvider({ children }) {
     else localStorage.removeItem('user')
   }, [user])
 
-  const value = useMemo(() => ({ token, setToken, user, setUser }), [token, user])
+  const logout = () => {
+    setToken(null)
+    setUser(null)
+    localStorage.removeItem('token')
+    localStorage.removeItem('user')
+  }
+
+  const value = useMemo(() => ({ token, setToken, user, setUser, logout }), [token, user])
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 

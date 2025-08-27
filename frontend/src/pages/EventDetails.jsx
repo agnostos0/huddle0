@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import api from '../lib/api.js'
 import { useAuth } from '../context/AuthContext.jsx'
+import ConfirmationDialog from '../components/ConfirmationDialog.jsx'
 
 export default function EventDetails() {
   const { id } = useParams()
@@ -15,19 +16,42 @@ export default function EventDetails() {
   const [selectedTeamDetails, setSelectedTeamDetails] = useState(null)
   const [showMemberPopup, setShowMemberPopup] = useState(false)
   const [selectedMember, setSelectedMember] = useState(null)
+  const [showJoinDialog, setShowJoinDialog] = useState(false)
+  const [showLeaveDialog, setShowLeaveDialog] = useState(false)
+  const [showTeamJoinDialog, setShowTeamJoinDialog] = useState(false)
 
   async function load() {
     const { data } = await api.get(`/events/${id}`)
     setEvent(data)
+    
+    // Track view
+    try {
+      await api.post(`/events/${id}/view`)
+    } catch (e) {
+      console.log('Failed to track view:', e)
+    }
   }
 
   useEffect(() => { load() }, [id])
 
   async function join() {
-    try { await api.post(`/events/${id}/join`); await load() } catch (e) { setError('Failed to join') }
+    try { 
+      await api.post(`/events/${id}/join`); 
+      await load() 
+    } catch (e) { 
+      setError('Failed to join') 
+      throw e
+    }
   }
+  
   async function leave() {
-    try { await api.post(`/events/${id}/leave`); await load() } catch (e) { setError('Failed to leave') }
+    try { 
+      await api.post(`/events/${id}/leave`); 
+      await load() 
+    } catch (e) { 
+      setError('Failed to leave') 
+      throw e
+    }
   }
   async function del() {
     try { await api.delete(`/events/${id}`); navigate('/dashboard') } catch (e) { setError('Failed to delete') }
@@ -35,7 +59,13 @@ export default function EventDetails() {
 
   async function joinAsTeam() {
     if (!selectedTeam) return
-    try { await api.post(`/events/${id}/join`, { teamId: selectedTeam }); await load() } catch (e) { setError('Failed to join as team') }
+    try { 
+      await api.post(`/events/${id}/join`, { teamId: selectedTeam }); 
+      await load() 
+    } catch (e) { 
+      setError('Failed to join as team') 
+      throw e
+    }
   }
 
   async function showTeamDetails(teamId) {
@@ -92,17 +122,33 @@ export default function EventDetails() {
         {isOwner ? (
           <button onClick={del} className="bg-red-600 text-white px-4 py-2 rounded">Delete</button>
         ) : isParticipant ? (
-          <button onClick={leave} className="bg-gray-700 text-white px-4 py-2 rounded">Leave</button>
+          <button 
+            onClick={() => setShowLeaveDialog(true)} 
+            className="bg-gray-700 text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors"
+          >
+            Leave
+          </button>
         ) : (
           <>
-            <button onClick={join} className="bg-blue-600 text-white px-4 py-2 rounded">Join</button>
+            <button 
+              onClick={() => setShowJoinDialog(true)} 
+              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+            >
+              Join
+            </button>
             {teams.length > 0 && (
               <div className="flex items-center gap-2">
                 <select className="border px-2 py-2 rounded" value={selectedTeam} onChange={e=>setSelectedTeam(e.target.value)}>
                   <option value="">Select team</option>
                   {teams.map(t => <option key={t._id} value={t._id}>{t.name}</option>)}
                 </select>
-                <button onClick={joinAsTeam} className="bg-indigo-600 text-white px-4 py-2 rounded">Join as Team</button>
+                <button 
+                  onClick={() => setShowTeamJoinDialog(true)} 
+                  className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700 transition-colors"
+                  disabled={!selectedTeam}
+                >
+                  Join as Team
+                </button>
               </div>
             )}
           </>
@@ -204,6 +250,43 @@ export default function EventDetails() {
           </div>
         </div>
       )}
+
+      {/* Confirmation Dialogs */}
+      <ConfirmationDialog
+        isOpen={showJoinDialog}
+        onClose={() => setShowJoinDialog(false)}
+        onConfirm={join}
+        title="Join Event"
+        message="Are you sure you want to join this event? You'll be added to the participant list and may receive updates from the organizer."
+        confirmText="Join Event"
+        type="join"
+        eventTitle={event?.title}
+        showConsent={true}
+      />
+
+      <ConfirmationDialog
+        isOpen={showLeaveDialog}
+        onClose={() => setShowLeaveDialog(false)}
+        onConfirm={leave}
+        title="Leave Event"
+        message="Are you sure you want to leave this event? You'll be removed from the participant list and won't receive further updates."
+        confirmText="Leave Event"
+        type="leave"
+        eventTitle={event?.title}
+        showConsent={false}
+      />
+
+      <ConfirmationDialog
+        isOpen={showTeamJoinDialog}
+        onClose={() => setShowTeamJoinDialog(false)}
+        onConfirm={joinAsTeam}
+        title="Join as Team"
+        message={`Are you sure you want to join this event with your team? All team members will be added to the participant list.`}
+        confirmText="Join as Team"
+        type="join"
+        eventTitle={event?.title}
+        showConsent={true}
+      />
     </div>
   )
 }

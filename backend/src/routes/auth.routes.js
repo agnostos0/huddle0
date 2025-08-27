@@ -10,7 +10,6 @@ router.post('/register', async (req, res) => {
     const { name, username, email, password } = req.body;
     if (!name || !username || !email || !password) return res.status(400).json({ message: 'Missing fields' });
     
-    // Check if email or username already exists
     const existingEmail = await User.findOne({ email });
     if (existingEmail) return res.status(409).json({ message: 'Email already registered' });
     
@@ -30,6 +29,7 @@ router.post('/register', async (req, res) => {
       } 
     });
   } catch (err) {
+    console.error('Registration error:', err);
     res.status(500).json({ message: 'Registration failed' });
   }
 });
@@ -39,7 +39,6 @@ router.post('/login', async (req, res) => {
     const { emailOrUsername, password } = req.body;
     if (!emailOrUsername || !password) return res.status(400).json({ message: 'Missing fields' });
     
-    // Try to find user by email or username
     const user = await User.findOne({
       $or: [
         { email: emailOrUsername.toLowerCase() },
@@ -61,6 +60,7 @@ router.post('/login', async (req, res) => {
       } 
     });
   } catch (err) {
+    console.error('Login error:', err);
     res.status(500).json({ message: 'Login failed' });
   }
 });

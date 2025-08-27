@@ -8,10 +8,53 @@ const router = Router();
 // Create
 router.post('/', authenticate, async (req, res) => {
   try {
-    const { title, description, date, location } = req.body;
-    const event = await Event.create({ title, description, date, location, organizer: req.user.id });
+    const {
+      title,
+      description,
+      date,
+      location,
+      coordinates,
+      category,
+      tags,
+      photos,
+      coverPhoto,
+      maxParticipants,
+      price,
+      currency,
+      eventType,
+      virtualMeetingLink,
+      contactEmail,
+      contactPhone,
+      website,
+      socialLinks
+    } = req.body;
+
+    const eventData = {
+      title,
+      description,
+      date,
+      location,
+      organizer: req.user.id,
+      coordinates,
+      category: category || 'General',
+      tags: tags || [],
+      photos: photos || [],
+      coverPhoto,
+      maxParticipants: maxParticipants || 0,
+      price: price || 0,
+      currency: currency || 'USD',
+      eventType: eventType || 'in-person',
+      virtualMeetingLink,
+      contactEmail,
+      contactPhone,
+      website,
+      socialLinks
+    };
+
+    const event = await Event.create(eventData);
     res.status(201).json(event);
   } catch (err) {
+    console.error('Event creation error:', err);
     res.status(400).json({ message: 'Failed to create event' });
   }
 });
@@ -31,16 +74,58 @@ router.get('/:id', async (req, res) => {
 
 // Update (only organizer)
 router.put('/:id', authenticate, async (req, res) => {
-  const event = await Event.findById(req.params.id);
-  if (!event) return res.status(404).json({ message: 'Not found' });
-  if (event.organizer.toString() !== req.user.id) return res.status(403).json({ message: 'Forbidden' });
-  const { title, description, date, location } = req.body;
-  event.title = title ?? event.title;
-  event.description = description ?? event.description;
-  event.date = date ?? event.date;
-  event.location = location ?? event.location;
-  await event.save();
-  res.json(event);
+  try {
+    const event = await Event.findById(req.params.id);
+    if (!event) return res.status(404).json({ message: 'Not found' });
+    if (event.organizer.toString() !== req.user.id) return res.status(403).json({ message: 'Forbidden' });
+    
+    const {
+      title,
+      description,
+      date,
+      location,
+      coordinates,
+      category,
+      tags,
+      photos,
+      coverPhoto,
+      maxParticipants,
+      price,
+      currency,
+      eventType,
+      virtualMeetingLink,
+      contactEmail,
+      contactPhone,
+      website,
+      socialLinks
+    } = req.body;
+
+    // Update fields if provided
+    if (title !== undefined) event.title = title;
+    if (description !== undefined) event.description = description;
+    if (date !== undefined) event.date = date;
+    if (location !== undefined) event.location = location;
+    if (coordinates !== undefined) event.coordinates = coordinates;
+    if (category !== undefined) event.category = category;
+    if (tags !== undefined) event.tags = tags;
+    if (photos !== undefined) event.photos = photos;
+    if (coverPhoto !== undefined) event.coverPhoto = coverPhoto;
+    if (maxParticipants !== undefined) event.maxParticipants = maxParticipants;
+    if (price !== undefined) event.price = price;
+    if (currency !== undefined) event.currency = currency;
+    if (eventType !== undefined) event.eventType = eventType;
+    if (virtualMeetingLink !== undefined) event.virtualMeetingLink = virtualMeetingLink;
+    if (contactEmail !== undefined) event.contactEmail = contactEmail;
+    if (contactPhone !== undefined) event.contactPhone = contactPhone;
+    if (website !== undefined) event.website = website;
+    if (socialLinks !== undefined) event.socialLinks = socialLinks;
+
+    await event.save();
+    res.json(event);
+  } catch (err) {
+    console.error('Event update error:', err);
+    res.status(400).json({ message: 'Failed to update event' });
+  }
 });
 
 // Delete (only organizer)
@@ -83,6 +168,36 @@ router.post('/:id/leave', authenticate, async (req, res) => {
   event.participants = event.participants.filter((p) => p.toString() !== req.user.id);
   await event.save();
   res.json(event);
+});
+
+// Track event view
+router.post('/:id/view', async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id);
+    if (!event) {
+      return res.status(404).json({ message: 'Event not found' });
+    }
+
+    // Increment view count
+    event.views += 1;
+    
+    // Add to view history if user is logged in
+    if (req.user) {
+      const existingView = event.viewHistory.find(v => v.userId.toString() === req.user.id);
+      if (!existingView) {
+        event.viewHistory.push({
+          userId: req.user.id,
+          viewedAt: new Date()
+        });
+      }
+    }
+    
+    await event.save();
+    res.json({ message: 'View tracked', views: event.views });
+  } catch (error) {
+    console.error('View tracking error:', error);
+    res.status(500).json({ message: 'Failed to track view' });
+  }
 });
 
 export default router;

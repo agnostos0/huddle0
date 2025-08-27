@@ -6,7 +6,7 @@ import api from '../lib/api.js';
 const InviteAccept = () => {
   const { token } = useParams();
   const navigate = useNavigate();
-  const { user, setToken, setUser } = useAuth();
+  const { user, setToken, setUser, logout } = useAuth();
   const [invite, setInvite] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -397,6 +397,31 @@ const InviteAccept = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-lg shadow-xl p-8 max-w-2xl w-full">
+        {/* Header with email change and sign out options */}
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex-1"></div>
+          <div className="flex items-center space-x-4">
+            {user && (
+              <>
+                <div className="text-sm text-gray-600">
+                  Logged in as: <span className="font-medium">{user.email}</span>
+                </div>
+                <button
+                  onClick={() => {
+                    logout();
+                    setShowTeamJoinForm(false);
+                    setShowLoginForm(false);
+                    setShowRegistrationForm(false);
+                  }}
+                  className="text-red-600 hover:text-red-800 text-sm font-medium"
+                >
+                  Sign Out
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">

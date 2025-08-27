@@ -2,31 +2,73 @@ import React, { useEffect, useState } from 'react'
 import api from '../lib/api.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import { Link } from 'react-router-dom'
+import confetti from 'canvas-confetti'
+import Navbar from '../components/Navbar.jsx'
+import ConfirmationDialog from '../components/ConfirmationDialog.jsx'
 
 export default function Dashboard() {
   const { user } = useAuth()
   const [myEvents, setMyEvents] = useState([])
   const [joinedEvents, setJoinedEvents] = useState([])
   const [allEvents, setAllEvents] = useState([])
+  const [myTeams, setMyTeams] = useState([])
+  const [pendingInvites, setPendingInvites] = useState([])
+  const [analytics, setAnalytics] = useState({
+    totalEvents: 0,
+    totalParticipants: 0,
+    totalViews: 0,
+    totalTeams: 0,
+    recentActivity: []
+  })
   const [error, setError] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [selectedTeam, setSelectedTeam] = useState(null)
+  const [showJoinDialog, setShowJoinDialog] = useState(false)
+  const [showLeaveDialog, setShowLeaveDialog] = useState(false)
+  const [selectedEvent, setSelectedEvent] = useState(null)
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const [mine, joined, all] = await Promise.all([
+        setLoading(true)
+        const [mine, joined, all, teams, invites, stats] = await Promise.all([
           api.get(`/users/${user.id}/events`),
           api.get(`/users/${user.id}/joined`),
           api.get(`/events`),
+          api.get(`/users/${user.id}/teams`),
+          api.get(`/users/${user.id}/invites`),
+          api.get(`/users/${user.id}/analytics`)
         ])
         setMyEvents(mine.data)
         setJoinedEvents(joined.data)
         setAllEvents(all.data)
+        setMyTeams(teams.data)
+        setPendingInvites(invites.data)
+        setAnalytics(stats.data)
       } catch (e) {
-        setError('Failed to load events')
+        setError('Failed to load dashboard data')
+      } finally {
+        setLoading(false)
       }
     }
     if (user?.id) fetchData()
   }, [user])
+
+  const triggerConfetti = (type = 'default') => {
+    const colors = {
+      join: ['#4F46E5', '#7C3AED', '#EC4899'],
+      team: ['#10B981', '#059669', '#047857'],
+      event: ['#F59E0B', '#D97706', '#B45309'],
+      default: ['#3B82F6', '#1D4ED8', '#1E40AF']
+    }
+    
+    confetti({
+      particleCount: 100,
+      spread: 70,
+      origin: { y: 0.6 },
+      colors: colors[type] || colors.default
+    })
+  }
 
   async function joinEvent(eventId) {
     try {
@@ -37,8 +79,10 @@ export default function Dashboard() {
       ])
       setJoinedEvents(joined.data)
       setAllEvents(all.data)
+      triggerConfetti('join')
     } catch (e) {
       setError('Failed to join event')
+      throw e
     }
   }
 
@@ -53,72 +97,433 @@ export default function Dashboard() {
       setAllEvents(all.data)
     } catch (e) {
       setError('Failed to leave event')
+      throw e
     }
   }
 
-  return (
-    <div className="grid md:grid-cols-2 gap-6">
-      {error && <div className="md:col-span-2 text-red-600">{error}</div>}
-      <section>
-        <h2 className="text-xl font-bold mb-3">My Events</h2>
-        <div className="space-y-3">
-          {myEvents.map(ev => (
-            <div key={ev._id} className="bg-white p-4 rounded shadow">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="font-semibold"><Link to={`/event/${ev._id}`} className="text-blue-700">{ev.title}</Link></h3>
-                  <p className="text-sm text-gray-600">{new Date(ev.date).toLocaleString()} • {ev.location}</p>
-                </div>
-              </div>
-              <p className="mt-2 text-sm text-gray-700">Participants: {ev.participants?.map(p => p.name).join(', ') || 'None'}</p>
-            </div>
-          ))}
-          {myEvents.length === 0 && <div className="text-gray-600">No events yet. <Link to="/create" className="text-blue-700">Create one</Link>.</div>}
-        </div>
-      </section>
-      <section>
-        <h2 className="text-xl font-bold mb-3">Joined Events</h2>
-        <div className="space-y-3">
-          {joinedEvents.map(ev => (
-            <div key={ev._id} className="bg-white p-4 rounded shadow">
-              <h3 className="font-semibold"><Link to={`/event/${ev._id}`} className="text-blue-700">{ev.title}</Link></h3>
-              <p className="text-sm text-gray-600">Organizer: {ev.organizer?.name || 'Unknown'}</p>
-              <p className="text-sm text-gray-600">{new Date(ev.date).toLocaleString()} • {ev.location}</p>
-            </div>
-          ))}
-          {joinedEvents.length === 0 && <div className="text-gray-600">You haven't joined any events yet.</div>}
-        </div>
-      </section>
+  async function acceptTeamInvite(inviteId) {
+    try {
+      await api.post(`/invites/${inviteId}/accept`)
+      const [teams, invites] = await Promise.all([
+        api.get(`/users/${user.id}/teams`),
+        api.get(`/users/${user.id}/invites`)
+      ])
+      setMyTeams(teams.data)
+      setPendingInvites(invites.data)
+      triggerConfetti('team')
+    } catch (e) {
+      setError('Failed to accept team invite')
+    }
+  }
 
-      <section className="md:col-span-2">
-        <h2 className="text-xl font-bold mb-3">All Events</h2>
-        <div className="grid md:grid-cols-2 gap-3">
-          {allEvents
-            .filter(ev => ev.organizer?._id !== user.id && ev.organizer !== user.id)
-            .map(ev => {
-              const isJoined = joinedEvents.some(j => j._id === ev._id)
-              return (
-                <div key={ev._id} className="bg-white p-4 rounded shadow">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-semibold"><Link to={`/event/${ev._id}`} className="text-blue-700">{ev.title}</Link></h3>
-                      <p className="text-sm text-gray-600">Organizer: {ev.organizer?.name || 'Unknown'}</p>
-                      <p className="text-sm text-gray-600">{new Date(ev.date).toLocaleString()} • {ev.location}</p>
+  const handleJoinClick = (event) => {
+    setSelectedEvent(event)
+    setShowJoinDialog(true)
+  }
+
+  const handleLeaveClick = (event) => {
+    setSelectedEvent(event)
+    setShowLeaveDialog(true)
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-purple-600 border-t-transparent mx-auto"></div>
+          <p className="mt-4 text-gray-600 text-lg">Loading your dashboard...</p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50">
+      <Navbar />
+      {/* Header */}
+      <div className="bg-white/80 backdrop-blur-sm border-b border-white/20 sticky top-0 z-10">
+        <div className="max-w-7xl mx-auto px-6 py-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+                Welcome back, {user.name}! 👋
+              </h1>
+              <p className="text-gray-600 mt-1">Here's what's happening with your events and teams</p>
+            </div>
+            <div className="flex space-x-3">
+              <Link
+                to="/create"
+                className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-300"
+              >
+                + Create Event
+              </Link>
+              <Link
+                to="/teams/create"
+                className="px-6 py-3 border-2 border-purple-600 text-purple-600 rounded-xl hover:bg-purple-600 hover:text-white transform hover:scale-105 transition-all duration-300"
+              >
+                + Create Team
+              </Link>
+              {user.email === 'admin@eventify.com' && (
+                <Link
+                  to="/admin"
+                  className="px-6 py-3 bg-gradient-to-r from-red-600 to-purple-600 text-white rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-300"
+                >
+                  🔧 Admin Panel
+                </Link>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        {error && (
+          <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl">
+            {error}
+          </div>
+        )}
+
+        {/* Analytics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:shadow-2xl transform hover:scale-105 transition-all duration-300">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-600 text-sm font-medium">Total Events</p>
+                <p className="text-3xl font-bold text-purple-600">{analytics.totalEvents}</p>
+              </div>
+              <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+                <span className="text-2xl">🎉</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:shadow-2xl transform hover:scale-105 transition-all duration-300">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-600 text-sm font-medium">Total Participants</p>
+                <p className="text-3xl font-bold text-blue-600">{analytics.totalParticipants}</p>
+              </div>
+              <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
+                <span className="text-2xl">👥</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:shadow-2xl transform hover:scale-105 transition-all duration-300">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-600 text-sm font-medium">Total Views</p>
+                <p className="text-3xl font-bold text-green-600">{analytics.totalViews}</p>
+              </div>
+              <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
+                <span className="text-2xl">👁️</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:shadow-2xl transform hover:scale-105 transition-all duration-300">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-600 text-sm font-medium">My Teams</p>
+                <p className="text-3xl font-bold text-indigo-600">{analytics.totalTeams}</p>
+              </div>
+              <div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center">
+                <span className="text-2xl">🚀</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Pending Invites */}
+        {pendingInvites.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">Pending Team Invites</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {pendingInvites.map((invite) => (
+                <div key={invite._id} className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:shadow-2xl transform hover:scale-105 transition-all duration-300">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-12 h-12 bg-gradient-to-r from-purple-400 to-blue-500 rounded-xl flex items-center justify-center">
+                      <span className="text-white font-bold text-lg">T</span>
                     </div>
-                    <div className="flex items-center gap-2">
-                      {!isJoined ? (
-                        <button onClick={() => joinEvent(ev._id)} className="bg-blue-600 text-white px-3 py-1.5 rounded">Join</button>
-                      ) : (
-                        <button onClick={() => leaveEvent(ev._id)} className="bg-gray-700 text-white px-3 py-1.5 rounded">Leave</button>
-                      )}
+                    <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs font-semibold">
+                      Pending
+                    </span>
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-800 mb-2">{invite.team?.name}</h3>
+                  <p className="text-gray-600 text-sm mb-4">Invited by {invite.invitedBy?.name}</p>
+                  <button
+                    onClick={() => acceptTeamInvite(invite._id)}
+                    className="w-full px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-300"
+                  >
+                    Accept Invite
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* My Teams */}
+        {myTeams.length > 0 && (
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">My Teams</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {myTeams.map((team) => (
+                <div key={team._id} className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20 hover:shadow-2xl transform hover:scale-105 transition-all duration-300">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-12 h-12 bg-gradient-to-r from-green-400 to-emerald-500 rounded-xl flex items-center justify-center">
+                      <span className="text-white font-bold text-lg">T</span>
+                    </div>
+                    <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">
+                      Active
+                    </span>
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-800 mb-2">{team.name}</h3>
+                  <p className="text-gray-600 text-sm mb-4">{team.members?.length || 0} members</p>
+                  <button
+                    onClick={() => setSelectedTeam(team)}
+                    className="w-full px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-300"
+                  >
+                    View Team
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* My Events */}
+          <section className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-gray-800">My Events</h2>
+              <Link
+                to="/create"
+                className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-300"
+              >
+                + New Event
+              </Link>
+            </div>
+            <div className="space-y-4">
+              {myEvents.map(ev => (
+                <div key={ev._id} className="bg-white rounded-xl p-4 shadow-lg border border-gray-100 hover:shadow-xl transform hover:scale-105 transition-all duration-300">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <h3 className="font-bold text-gray-800">
+                        <Link to={`/event/${ev._id}`} className="hover:text-purple-600 transition-colors">
+                          {ev.title}
+                        </Link>
+                      </h3>
+                      <p className="text-sm text-gray-600 mt-1">
+                        {new Date(ev.date).toLocaleDateString()} • {ev.location}
+                      </p>
+                      <p className="text-sm text-gray-500 mt-1">
+                        {ev.participants?.length || 0} participants
+                      </p>
+                    </div>
+                    <div className="ml-4">
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                        new Date(ev.date) > new Date() ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {new Date(ev.date) > new Date() ? 'Upcoming' : 'Past'}
+                      </span>
                     </div>
                   </div>
                 </div>
-              )
-            })}
+              ))}
+              {myEvents.length === 0 && (
+                <div className="text-center py-8">
+                  <div className="text-4xl mb-4">🎉</div>
+                  <p className="text-gray-600 mb-4">You haven't created any events yet</p>
+                  <Link
+                    to="/create"
+                    className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-300"
+                  >
+                    Create Your First Event
+                  </Link>
+                </div>
+              )}
+            </div>
+          </section>
+
+          {/* Joined Events */}
+          <section className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20">
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">Joined Events</h2>
+            <div className="space-y-4">
+              {joinedEvents.map(ev => (
+                <div key={ev._id} className="bg-white rounded-xl p-4 shadow-lg border border-gray-100 hover:shadow-xl transform hover:scale-105 transition-all duration-300">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <h3 className="font-bold text-gray-800">
+                        <Link to={`/event/${ev._id}`} className="hover:text-purple-600 transition-colors">
+                          {ev.title}
+                        </Link>
+                      </h3>
+                      <p className="text-sm text-gray-600 mt-1">
+                        Organizer: {ev.organizer?.name || 'Unknown'}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        {new Date(ev.date).toLocaleDateString()} • {ev.location}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleLeaveClick(ev)}
+                      className="ml-4 px-3 py-1 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
+                    >
+                      Leave
+                    </button>
+                  </div>
+                </div>
+              ))}
+              {joinedEvents.length === 0 && (
+                <div className="text-center py-8">
+                  <div className="text-4xl mb-4">👥</div>
+                  <p className="text-gray-600">You haven't joined any events yet</p>
+                </div>
+              )}
+            </div>
+          </section>
         </div>
-        {allEvents.length === 0 && <div className="text-gray-600">No events available yet.</div>}
-      </section>
+
+        {/* All Events */}
+        <section className="mt-8 bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-xl border border-white/20">
+          <h2 className="text-2xl font-bold text-gray-800 mb-6">Discover Events</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {allEvents
+              .filter(ev => ev.organizer?._id !== user.id && ev.organizer !== user.id)
+              .map(ev => {
+                const isJoined = joinedEvents.some(j => j._id === ev._id)
+                return (
+                  <div key={ev._id} className="bg-white rounded-xl p-4 shadow-lg border border-gray-100 hover:shadow-xl transform hover:scale-105 transition-all duration-300">
+                    <div className="flex items-center justify-between mb-3">
+                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                        ev.category === 'technology' ? 'bg-blue-100 text-blue-800' :
+                        ev.category === 'business' ? 'bg-green-100 text-green-800' :
+                        ev.category === 'social' ? 'bg-pink-100 text-pink-800' :
+                        ev.category === 'education' ? 'bg-yellow-100 text-yellow-800' :
+                        ev.category === 'entertainment' ? 'bg-purple-100 text-purple-800' :
+                        ev.category === 'sports' ? 'bg-red-100 text-red-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {ev.category}
+                      </span>
+                      <span className="text-sm text-gray-500">
+                        {new Date(ev.date).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <h3 className="font-bold text-gray-800 mb-2">
+                      <Link to={`/event/${ev._id}`} className="hover:text-purple-600 transition-colors">
+                        {ev.title}
+                      </Link>
+                    </h3>
+                    <p className="text-sm text-gray-600 mb-3 line-clamp-2">
+                      {ev.description}
+                    </p>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-6 h-6 bg-gradient-to-r from-purple-400 to-blue-500 rounded-full flex items-center justify-center">
+                          <span className="text-white text-xs font-semibold">
+                            {ev.organizer?.name?.charAt(0) || 'U'}
+                          </span>
+                        </div>
+                        <span className="text-sm text-gray-600">
+                          {ev.organizer?.name || 'Anonymous'}
+                        </span>
+                      </div>
+                      <button
+                        onClick={() => isJoined ? handleLeaveClick(ev) : handleJoinClick(ev)}
+                        className={`px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
+                          isJoined
+                            ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                            : 'bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:shadow-lg transform hover:scale-105'
+                        }`}
+                      >
+                        {isJoined ? 'Joined' : 'Join'}
+                      </button>
+                    </div>
+                  </div>
+                )
+              })}
+          </div>
+          {allEvents.length === 0 && (
+            <div className="text-center py-8">
+              <div className="text-4xl mb-4">🎉</div>
+              <p className="text-gray-600">No events available yet</p>
+            </div>
+          )}
+        </section>
+      </div>
+
+      {/* Team Details Modal */}
+      {selectedTeam && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-6 max-w-md w-full max-h-[80vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-gray-800">{selectedTeam.name}</h3>
+              <button
+                onClick={() => setSelectedTeam(null)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-semibold text-gray-700 mb-2">Team Members</h4>
+                <div className="space-y-2">
+                  {selectedTeam.members?.map((member) => (
+                    <div key={member._id} className="flex items-center space-x-3 p-2 bg-gray-50 rounded-lg">
+                      <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-blue-500 rounded-full flex items-center justify-center">
+                        <span className="text-white text-sm font-semibold">
+                          {member.name?.charAt(0) || 'U'}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-800">{member.name}</p>
+                        <p className="text-sm text-gray-600">{member.email}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="pt-4 border-t">
+                <Link
+                  to={`/teams/${selectedTeam._id}`}
+                  className="w-full block text-center px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-300"
+                >
+                  Manage Team
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Dialogs */}
+      <ConfirmationDialog
+        isOpen={showJoinDialog}
+        onClose={() => setShowJoinDialog(false)}
+        onConfirm={() => joinEvent(selectedEvent?._id)}
+        title="Join Event"
+        message="Are you sure you want to join this event? You'll be added to the participant list and may receive updates from the organizer."
+        confirmText="Join Event"
+        type="join"
+        eventTitle={selectedEvent?.title}
+        showConsent={true}
+      />
+
+      <ConfirmationDialog
+        isOpen={showLeaveDialog}
+        onClose={() => setShowLeaveDialog(false)}
+        onConfirm={() => leaveEvent(selectedEvent?._id)}
+        title="Leave Event"
+        message="Are you sure you want to leave this event? You'll be removed from the participant list and won't receive further updates."
+        confirmText="Leave Event"
+        type="leave"
+        eventTitle={selectedEvent?.title}
+        showConsent={false}
+      />
     </div>
   )
 }

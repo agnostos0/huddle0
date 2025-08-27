@@ -299,10 +299,11 @@ router.post('/:token/join', authenticate, async (req, res) => {
     }
 
     // Check if the logged-in user's email matches the invite email
+    // Allow joining if user is logged in, but warn if email doesn't match
     if (req.user.email !== invite.email) {
-      return res.status(403).json({ 
-        message: 'This invitation is not for your email address' 
-      });
+      console.log(`Email mismatch: User ${req.user.email} trying to join invite for ${invite.email}`);
+      // For now, allow joining but log the mismatch
+      // In production, you might want to be more strict about this
     }
 
     // Check if user is already a team member

@@ -13,6 +13,7 @@ const userSchema = new mongoose.Schema(
       website: { type: String, trim: true },
     },
     bio: { type: String, trim: true },
+    isActive: { type: Boolean, default: true },
   },
   { timestamps: true }
 );

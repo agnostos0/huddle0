@@ -8,6 +8,7 @@ import eventRoutes from './routes/events.routes.js';
 import userRoutes from './routes/users.routes.js';
 import teamRoutes from './routes/teams.routes.js';
 import inviteRoutes from './routes/invites.routes.js';
+import adminRoutes from './routes/admin.routes.js';
 
 const app = express();
 
@@ -24,10 +25,12 @@ app.use('/api/events', eventRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/teams', teamRoutes);
 app.use('/api/invites', inviteRoutes);
+app.use('/api/admin', adminRoutes);
 
 async function start() {
   try {
     await connectToDatabase();
+    
     app.listen(env.port, () => {
       // eslint-disable-next-line no-console
       console.log(`Eventify backend listening on port ${env.port}`);
