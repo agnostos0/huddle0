@@ -26,9 +26,12 @@ export default function Login() {
     setIsLoading(true)
 
     try {
-      console.log('Attempting login with:', form.emailOrUsername)
+      console.log('Login: Starting login process...')
+      console.log('Login: Attempting login with:', form.emailOrUsername)
+      console.log('Login: API base URL:', import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api')
+      
       const result = await login(form.emailOrUsername, form.password)
-      console.log('Login result:', result)
+      console.log('Login: Login result:', result)
       
       if (result.success) {
         console.log('Login successful, navigating to dashboard for role:', result.user.role)

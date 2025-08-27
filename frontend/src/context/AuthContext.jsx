@@ -101,6 +101,9 @@ export const AuthProvider = ({ children }) => {
   const login = async (emailOrUsername, password) => {
     try {
       console.log('AuthContext: Attempting login API call')
+      console.log('AuthContext: API base URL:', import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api')
+      console.log('AuthContext: Login payload:', { emailOrUsername, password })
+      
       const response = await api.post('/auth/login', { emailOrUsername, password });
       console.log('AuthContext: Login API response:', response.data);
       
