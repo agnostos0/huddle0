@@ -144,7 +144,7 @@ router.post('/:id/join', authenticate, async (req, res) => {
     if (!event) return res.status(404).json({ message: 'Not found' });
     if (event.organizer.toString() === req.user.id) return res.status(400).json({ message: 'Organizer cannot join' });
     
-    const { teamId, autoMatch } = req.body || {};
+    const { teamId } = req.body || {};
     
     if (teamId) {
       // Join with specific team
@@ -163,45 +163,7 @@ router.post('/:id/join', authenticate, async (req, res) => {
       }
       await event.save();
       
-    } else if (autoMatch) {
-      // Auto-match logic: find other solo participants and create/join a team
-      
-      // Find existing auto-match team for this event
-      let autoMatchTeam = null;
-      if (event.teams && event.teams.length > 0) {
-        // Get all teams for this event
-        const eventTeams = await Team.find({ _id: { $in: event.teams } });
-        autoMatchTeam = eventTeams.find(team => 
-          team.name.includes('Auto-Match') && team.members.length < 4
-        );
-      }
-      
-      if (!autoMatchTeam) {
-        // Create new auto-match team
-        autoMatchTeam = await Team.create({
-          name: `Auto-Match Team - ${event.title}`,
-          description: 'Automatically created team for solo participants',
-          owner: req.user.id,
-          members: [req.user.id],
-          isAutoMatch: true
-        });
-        
-        if (!event.teams) event.teams = [];
-        event.teams.push(autoMatchTeam._id);
-      } else {
-        // Add user to existing auto-match team
-        if (!autoMatchTeam.members.some(m => m.toString() === req.user.id)) {
-          autoMatchTeam.members.push(req.user.id);
-          await autoMatchTeam.save();
-        }
-      }
-      
-      // Add user to event participants
-      if (!event.participants.some((p) => p.toString() === req.user.id)) {
-        event.participants.push(req.user.id);
-      }
-      
-      await event.save();
+
       
     } else {
       // Join as individual

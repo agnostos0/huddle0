@@ -147,26 +147,7 @@ export default function EventDetails() {
     }
   }
 
-  async function joinWithAutoMatch() {
-    if (!user) {
-      setError('Please login to join this event')
-      navigate('/login')
-      return
-    }
-    
-    try { 
-      await api.post(`/events/${id}/join`, { autoMatch: true }); 
-      setSuccess('Successfully joined with auto-match! You will be grouped with other solo participants.')
-      await load() 
-    } catch (e) { 
-      if (e.response?.status === 401) {
-        setError('Please login to join this event')
-        navigate('/login')
-      } else {
-        setError(e.response?.data?.message || 'Failed to join with auto-match. Please try again.') 
-      }
-    }
-  }
+
 
   async function showTeamDetails(teamId) {
     try {
@@ -524,13 +505,7 @@ export default function EventDetails() {
                     Join as Individual
                   </button>
 
-                  {/* Auto Match */}
-                  <button 
-                    onClick={() => setShowJoinDialog(true)} 
-                    className="w-full bg-green-600 text-white px-4 py-3 rounded-lg hover:bg-green-700 transition-colors font-medium"
-                  >
-                    Join with Auto-Match
-                  </button>
+
 
                   {/* Team Join */}
                   <div className="space-y-3">

@@ -494,12 +494,7 @@ export default function Teams() {
                           >
                             Invite by Username
                           </button>
-                          <button
-                            onClick={() => setShowAutoMatchForm(true)}
-                            className="bg-orange-600 text-white px-3 py-1 rounded-lg text-sm hover:bg-orange-700 transition-colors"
-                          >
-                            Auto-Match
-                          </button>
+
                           <button
                             onClick={() => setShowManualForm(true)}
                             className="bg-blue-600 text-white px-3 py-1 rounded-lg text-sm hover:bg-blue-700 transition-colors"

@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { Team } from '../models/Team.js';
 import { User } from '../models/User.js';
 import { Invite } from '../models/Invite.js';
+import { Notification } from '../models/Notification.js';
 import { authenticate } from '../middleware/auth.js';
 
 const router = Router();
@@ -16,6 +17,14 @@ router.post('/', authenticate, async (req, res) => {
 // My teams (owned or member)
 router.get('/mine', authenticate, async (req, res) => {
   const teams = await Team.find({ $or: [{ owner: req.user.id }, { members: req.user.id }] })
+    .populate('owner', 'name')
+    .populate('members', 'name');
+  res.json(teams);
+});
+
+// Get all teams (for event joining)
+router.get('/', authenticate, async (req, res) => {
+  const teams = await Team.find({ members: req.user.id })
     .populate('owner', 'name')
     .populate('members', 'name');
   res.json(teams);
@@ -195,6 +204,20 @@ router.post('/:id/invite-by-username', authenticate, async (req, res) => {
       token: require('crypto').randomBytes(32).toString('hex'),
       expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
       invitedBy: req.user.id,
+    });
+
+    // Create notification for the invited user
+    await Notification.create({
+      recipient: user._id,
+      sender: req.user.id,
+      type: 'team_invitation',
+      title: `Team Invitation: ${team.name}`,
+      message: reason || `${req.user.name} has invited you to join their team "${team.name}"`,
+      data: {
+        teamId: teamId,
+        inviteId: invite._id
+      },
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days
     });
 
     // Send email with reason
