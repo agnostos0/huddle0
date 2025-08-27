@@ -8,6 +8,7 @@ import Navbar from '../components/Navbar.jsx'
 export default function CreateTeam() {
   const { user } = useAuth()
   const [name, setName] = useState('')
+  const [description, setDescription] = useState('')
   const [error, setError] = useState('')
   const navigate = useNavigate()
 
@@ -22,7 +23,7 @@ export default function CreateTeam() {
     }
     
     try {
-      await api.post('/teams', { name })
+      await api.post('/teams', { name, description })
       
       // Trigger confetti celebration
       confetti({
@@ -92,6 +93,17 @@ export default function CreateTeam() {
               value={name} 
               onChange={(e)=>setName(e.target.value)} 
               required
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Description (Optional)</label>
+            <textarea 
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-300 resize-none" 
+              placeholder="Describe your team's purpose or goals..." 
+              value={description} 
+              onChange={(e)=>setDescription(e.target.value)} 
+              rows={3}
             />
           </div>
           

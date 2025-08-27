@@ -20,7 +20,6 @@ const inviteSchema = new mongoose.Schema(
     token: {
       type: String,
       required: true,
-      unique: true,
     },
     status: {
       type: String,
@@ -45,7 +44,7 @@ const inviteSchema = new mongoose.Schema(
 );
 
 // Index for token lookup and expiration
-inviteSchema.index({ token: 1 });
+inviteSchema.index({ token: 1 }, { unique: true });
 inviteSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 
 export const Invite = mongoose.model('Invite', inviteSchema);

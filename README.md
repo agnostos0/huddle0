@@ -99,6 +99,31 @@ npm start
 npm run dev
 ```
 
+## 🚀 **Deployment**
+
+### Quick Deployment
+
+1. **Prepare for deployment**
+```bash
+# Run the deployment script
+./deploy.sh
+```
+
+2. **Deploy Backend (Railway)**
+   - Go to [Railway](https://railway.app/)
+   - Create new project from GitHub
+   - Set root directory to `backend`
+   - Add environment variables (see DEPLOYMENT.md)
+
+3. **Deploy Frontend (Vercel)**
+   - Go to [Vercel](https://vercel.com/)
+   - Create new project from GitHub
+   - Set root directory to `frontend`
+   - Add `VITE_API_BASE_URL` environment variable
+
+### Detailed Deployment Guide
+See [DEPLOYMENT.md](./DEPLOYMENT.md) for complete deployment instructions.
+
 5. **Access the application**
 - Frontend: http://localhost:5175
 - Backend API: http://localhost:4000

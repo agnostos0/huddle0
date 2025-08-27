@@ -8,7 +8,7 @@ const router = Router();
 // Register
 router.post('/register', async (req, res) => {
   try {
-    const { name, email, username, password, role = 'user' } = req.body;
+    const { name, email, username, password, contactNumber, role = 'user' } = req.body;
 
     // Check if user already exists
     const existingUser = await User.findOne({
@@ -32,6 +32,7 @@ router.post('/register', async (req, res) => {
       email,
       username,
       password,
+      contactNumber: contactNumber || '0000000000', // Default if not provided
       role
     });
 

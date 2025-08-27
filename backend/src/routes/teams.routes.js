@@ -9,9 +9,26 @@ const router = Router();
 
 // Create a team
 router.post('/', authenticate, async (req, res) => {
-  const { name, members } = req.body;
-  const team = await Team.create({ name, owner: req.user.id, members: members || [req.user.id] });
-  res.status(201).json(team);
+  try {
+    const { name, description, members, leader } = req.body;
+    const team = await Team.create({ 
+      name, 
+      description,
+      owner: req.user.id, 
+      leader: leader || req.user.id, // Default leader is the creator
+      members: members || [req.user.id] 
+    });
+    
+    const populatedTeam = await Team.findById(team._id)
+      .populate('owner', 'name')
+      .populate('leader', 'name')
+      .populate('members', 'name');
+    
+    res.status(201).json(populatedTeam);
+  } catch (error) {
+    console.error('Error creating team:', error);
+    res.status(500).json({ message: 'Failed to create team' });
+  }
 });
 
 // My teams (owned or member)
@@ -24,10 +41,28 @@ router.get('/mine', authenticate, async (req, res) => {
 
 // Get all teams (for event joining)
 router.get('/', authenticate, async (req, res) => {
-  const teams = await Team.find({ members: req.user.id })
-    .populate('owner', 'name')
-    .populate('members', 'name');
-  res.json(teams);
+  try {
+    // Get teams where user is a member
+    const userTeams = await Team.find({ members: req.user.id })
+      .populate('owner', 'name')
+      .populate('leader', 'name')
+      .populate('members', 'name');
+    
+    // Get all public teams (for joining events)
+    const allTeams = await Team.find({})
+      .populate('owner', 'name')
+      .populate('leader', 'name')
+      .populate('members', 'name')
+      .limit(50); // Limit to prevent performance issues
+    
+    res.json({
+      userTeams,
+      allTeams
+    });
+  } catch (error) {
+    console.error('Error fetching teams:', error);
+    res.status(500).json({ message: 'Failed to fetch teams' });
+  }
 });
 
 // Debug route to check all users (for testing)
@@ -232,7 +267,7 @@ router.post('/:id/invite-by-username', authenticate, async (req, res) => {
 
     // Check if user is already a member
     if (team.members.some(m => m.toString() === user._id.toString())) {
-      return res.status(400).json({ message: 'User is already a team member' });
+      return res.status(400).json({ message: 'You are already a member of this team' });
     }
 
     // Check if invite already exists

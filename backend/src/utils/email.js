@@ -145,6 +145,78 @@ export const sendInviteEmail = async (invite, teamName, inviterName, reason = nu
   }
 };
 
+export const sendEventJoinNotification = async (event, participant, joinType, teamName = null) => {
+  const eventUrl = `${config.clientOrigin}/event/${event._id}`;
+  
+  const mailOptions = {
+    from: config.email.from,
+    to: event.organizer.email,
+    subject: `🎉 New participant joined your event: ${event.title}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+          <h1 style="margin: 0; font-size: 28px;">🎉 New Participant!</h1>
+          <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">Someone just joined your event</p>
+        </div>
+        
+        <div style="background: #f8f9fa; padding: 30px; border-radius: 0 0 10px 10px;">
+          <h2 style="color: #333; margin-top: 0;">Great news!</h2>
+          
+          <p style="color: #555; line-height: 1.6; font-size: 16px;">
+            <strong>${participant.name}</strong> has joined your event <strong>"${event.title}"</strong>.
+          </p>
+          
+          <div style="background: #f0f8ff; border-left: 4px solid #3b82f6; padding: 15px; margin: 20px 0; border-radius: 4px;">
+            <p style="color: #1e40af; font-weight: 600; margin: 0 0 8px 0;">Join Details:</p>
+            <ul style="color: #374151; margin: 0; padding-left: 20px;">
+              <li><strong>Join Type:</strong> ${joinType}</li>
+              ${teamName ? `<li><strong>Team Name:</strong> ${teamName}</li>` : ''}
+              <li><strong>Participant:</strong> ${participant.name}</li>
+              <li><strong>Contact:</strong> ${participant.contactNumber || 'Not provided'}</li>
+              <li><strong>Email:</strong> ${participant.email}</li>
+            </ul>
+          </div>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${eventUrl}" 
+               style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); 
+                      color: white; 
+                      padding: 15px 30px; 
+                      text-decoration: none; 
+                      border-radius: 25px; 
+                      font-weight: bold; 
+                      display: inline-block;
+                      font-size: 16px;">
+              View Event Details
+            </a>
+          </div>
+          
+          <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 15px; margin: 20px 0;">
+            <p style="color: #856404; margin: 0; font-size: 14px;">
+              <strong>Current Participants:</strong> ${event.participants?.length || 0}${event.maxParticipants ? ` / ${event.maxParticipants}` : ''}
+            </p>
+          </div>
+          
+          <hr style="border: none; border-top: 1px solid #ddd; margin: 30px 0;">
+          
+          <p style="color: #777; font-size: 12px; text-align: center;">
+            This email was sent from Eventify. You can manage your event notifications in your dashboard.
+          </p>
+        </div>
+      </div>
+    `,
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log('Event join notification sent:', info.messageId);
+    return info;
+  } catch (error) {
+    console.error('Error sending event join notification:', error);
+    throw error;
+  }
+};
+
 export const sendTestEmail = async () => {
   const mailOptions = {
     from: config.email.from,

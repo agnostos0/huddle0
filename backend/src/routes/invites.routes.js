@@ -46,7 +46,7 @@ router.get('/:token', async (req, res) => {
 // Accept invite (public route)
 router.post('/:token/accept', async (req, res) => {
   try {
-    const { name, username, password, bio, socialLinks } = req.body;
+    const { name, username, password, bio, socialLinks, userEmail } = req.body;
 
     const invite = await Invite.findOne({ 
       token: req.params.token,
@@ -66,10 +66,11 @@ router.post('/:token/accept', async (req, res) => {
     if (user) {
       // User exists, just add to team if not already a member
       const team = await Team.findById(invite.team._id);
-      if (!team.members.some(m => m.toString() === user._id.toString())) {
-        team.members.push(user._id);
-        await team.save();
+      if (team.members.some(m => m.toString() === user._id.toString())) {
+        return res.status(400).json({ message: 'You are already a member of this team' });
       }
+      team.members.push(user._id);
+      await team.save();
     } else {
       // Check if username is available
       if (username) {
@@ -82,7 +83,7 @@ router.post('/:token/accept', async (req, res) => {
       // Create new user
       user = await User.create({
         name,
-        username: username || email.split('@')[0], // Use email prefix if no username provided
+        username: username || invite.email.split('@')[0], // Use email prefix if no username provided
         email: invite.email,
         password,
         bio,

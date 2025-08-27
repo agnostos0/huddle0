@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate, Link, useLocation } from 'react-router-dom'
 import api from '../lib/api.js'
 import { useAuth } from '../context/AuthContext.jsx'
 
 export default function Login() {
   const { login } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
   const [form, setForm] = useState({ emailOrUsername: '', password: '' })
   const [error, setError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
@@ -31,13 +32,23 @@ export default function Login() {
       
       if (result.success) {
         console.log('Login successful, navigating to dashboard for role:', result.user.role)
-        // Navigate based on user role
-        if (result.user.role === 'admin') {
-          navigate('/admin-dashboard')
-        } else if (result.user.role === 'organizer') {
-          navigate('/organizer-dashboard')
+        
+        // Check if there's a redirect path in the URL
+        const params = new URLSearchParams(location.search)
+        const redirectTo = params.get('redirect')
+        
+        if (redirectTo) {
+          console.log('Redirecting to:', redirectTo)
+          navigate(redirectTo)
         } else {
-          navigate('/dashboard')
+          // Navigate based on user role
+          if (result.user.role === 'admin') {
+            navigate('/admin-dashboard')
+          } else if (result.user.role === 'organizer') {
+            navigate('/organizer-dashboard')
+          } else {
+            navigate('/dashboard')
+          }
         }
       } else {
         console.log('Login failed:', result.message)

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import api from '../lib/api.js'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext.jsx'
 import confetti from 'canvas-confetti'
 import Navbar from '../components/Navbar.jsx'
 import LocationPicker from '../components/LocationPicker.jsx'
@@ -9,6 +10,8 @@ import TagInput from '../components/TagInput.jsx'
 
 export default function CreateEvent() {
   const navigate = useNavigate()
+  const { user, token } = useAuth()
+  
   const [form, setForm] = useState({
     title: '',
     description: '',

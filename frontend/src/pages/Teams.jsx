@@ -35,7 +35,7 @@ export default function Teams() {
     try {
       setLoading(true)
       const { data } = await api.get('/teams/mine')
-      setTeams(data)
+      setTeams(data.userTeams || data)
     } catch (e) {
       setError('Failed to load teams')
     } finally {
@@ -444,12 +444,22 @@ export default function Teams() {
                             <p className="text-sm text-gray-600">
                               {team.members?.length || 0} members
                             </p>
+                            {team.description && (
+                              <p className="text-xs text-gray-500 mt-1">{team.description}</p>
+                            )}
                           </div>
-                          {team.owner?._id === user?.id && (
-                            <span className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full">
-                              Owner
-                            </span>
-                          )}
+                          <div className="flex flex-col items-end gap-1">
+                            {team.owner?._id === user?.id && (
+                              <span className="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full">
+                                Owner
+                              </span>
+                            )}
+                            {team.leader?._id === user?.id && team.leader?._id !== team.owner?._id && (
+                              <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+                                Leader
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -465,7 +475,15 @@ export default function Teams() {
                   <div className="flex items-center justify-between mb-6">
                     <div>
                       <h2 className="text-2xl font-bold text-gray-800">{selectedTeam.name}</h2>
-                      <p className="text-gray-600">Created by {selectedTeam.owner?.name}</p>
+                      <div className="flex items-center gap-4 text-sm text-gray-600">
+                        <span>Owner: {selectedTeam.owner?.name}</span>
+                        {selectedTeam.leader && selectedTeam.leader._id !== selectedTeam.owner._id && (
+                          <span>Leader: {selectedTeam.leader?.name}</span>
+                        )}
+                      </div>
+                      {selectedTeam.description && (
+                        <p className="text-gray-600 mt-1">{selectedTeam.description}</p>
+                      )}
                     </div>
                     {selectedTeam.owner?._id === user?.id && (
                       <button
@@ -489,15 +507,7 @@ export default function Teams() {
                           >
                             Invite by Email
                           </button>
-                          <button
-                            onClick={() => {
-                              setInviteMethod('username')
-                              setShowInviteForm(true)
-                            }}
-                            className="bg-purple-600 text-white px-3 py-1 rounded-lg text-sm hover:bg-purple-700 transition-colors"
-                          >
-                            Invite by Username
-                          </button>
+
 
                           <button
                             onClick={() => setShowManualForm(true)}
@@ -624,151 +634,41 @@ export default function Teams() {
           <div className="bg-white rounded-2xl p-6 w-full max-w-lg mx-4">
             <h3 className="text-xl font-semibold text-gray-800 mb-4">Invite Team Member</h3>
             
-            {/* Invitation Method Tabs */}
-            <div className="flex space-x-1 mb-6 bg-gray-100 rounded-lg p-1">
-              <button
-                onClick={() => setInviteMethod('email')}
-                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                  inviteMethod === 'email' 
-                    ? 'bg-white text-purple-600 shadow-sm' 
-                    : 'text-gray-600 hover:text-gray-800'
-                }`}
-              >
-                📧 Invite by Email
-              </button>
-              <button
-                onClick={() => setInviteMethod('username')}
-                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
-                  inviteMethod === 'username' 
-                    ? 'bg-white text-purple-600 shadow-sm' 
-                    : 'text-gray-600 hover:text-gray-800'
-                }`}
-              >
-                👤 Invite by Username
-              </button>
-            </div>
+
 
             {/* Email Invitation Form */}
-            {inviteMethod === 'email' && (
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
-                  <input
-                    type="email"
-                    value={inviteEmail}
-                    onChange={(e) => setInviteEmail(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    placeholder="Enter email address"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Name (Optional)</label>
-                  <input
-                    type="text"
-                    value={inviteName}
-                    onChange={(e) => setInviteName(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    placeholder="Enter name"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Invitation Message (Optional)</label>
-                  <textarea
-                    value={inviteReason}
-                    onChange={(e) => setInviteReason(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    placeholder="Tell them why you want them to join your team..."
-                    rows={3}
-                  />
-                </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                <input
+                  type="email"
+                  value={inviteEmail}
+                  onChange={(e) => setInviteEmail(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="Enter email address"
+                />
               </div>
-            )}
-
-            {/* Username Invitation Form */}
-            {inviteMethod === 'username' && (
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Search Username or Email</label>
-                  <input
-                    type="text"
-                    value={inviteUsername}
-                    onChange={(e) => {
-                      setInviteUsername(e.target.value)
-                      if (e.target.value.length >= 2) {
-                        searchUsersByUsernameOrEmail(e.target.value)
-                      } else {
-                        setSearchResults([])
-                      }
-                    }}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    placeholder="Enter username or email to search..."
-                  />
-                </div>
-                
-                {/* Search Results */}
-                {searchResults.length > 0 && (
-                  <div className="max-h-48 overflow-y-auto border border-gray-200 rounded-lg">
-                    {searchResults.map((user) => (
-                      <div
-                        key={user._id}
-                        className="p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <div className="font-medium text-gray-800">
-                              {user.username ? `@${user.username}` : user.email}
-                            </div>
-                            <div className="text-sm text-gray-600">{user.name}</div>
-                            {user.username && user.email && (
-                              <div className="text-xs text-gray-500">{user.email}</div>
-                            )}
-                            {user.bio && (
-                              <div className="text-xs text-gray-500 mt-1">{user.bio}</div>
-                            )}
-                          </div>
-                          <div className="flex space-x-2">
-                            <button
-                              onClick={() => addUserToTeam(selectedTeam._id, user._id)}
-                              className="px-3 py-1 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 transition-colors"
-                            >
-                              Add Directly
-                            </button>
-                            <button
-                              onClick={() => {
-                                setInviteUsername(user.username)
-                                setInviteReason('')
-                              }}
-                              className="px-3 py-1 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition-colors"
-                            >
-                              Send Invite
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                
-                {inviteUsername && searchResults.length === 0 && inviteUsername.length >= 2 && (
-                  <div className="text-center py-4 text-gray-500">
-                    No users found with that username or email
-                  </div>
-                )}
-
-                {inviteUsername && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Invitation Message (Optional)</label>
-                    <textarea
-                      value={inviteReason}
-                      onChange={(e) => setInviteReason(e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                      placeholder="Tell them why you want them to join your team..."
-                      rows={3}
-                    />
-                  </div>
-                )}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Name (Optional)</label>
+                <input
+                  type="text"
+                  value={inviteName}
+                  onChange={(e) => setInviteName(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="Enter name"
+                />
               </div>
-            )}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Invitation Message (Optional)</label>
+                <textarea
+                  value={inviteReason}
+                  onChange={(e) => setInviteReason(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  placeholder="Tell them why you want them to join your team..."
+                  rows={3}
+                />
+              </div>
+            </div>
 
             <div className="flex space-x-3 mt-6">
               <button
@@ -786,17 +686,8 @@ export default function Teams() {
                 Cancel
               </button>
               <button
-                onClick={() => {
-                  if (inviteMethod === 'email') {
-                    inviteMember(selectedTeam._id)
-                  } else {
-                    inviteUserByUsername(selectedTeam._id)
-                  }
-                }}
-                disabled={
-                  (inviteMethod === 'email' && !inviteEmail) ||
-                  (inviteMethod === 'username' && !inviteUsername)
-                }
+                onClick={() => inviteMember(selectedTeam._id)}
+                disabled={!inviteEmail}
                 className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Send Invitation

@@ -1,10 +1,11 @@
 import React from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import LoadingSpinner from './LoadingSpinner.jsx';
 
 const ProtectedRoute = ({ children, requiredRole = null }) => {
   const { token, user, loading } = useAuth();
+  const location = useLocation();
 
   // Show loading spinner while authentication is being checked
   if (loading) {
@@ -13,7 +14,7 @@ const ProtectedRoute = ({ children, requiredRole = null }) => {
 
   // Check if user is authenticated
   if (!token) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname)}`} replace />;
   }
 
   // If no specific role is required, allow access
@@ -45,7 +46,7 @@ const ProtectedRoute = ({ children, requiredRole = null }) => {
   } else if (user && user.role === 'organizer') {
     return <Navigate to="/organizer-dashboard" replace />;
   } else {
-            return <Navigate to="/dashboard" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 };
 
