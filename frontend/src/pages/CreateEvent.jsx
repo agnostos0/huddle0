@@ -49,6 +49,7 @@ export default function CreateEvent() {
       console.log('CreateEvent: Starting event creation...')
       console.log('CreateEvent: User:', user)
       console.log('CreateEvent: Token:', token)
+      console.log('CreateEvent: Form data:', form)
       
       const payload = { 
         ...form, 
@@ -56,6 +57,8 @@ export default function CreateEvent() {
       }
       
       console.log('CreateEvent: Sending payload:', payload)
+      console.log('CreateEvent: About to make API call...')
+      
       const { data } = await api.post('/events', payload)
       console.log('CreateEvent: Event created successfully:', data)
       
@@ -264,7 +267,7 @@ export default function CreateEvent() {
             </div>
 
             {/* Submit Button */}
-            <div className="flex justify-center pt-6">
+            <div className="flex justify-center pt-6 space-x-4">
               <button
                 type="submit"
                 disabled={isSubmitting}
@@ -278,6 +281,32 @@ export default function CreateEvent() {
                 ) : (
                   'Create Event'
                 )}
+              </button>
+              
+              <button
+                type="button"
+                onClick={async () => {
+                  console.log('CreateEvent: Testing simple event creation...')
+                  try {
+                    const testPayload = {
+                      title: 'Test Event',
+                      description: 'Test Description',
+                      date: new Date().toISOString(),
+                      location: 'Test Location',
+                      category: 'General'
+                    }
+                    console.log('CreateEvent: Test payload:', testPayload)
+                    const { data } = await api.post('/events', testPayload)
+                    console.log('CreateEvent: Test event created:', data)
+                    alert('Test event created successfully!')
+                  } catch (err) {
+                    console.error('CreateEvent: Test event failed:', err)
+                    alert('Test event failed: ' + err.message)
+                  }
+                }}
+                className="px-8 py-4 bg-green-600 text-white font-semibold rounded-xl hover:bg-green-700 transform hover:scale-105 transition-all duration-300"
+              >
+                Test Create
               </button>
             </div>
           </form>
