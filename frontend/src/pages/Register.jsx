@@ -55,6 +55,9 @@ export default function Register() {
       const username = value.toLowerCase(); // Convert to lowercase
       setFormData(prev => ({ ...prev, username })); // Update with lowercase
       
+      // Basic validation
+      const isValid = username.length >= 3 && !/\s/.test(username) && /^[a-z0-9_]+$/.test(username);
+      
       setUsernameCriteria({
         minLength: username.length >= 3,
         noSpaces: !/\s/.test(username),
@@ -63,8 +66,8 @@ export default function Register() {
         isAvailable: false // Reset availability check
       });
       
-      // Check username availability if criteria are met
-      if (username.length >= 3 && !/\s/.test(username) && /^[a-z0-9_]+$/.test(username)) {
+      // Check username availability if basic criteria are met
+      if (isValid) {
         checkUsernameAvailability(username);
       }
     }
@@ -85,8 +88,8 @@ export default function Register() {
       return;
     }
 
-    if (!Object.values(usernameCriteria).every(Boolean)) {
-      setError('Please meet all username requirements');
+    if (!usernameCriteria.isAvailable) {
+      setError('Please choose an available username');
       return;
     }
 
@@ -242,18 +245,35 @@ export default function Register() {
                 required
               />
               
-              {/* Username Requirements */}
-              <div className="mt-3 space-y-2">
-                <UsernameChecklistItem met={usernameCriteria.minLength} text="At least 3 characters" />
-                <UsernameChecklistItem met={usernameCriteria.noSpaces} text="No spaces allowed" />
-                <UsernameChecklistItem met={usernameCriteria.noCapital} text="No capital letters" />
-                <UsernameChecklistItem met={usernameCriteria.validChars} text="Only letters, numbers, and underscore" />
-                <UsernameChecklistItem 
-                  met={usernameCriteria.isAvailable} 
-                  text="Username is available" 
-                  loading={isCheckingUsername}
-                />
-              </div>
+              {/* Username Availability Status */}
+              {formData.username.length > 0 && (
+                <div className="mt-3">
+                  {isCheckingUsername ? (
+                    <div className="flex items-center space-x-2 text-blue-600">
+                      <div className="w-4 h-4 border-2 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
+                      <span className="text-sm">Checking availability...</span>
+                    </div>
+                  ) : usernameCriteria.isAvailable ? (
+                    <div className="flex items-center space-x-2 text-green-600">
+                      <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                        <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <span className="text-sm font-medium">Username is available! ✅</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center space-x-2 text-red-600">
+                      <div className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
+                        <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <span className="text-sm font-medium">Username is not available ❌</span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
 
