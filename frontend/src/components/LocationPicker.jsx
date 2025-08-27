@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
-import { Loader } from '@googlemaps/js-api-loader';
 
 // Fix for default markers
 delete L.Icon.Default.prototype._getIconUrl;
@@ -39,51 +38,23 @@ export default function LocationPicker({
   const [searchTerm, setSearchTerm] = useState(location || '');
   const [isMapOpen, setIsMapOpen] = useState(false);
   const [selectedCoords, setSelectedCoords] = useState(coordinates || null);
-  const [suggestions, setSuggestions] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [userLocation, setUserLocation] = useState(null);
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
-  const searchTimeoutRef = useRef(null);
-  const autocompleteRef = useRef(null);
   const inputRef = useRef(null);
 
-  // Initialize Google Maps
+  // Update search term when location prop changes
   useEffect(() => {
-    const initGoogleMaps = async () => {
-      try {
-        const loader = new Loader({
-          apiKey: 'AIzaSyB41DRUbKWJHPxaFjMAwdrzWzbVKartNGg', // Replace with your Google Maps API key
-          version: 'weekly',
-          libraries: ['places']
-        });
+    if (location) {
+      setSearchTerm(location);
+    }
+  }, [location]);
 
-        await loader.load();
-        
-        // Initialize autocomplete
-        if (inputRef.current) {
-          autocompleteRef.current = new google.maps.places.Autocomplete(inputRef.current, {
-            types: ['establishment', 'geocode'],
-            componentRestrictions: { country: ['us', 'in', 'gb', 'ca', 'au'] }
-          });
-
-          autocompleteRef.current.addListener('place_changed', () => {
-            const place = autocompleteRef.current.getPlace();
-            if (place.geometry) {
-              const coords = {
-                lat: place.geometry.location.lat(),
-                lng: place.geometry.location.lng()
-              };
-              handleLocationSelect(place.formatted_address, coords);
-            }
-          });
-        }
-      } catch (error) {
-        console.error('Error loading Google Maps:', error);
-      }
-    };
-
-    initGoogleMaps();
-  }, []);
+  // Update coordinates when coordinates prop changes
+  useEffect(() => {
+    if (coordinates) {
+      setSelectedCoords(coordinates);
+    }
+  }, [coordinates]);
 
   // Detect user location
   const detectUserLocation = () => {
@@ -126,6 +97,12 @@ export default function LocationPicker({
       }
     } catch (error) {
       console.error('Error reverse geocoding:', error);
+      // Fallback: use coordinates as location name
+      const locationName = `${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}`;
+      setSearchTerm(locationName);
+      onLocationChange(locationName);
+      setSelectedCoords(coords);
+      onCoordinatesChange(coords);
     }
   };
 
@@ -154,15 +131,21 @@ export default function LocationPicker({
     handleLocationSelect(latlng);
   };
 
+  const handleInputChange = (e) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    onLocationChange(value);
+  };
+
   return (
     <div className="space-y-4">
-      {/* Location Input with Google Places Autocomplete */}
+      {/* Location Input */}
       <div className="relative">
         <input
           ref={inputRef}
           type="text"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={handleInputChange}
           placeholder={placeholder}
           className="w-full px-4 py-3 pr-20 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
         />
@@ -229,14 +212,6 @@ export default function LocationPicker({
               Clear
             </button>
           </div>
-        </div>
-      )}
-
-      {/* Loading Indicator */}
-      {isLoading && (
-        <div className="flex items-center justify-center py-2">
-          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-600"></div>
-          <span className="ml-2 text-sm text-gray-600">Searching locations...</span>
         </div>
       )}
 

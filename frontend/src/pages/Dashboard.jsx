@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react'
 import api from '../lib/api.js'
 import { useAuth } from '../context/AuthContext.jsx'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import confetti from 'canvas-confetti'
 import Navbar from '../components/Navbar.jsx'
 import ConfirmationDialog from '../components/ConfirmationDialog.jsx'
 
 export default function Dashboard() {
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
+  const navigate = useNavigate()
   const [myEvents, setMyEvents] = useState([])
   const [joinedEvents, setJoinedEvents] = useState([])
   const [allEvents, setAllEvents] = useState([])
@@ -26,6 +27,15 @@ export default function Dashboard() {
   const [showJoinDialog, setShowJoinDialog] = useState(false)
   const [showLeaveDialog, setShowLeaveDialog] = useState(false)
   const [selectedEvent, setSelectedEvent] = useState(null)
+  const [isImpersonating, setIsImpersonating] = useState(false)
+
+  useEffect(() => {
+    // Check if this is an admin impersonating a user
+    const adminToken = localStorage.getItem('adminToken')
+    if (adminToken && user?.email !== 'admin@eventify.com') {
+      setIsImpersonating(true)
+    }
+  }, [user])
 
   useEffect(() => {
     async function fetchData() {
@@ -126,6 +136,22 @@ export default function Dashboard() {
     setShowLeaveDialog(true)
   }
 
+  const handleReturnToAdmin = () => {
+    // Restore admin token and user
+    const adminToken = localStorage.getItem('adminToken')
+    const adminUser = JSON.parse(localStorage.getItem('adminUser') || '{}')
+    
+    if (adminToken && adminUser.email === 'admin@eventify.com') {
+      localStorage.setItem('token', adminToken)
+      localStorage.removeItem('adminToken')
+      localStorage.removeItem('adminUser')
+      window.location.reload()
+    } else {
+      logout()
+      navigate('/login')
+    }
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center">
@@ -140,6 +166,29 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50">
       <Navbar />
+      
+      {/* Impersonation Banner */}
+      {isImpersonating && (
+        <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white px-6 py-3">
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              <span className="font-medium">
+                Admin Mode: Currently logged in as <strong>{user?.name}</strong> ({user?.email})
+              </span>
+            </div>
+            <button
+              onClick={handleReturnToAdmin}
+              className="px-4 py-2 bg-white text-orange-600 rounded-lg font-medium hover:bg-gray-100 transition-colors"
+            >
+              Return to Admin
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="bg-white/80 backdrop-blur-sm border-b border-white/20 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-6 py-6">

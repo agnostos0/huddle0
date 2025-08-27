@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import api from '../lib/api.js'
 import { useAuth } from '../context/AuthContext.jsx'
 import confetti from 'canvas-confetti'
+import Navbar from '../components/Navbar.jsx'
 
 export default function Teams() {
   const { user } = useAuth()
@@ -163,23 +164,34 @@ export default function Teams() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50">
+      {/* Back Button */}
+      <div className="max-w-7xl mx-auto px-6 py-6">
+        <Link
+          to="/dashboard"
+          className="inline-flex items-center space-x-2 text-purple-600 hover:text-purple-700 transition-colors mb-6"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          <span>Back to Dashboard</span>
+        </Link>
+      </div>
+
       {/* Header */}
-      <div className="bg-white/80 backdrop-blur-sm border-b border-white/20">
-        <div className="max-w-7xl mx-auto px-6 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
-                Team Management
-              </h1>
-              <p className="text-gray-600 mt-1">Manage your teams and collaborate with others</p>
-            </div>
-            <Link 
-              to="/teams/create" 
-              className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-300"
-            >
-              + Create Team
-            </Link>
+      <div className="max-w-7xl mx-auto px-6 pb-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
+              Team Management
+            </h1>
+            <p className="text-gray-600 mt-1">Manage your teams and collaborate with others</p>
           </div>
+          <Link 
+            to="/teams/create" 
+            className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-300"
+          >
+            + Create Team
+          </Link>
         </div>
       </div>
 

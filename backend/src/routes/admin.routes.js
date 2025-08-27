@@ -3,6 +3,7 @@ import { User } from '../models/User.js';
 import { Event } from '../models/Event.js';
 import { Team } from '../models/Team.js';
 import { Invite } from '../models/Invite.js';
+import { signJwt } from '../utils/jwt.js';
 
 const router = Router();
 
@@ -179,6 +180,112 @@ router.get('/users/:userId/details', async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch user details' });
+  }
+});
+
+// Admin impersonation - login as any user
+router.post('/impersonate/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    const user = await User.findById(userId).select('-password');
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Generate token for the impersonated user
+    const token = signJwt({ id: user._id.toString() });
+    
+    res.json({ 
+      message: `Now logged in as ${user.name}`,
+      token, 
+      user: { 
+        id: user._id, 
+        name: user.name, 
+        username: user.username,
+        email: user.email 
+      } 
+    });
+  } catch (error) {
+    console.error('Admin impersonation error:', error);
+    res.status(500).json({ message: 'Failed to impersonate user' });
+  }
+});
+
+// Delete event
+router.delete('/events/:eventId', async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    
+    const event = await Event.findByIdAndDelete(eventId);
+    
+    if (!event) {
+      return res.status(404).json({ message: 'Event not found' });
+    }
+
+    res.json({ message: 'Event deleted successfully' });
+  } catch (error) {
+    console.error('Delete event error:', error);
+    res.status(500).json({ message: 'Failed to delete event' });
+  }
+});
+
+// Delete invite
+router.delete('/invites/:inviteId', async (req, res) => {
+  try {
+    const { inviteId } = req.params;
+    
+    const invite = await Invite.findByIdAndDelete(inviteId);
+    
+    if (!invite) {
+      return res.status(404).json({ message: 'Invite not found' });
+    }
+
+    res.json({ message: 'Invite deleted successfully' });
+  } catch (error) {
+    console.error('Delete invite error:', error);
+    res.status(500).json({ message: 'Failed to delete invite' });
+  }
+});
+
+// Withdraw invite
+router.post('/invites/:inviteId/withdraw', async (req, res) => {
+  try {
+    const { inviteId } = req.params;
+    
+    const invite = await Invite.findByIdAndUpdate(
+      inviteId,
+      { status: 'withdrawn' },
+      { new: true }
+    );
+    
+    if (!invite) {
+      return res.status(404).json({ message: 'Invite not found' });
+    }
+
+    res.json({ message: 'Invite withdrawn successfully', invite });
+  } catch (error) {
+    console.error('Withdraw invite error:', error);
+    res.status(500).json({ message: 'Failed to withdraw invite' });
+  }
+});
+
+// Clear all database data
+router.delete('/clear-database', async (req, res) => {
+  try {
+    // Delete all data from all collections
+    await Promise.all([
+      User.deleteMany({}),
+      Event.deleteMany({}),
+      Team.deleteMany({}),
+      Invite.deleteMany({})
+    ]);
+
+    res.json({ message: 'Database cleared successfully' });
+  } catch (error) {
+    console.error('Clear database error:', error);
+    res.status(500).json({ message: 'Failed to clear database' });
   }
 });
 

@@ -5,7 +5,7 @@ export const config = {
   port: process.env.PORT || 4000,
   mongoUri: process.env.MONGODB_URI || 'mongodb://localhost:27017/eventify',
   jwtSecret: process.env.JWT_SECRET || 'dev-secret-change-me',
-  clientOrigin: process.env.CLIENT_ORIGIN || 'http://localhost:5175',
+  clientOrigin: process.env.CLIENT_ORIGIN || 'http://localhost:5176',
   smtp: {
     host: process.env.SMTP_HOST || 'smtp.gmail.com',
     port: parseInt(process.env.SMTP_PORT) || 587,
