@@ -41,6 +41,7 @@ export default function CreateEvent() {
   const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isUploadingImages, setIsUploadingImages] = useState(false)
+  const [compressionProgress, setCompressionProgress] = useState('')
   const [showGoogleLink, setShowGoogleLink] = useState(false)
   const [locationSuggestions, setLocationSuggestions] = useState([])
   const [showSuggestions, setShowSuggestions] = useState(false)
@@ -111,18 +112,19 @@ export default function CreateEvent() {
       return
     }
     
-    // Limit file size to 5MB
-    const validFiles = imageFiles.filter(file => file.size <= 5 * 1024 * 1024)
+    // Limit file size to 2MB (will be compressed further)
+    const validFiles = imageFiles.filter(file => file.size <= 2 * 1024 * 1024)
     
     if (validFiles.length !== imageFiles.length) {
-      alert('Some files were too large. Maximum file size is 5MB.')
+      alert('Some files were too large. Maximum file size is 2MB.')
     }
     
     setIsUploadingImages(true)
     
     try {
-      // Compress images more aggressively
-      const compressedImages = await compressImages(validFiles, 600, 0.5)
+      setCompressionProgress('Compressing images...')
+      // Compress images very aggressively for smaller file sizes
+      const compressedImages = await compressImages(validFiles, 400, 0.3)
       
       setForm(prev => ({
         ...prev,
@@ -130,6 +132,8 @@ export default function CreateEvent() {
       }))
       
       console.log(`Added ${compressedImages.length} compressed images`)
+      setCompressionProgress('Images compressed successfully!')
+      setTimeout(() => setCompressionProgress(''), 2000)
     } catch (error) {
       console.error('Error processing images:', error)
       alert('Error processing images. Please try again.')
@@ -569,18 +573,18 @@ export default function CreateEvent() {
                        disabled={isUploadingImages}
                        className="w-full disabled:opacity-50"
                      >
-                       {isUploadingImages ? (
-                         <>
-                           <div className="w-12 h-12 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto mb-4"></div>
-                           <p className="text-gray-600">Processing images...</p>
-                         </>
-                       ) : (
+                                               {isUploadingImages ? (
+                          <>
+                            <div className="w-12 h-12 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto mb-4"></div>
+                            <p className="text-gray-600">{compressionProgress || 'Processing images...'}</p>
+                          </>
+                        ) : (
                          <>
                            <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
                            </svg>
-                           <p className="text-gray-600">Click to upload photos or drag and drop</p>
-                           <p className="text-sm text-gray-500 mt-1">PNG, JPG, GIF up to 5MB each (will be compressed)</p>
+                                                       <p className="text-gray-600">Click to upload photos or drag and drop</p>
+                            <p className="text-sm text-gray-500 mt-1">PNG, JPG, GIF up to 2MB each (will be auto-compressed)</p>
                          </>
                        )}
                      </button>
