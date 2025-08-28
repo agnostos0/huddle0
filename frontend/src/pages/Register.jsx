@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import confetti from 'canvas-confetti';
 import Navbar from '../components/Navbar.jsx';
+import ApiTest from '../components/ApiTest.jsx';
 import api from '../lib/api.js';
 
 
