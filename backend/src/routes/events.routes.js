@@ -224,7 +224,13 @@ router.post('/:id/join', authenticate, async (req, res) => {
     res.json(event);
   } catch (error) {
     console.error('Join event error:', error);
-    res.status(500).json({ message: 'Failed to join event' });
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      eventId: req.params.id,
+      userId: req.user.id
+    });
+    res.status(500).json({ message: 'Failed to join event', error: error.message });
   }
 });
 
