@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext.jsx'
 import confetti from 'canvas-confetti'
 import Navbar from '../components/Navbar.jsx'
+import { compressImages } from '../utils/imageCompression.js'
 
 export default function CreateEvent() {
   const navigate = useNavigate()
@@ -39,6 +40,7 @@ export default function CreateEvent() {
   
   const [error, setError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isUploadingImages, setIsUploadingImages] = useState(false)
   const [showGoogleLink, setShowGoogleLink] = useState(false)
   const [locationSuggestions, setLocationSuggestions] = useState([])
   const [showSuggestions, setShowSuggestions] = useState(false)
@@ -100,9 +102,14 @@ export default function CreateEvent() {
     setShowSuggestions(false)
   }
 
-  const handleFileUpload = (e) => {
+  const handleFileUpload = async (e) => {
     const files = Array.from(e.target.files)
     const imageFiles = files.filter(file => file.type.startsWith('image/'))
+    
+    if (imageFiles.length === 0) {
+      alert('Please select image files only.')
+      return
+    }
     
     // Limit file size to 5MB
     const validFiles = imageFiles.filter(file => file.size <= 5 * 1024 * 1024)
@@ -111,16 +118,24 @@ export default function CreateEvent() {
       alert('Some files were too large. Maximum file size is 5MB.')
     }
     
-    validFiles.forEach(file => {
-      const reader = new FileReader()
-      reader.onload = (e) => {
-        setForm(prev => ({
-          ...prev,
-          photos: [...prev.photos, e.target.result]
-        }))
-      }
-      reader.readAsDataURL(file)
-    })
+    setIsUploadingImages(true)
+    
+    try {
+      // Compress images
+      const compressedImages = await compressImages(validFiles, 800, 0.7)
+      
+      setForm(prev => ({
+        ...prev,
+        photos: [...prev.photos, ...compressedImages]
+      }))
+      
+      console.log(`Added ${compressedImages.length} compressed images`)
+    } catch (error) {
+      console.error('Error processing images:', error)
+      alert('Error processing images. Please try again.')
+    } finally {
+      setIsUploadingImages(false)
+    }
   }
 
   const removePhoto = (index) => {
@@ -546,17 +561,27 @@ export default function CreateEvent() {
                       onChange={handleFileUpload}
                       className="hidden"
                     />
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      className="w-full"
-                    >
-                      <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                      </svg>
-                      <p className="text-gray-600">Click to upload photos or drag and drop</p>
-                      <p className="text-sm text-gray-500 mt-1">PNG, JPG, GIF up to 10MB each</p>
-                    </button>
+                                         <button
+                       type="button"
+                       onClick={() => fileInputRef.current?.click()}
+                       disabled={isUploadingImages}
+                       className="w-full disabled:opacity-50"
+                     >
+                       {isUploadingImages ? (
+                         <>
+                           <div className="w-12 h-12 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin mx-auto mb-4"></div>
+                           <p className="text-gray-600">Processing images...</p>
+                         </>
+                       ) : (
+                         <>
+                           <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                           </svg>
+                           <p className="text-gray-600">Click to upload photos or drag and drop</p>
+                           <p className="text-sm text-gray-500 mt-1">PNG, JPG, GIF up to 5MB each (will be compressed)</p>
+                         </>
+                       )}
+                     </button>
                   </div>
                 </div>
 
