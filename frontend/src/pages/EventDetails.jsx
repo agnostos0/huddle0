@@ -26,11 +26,6 @@ export default function EventDetails() {
   const [filteredTeams, setFilteredTeams] = useState([])
   const [showTeamSearch, setShowTeamSearch] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [showOTPDialog, setShowOTPDialog] = useState(false)
-  const [mobileNumber, setMobileNumber] = useState('')
-  const [otp, setOtp] = useState('')
-  const [otpSent, setOtpSent] = useState(false)
-  const [otpLoading, setOtpLoading] = useState(false)
   const [joinLoading, setJoinLoading] = useState(false)
   const [selectedPhoto, setSelectedPhoto] = useState(null)
   const [showPhotoModal, setShowPhotoModal] = useState(false)
@@ -153,59 +148,7 @@ export default function EventDetails() {
     try { await api.delete(`/events/${id}`); navigate('/dashboard') } catch (e) { setError('Failed to delete') }
   }
 
-  async function sendOTP() {
-    if (!mobileNumber) {
-      setError('Please enter your mobile number')
-      return
-    }
-    
-    const mobileRegex = /^[0-9]{10,15}$/
-    if (!mobileRegex.test(mobileNumber)) {
-      setError('Please enter a valid mobile number')
-      return
-    }
-    
-    setOtpLoading(true)
-    setError('')
-    
-    try {
-      const purpose = selectedTeam ? 'team_join' : 'event_join'
-      await api.post('/otp/send', {
-        mobileNumber,
-        purpose,
-        eventId: id,
-        teamId: selectedTeam
-      })
-      
-      setOtpSent(true)
-      setSuccess('OTP sent to your mobile number')
-    } catch (e) {
-      setError(e.response?.data?.message || 'Failed to send OTP')
-    } finally {
-      setOtpLoading(false)
-    }
-  }
 
-  async function resendOTP() {
-    setOtpLoading(true)
-    setError('')
-    
-    try {
-      const purpose = selectedTeam ? 'team_join' : 'event_join'
-      await api.post('/otp/resend', {
-        mobileNumber,
-        purpose,
-        eventId: id,
-        teamId: selectedTeam
-      })
-      
-      setSuccess('OTP resent successfully')
-    } catch (e) {
-      setError(e.response?.data?.message || 'Failed to resend OTP')
-    } finally {
-      setOtpLoading(false)
-    }
-  }
 
   async function joinAsTeam() {
     if (!user) {
@@ -221,16 +164,10 @@ export default function EventDetails() {
     
     try { 
       await api.post(`/events/${id}/join`, { 
-        teamId: selectedTeam,
-        mobileNumber,
-        otp
+        teamId: selectedTeam
       }); 
       
       setSuccess('Successfully joined event with team!')
-      setShowOTPDialog(false)
-      setMobileNumber('')
-      setOtp('')
-      setOtpSent(false)
       setSelectedTeam('')
       await load() 
     } catch (e) { 
@@ -256,16 +193,9 @@ export default function EventDetails() {
     setError('')
     
     try { 
-      await api.post(`/events/${id}/join`, { 
-        mobileNumber,
-        otp
-      }); 
+      await api.post(`/events/${id}/join`); 
       
       setSuccess('Successfully joined event!')
-      setShowOTPDialog(false)
-      setMobileNumber('')
-      setOtp('')
-      setOtpSent(false)
       await load() 
     } catch (e) { 
       if (e.response?.status === 401) {
@@ -677,7 +607,7 @@ export default function EventDetails() {
                 <div className="space-y-4">
                   {/* Solo Join */}
                   <button 
-                    onClick={() => setShowOTPDialog(true)} 
+                    onClick={joinAsIndividual} 
                     className="w-full bg-purple-600 text-white px-4 py-3 rounded-lg hover:bg-purple-700 transition-colors font-medium"
                   >
                     Join as Individual
@@ -765,7 +695,7 @@ export default function EventDetails() {
 
                         {selectedTeam && (
                           <button 
-                            onClick={() => setShowOTPDialog(true)} 
+                            onClick={joinAsTeam} 
                             className="w-full bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors text-sm"
                           >
                             Join with Selected Team
@@ -909,92 +839,7 @@ export default function EventDetails() {
         </div>
       )}
 
-      {/* OTP Verification Dialog */}
-      {showOTPDialog && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900">Mobile Verification</h2>
-                <button onClick={() => setShowOTPDialog(false)} className="text-gray-500 hover:text-gray-700">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-              <p className="text-gray-600 mt-2">
-                {selectedTeam ? `Join "${event?.title}" with your team` : `Join "${event?.title}" as individual`}
-              </p>
-            </div>
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Mobile Number</label>
-                <input
-                  type="tel"
-                  value={mobileNumber}
-                  onChange={(e) => setMobileNumber(e.target.value)}
-                  placeholder="Enter your mobile number"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  disabled={otpSent}
-                />
-              </div>
 
-              {!otpSent ? (
-                <button
-                  onClick={sendOTP}
-                  disabled={otpLoading || !mobileNumber}
-                  className="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {otpLoading ? 'Sending OTP...' : 'Send OTP'}
-                </button>
-              ) : (
-                <>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Enter OTP</label>
-                    <input
-                      type="text"
-                      value={otp}
-                      onChange={(e) => setOtp(e.target.value)}
-                      placeholder="Enter 6-digit OTP"
-                      maxLength={6}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    />
-                  </div>
-
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={selectedTeam ? joinAsTeam : joinAsIndividual}
-                      disabled={joinLoading || !otp || otp.length !== 6}
-                      className="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {joinLoading ? 'Joining...' : 'Join Event'}
-                    </button>
-                    <button
-                      onClick={resendOTP}
-                      disabled={otpLoading}
-                      className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {otpLoading ? '...' : 'Resend'}
-                    </button>
-                  </div>
-                </>
-              )}
-
-              {error && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                  <p className="text-red-600 text-sm">{error}</p>
-                </div>
-              )}
-
-              {success && (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                  <p className="text-green-600 text-sm">{success}</p>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Confirmation Dialogs */}
       <ConfirmationDialog

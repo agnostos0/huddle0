@@ -2,7 +2,6 @@ import { Router } from 'express';
 import { Event } from '../models/Event.js';
 import { Team } from '../models/Team.js';
 import { User } from '../models/User.js';
-import { OTP } from '../models/OTP.js';
 import { authenticate } from '../middleware/auth.js';
 import { sendEventJoinNotification } from '../utils/email.js';
 
@@ -158,29 +157,7 @@ router.post('/:id/join', authenticate, async (req, res) => {
     if (!event) return res.status(404).json({ message: 'Not found' });
     if (event.organizer && event.organizer._id.toString() === req.user.id) return res.status(400).json({ message: 'Organizer cannot join' });
     
-    const { teamId, mobileNumber, otp } = req.body || {};
-    
-    // Verify OTP if provided (optional for now)
-    if (mobileNumber && otp) {
-      const otpDoc = await OTP.findOne({
-        mobileNumber,
-        otp,
-        purpose: teamId ? 'team_join' : 'event_join',
-        eventId: event._id,
-        teamId: teamId || null,
-        isUsed: false,
-        expiresAt: { $gt: new Date() }
-      });
-
-      if (!otpDoc) {
-        return res.status(400).json({ message: 'Invalid or expired OTP' });
-      }
-
-      // Mark OTP as used
-      otpDoc.isUsed = true;
-      await otpDoc.save();
-    }
-    // OTP is optional for now - allow joining without OTP
+    const { teamId } = req.body || {};
     
     let joinType = 'Individual';
     let teamName = null;
@@ -212,16 +189,26 @@ router.post('/:id/join', authenticate, async (req, res) => {
     
     await event.save();
     
-    // Send email notification to organizer (optional) - temporarily disabled
-    // try {
-    //   const user = await User.findById(req.user.id);
-    //   await sendEventJoinNotification(event, user, joinType, teamName);
-    // } catch (emailError) {
-    //   console.error('Failed to send join notification email:', emailError);
-    //   // Don't fail the request if email fails
-    // }
+    // Send email notification to organizer
+    try {
+      if (event.organizer && event.organizer.email) {
+        const user = await User.findById(req.user.id);
+        await sendEventJoinNotification(event, user, joinType, teamName);
+        console.log(`Email notification sent to organizer ${event.organizer.email} for ${joinType} join`);
+      }
+    } catch (emailError) {
+      console.error('Failed to send join notification email:', emailError);
+      // Don't fail the request if email fails
+    }
     
-    res.json(event);
+    res.json({
+      message: `${joinType === 'Team' ? `Team "${teamName}"` : req.user.name} has joined the event successfully`,
+      event: {
+        id: event._id,
+        title: event.title,
+        participants: event.participants.length
+      }
+    });
   } catch (error) {
     console.error('Join event error:', error);
     console.error('Error details:', {
