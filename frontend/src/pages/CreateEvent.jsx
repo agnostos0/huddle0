@@ -121,8 +121,8 @@ export default function CreateEvent() {
     setIsUploadingImages(true)
     
     try {
-      // Compress images
-      const compressedImages = await compressImages(validFiles, 800, 0.7)
+      // Compress images more aggressively
+      const compressedImages = await compressImages(validFiles, 600, 0.5)
       
       setForm(prev => ({
         ...prev,
@@ -200,6 +200,8 @@ export default function CreateEvent() {
         setError('Session expired. Please login again.')
       } else if (err.code === 'NETWORK_ERROR') {
         setError('Network error. Please check your connection.')
+      } else if (err.response?.status === 413) {
+        setError('Images are too large. Please try with smaller images.')
       } else {
         setError(err.response?.data?.message || 'Failed to create event. Please try again.')
       }

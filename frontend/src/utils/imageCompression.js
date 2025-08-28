@@ -31,7 +31,7 @@ export const compressImage = (file, maxWidth = 800, quality = 0.7) => {
   })
 }
 
-export const compressImages = async (files, maxWidth = 800, quality = 0.7) => {
+export const compressImages = async (files, maxWidth = 600, quality = 0.5) => {
   const compressedImages = []
   
   for (const file of files) {
