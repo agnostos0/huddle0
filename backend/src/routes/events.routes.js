@@ -60,6 +60,11 @@ router.post('/', authenticate, async (req, res) => {
       socialLinks
     };
 
+    // Ensure organizer is set
+    if (!eventData.organizer) {
+      return res.status(400).json({ message: 'Organizer is required' });
+    }
+
     const event = await Event.create(eventData);
     res.status(201).json(event);
   } catch (err) {
@@ -151,7 +156,7 @@ router.post('/:id/join', authenticate, async (req, res) => {
   try {
     const event = await Event.findById(req.params.id).populate('organizer', 'name email');
     if (!event) return res.status(404).json({ message: 'Not found' });
-    if (event.organizer._id.toString() === req.user.id) return res.status(400).json({ message: 'Organizer cannot join' });
+    if (event.organizer && event.organizer._id.toString() === req.user.id) return res.status(400).json({ message: 'Organizer cannot join' });
     
     const { teamId, mobileNumber, otp } = req.body || {};
     
