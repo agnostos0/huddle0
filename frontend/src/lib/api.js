@@ -2,7 +2,7 @@ import axios from 'axios'
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'https://eventify-production-ea1c.up.railway.app/api',
-  timeout: 10000,
+  timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
   }
@@ -18,6 +18,7 @@ api.interceptors.request.use((config) => {
   
   // Log request details for debugging
   console.log('API: Making request to:', config.baseURL + config.url)
+  console.log('API: Base URL:', config.baseURL)
   console.log('API: Request method:', config.method?.toUpperCase())
   console.log('API: Request data:', config.data)
   

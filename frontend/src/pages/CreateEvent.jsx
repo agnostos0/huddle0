@@ -104,7 +104,14 @@ export default function CreateEvent() {
     const files = Array.from(e.target.files)
     const imageFiles = files.filter(file => file.type.startsWith('image/'))
     
-    imageFiles.forEach(file => {
+    // Limit file size to 5MB
+    const validFiles = imageFiles.filter(file => file.size <= 5 * 1024 * 1024)
+    
+    if (validFiles.length !== imageFiles.length) {
+      alert('Some files were too large. Maximum file size is 5MB.')
+    }
+    
+    validFiles.forEach(file => {
       const reader = new FileReader()
       reader.onload = (e) => {
         setForm(prev => ({
@@ -142,10 +149,18 @@ export default function CreateEvent() {
         throw new Error('User or token not found')
       }
       
+      // Prepare payload with photos
       const payload = { 
         ...form, 
-        date: new Date(form.date).toISOString()
+        date: new Date(form.date).toISOString(),
+        photos: form.photos || [],
+        coverPhoto: form.photos.length > 0 ? form.photos[0] : null
       }
+      
+      console.log('Creating event with payload:', {
+        ...payload,
+        photos: payload.photos ? `${payload.photos.length} photos` : 'no photos'
+      })
       
       const { data } = await api.post('/events', payload)
       
@@ -160,6 +175,11 @@ export default function CreateEvent() {
       navigate(`/event/${data._id}`)
     } catch (err) {
       console.error('CreateEvent error:', err)
+      console.error('Error details:', {
+        message: err.message,
+        status: err.response?.status,
+        data: err.response?.data
+      })
       
       if (err.response?.status === 401) {
         setError('Session expired. Please login again.')
