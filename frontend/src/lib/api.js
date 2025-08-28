@@ -2,12 +2,8 @@ import axios from 'axios'
 
 // Determine the correct API base URL
 const getApiBaseUrl = () => {
-  // In production on Firebase, use relative URLs to avoid CORS issues
-  if (window.location.hostname.includes('firebaseapp.com') || window.location.hostname.includes('web.app')) {
-    return '/api'
-  }
-  // For local development or other environments, use the full URL
-  return import.meta.env.VITE_API_BASE_URL || 'https://us-central1-huddle-e6492.cloudfunctions.net/api'
+  // Always use the Railway backend URL for now
+  return 'https://eventify-production-ea1c.up.railway.app/api'
 }
 
 const api = axios.create({

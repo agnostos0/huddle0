@@ -8,10 +8,6 @@
     ],
     "rewrites": [
       {
-        "source": "/api/**",
-        "destination": "https://eventify-production-ea1c.up.railway.app/api/**"
-      },
-      {
         "source": "**",
         "destination": "/index.html"
       }
