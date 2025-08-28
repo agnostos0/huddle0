@@ -10,7 +10,7 @@ import teamRoutes from './routes/teams.routes.js';
 import inviteRoutes from './routes/invites.routes.js';
 import adminRoutes from './routes/admin.routes.js';
 import notificationRoutes from './routes/notifications.routes.js';
-import otpRoutes from './routes/otp.routes.js';
+
 import paymentRoutes from './routes/payments.routes.js';
 
 const app = express();
@@ -60,7 +60,7 @@ app.use('/api/teams', teamRoutes);
 app.use('/api/invites', inviteRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/notifications', notificationRoutes);
-app.use('/api/otp', otpRoutes);
+
 app.use('/api/payments', paymentRoutes);
 
 async function start() {

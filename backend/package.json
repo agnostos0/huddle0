@@ -24,9 +24,7 @@
     "helmet": "^7.1.0",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.5.1",
-    "nodemailer": "^7.0.5",
-    "twilio": "^4.19.0",
-    "axios": "^1.6.0"
+    "nodemailer": "^7.0.5"
   },
   "devDependencies": {
     "firebase-functions-test": "^3.4.1",

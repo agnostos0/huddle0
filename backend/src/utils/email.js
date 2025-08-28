@@ -217,7 +217,7 @@ export const sendEventJoinNotification = async (event, participant, joinType, te
   }
 };
 
-export const sendOTPEmail = async (mobileNumber, otp, purpose) => {
+
   // For now, we'll send to a default email since we don't have user email
   // In a real app, you'd get the user's email from their profile
   const userEmail = 'princetagadiya99@gmail.com'; // Default email for testing
