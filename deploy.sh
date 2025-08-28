@@ -1,90 +1,91 @@
 #!/bin/bash
 
-# Huddle Deployment Script
-echo "🚀 Starting Huddle deployment..."
+echo "🚀 Deploying Huddle Application..."
 
-# Check if we're in the right directory
-if [ ! -f "package.json" ] && [ ! -d "frontend" ] && [ ! -d "backend" ]; then
-    echo "❌ Error: Please run this script from the project root directory"
-    exit 1
-fi
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
 
-# Function to check if a command exists
-command_exists() {
-    command -v "$1" >/dev/null 2>&1
+# Function to print colored output
+print_status() {
+    echo -e "${GREEN}[INFO]${NC} $1"
 }
 
-# Check for required tools
-if ! command_exists git; then
-    echo "❌ Error: Git is not installed"
+print_warning() {
+    echo -e "${YELLOW}[WARNING]${NC} $1"
+}
+
+print_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
+}
+
+# Check if we're in the right directory
+if [ ! -f "README.md" ]; then
+    print_error "Please run this script from the project root directory"
     exit 1
 fi
 
-if ! command_exists npm; then
-    echo "❌ Error: npm is not installed"
+print_status "Starting deployment process..."
+
+# Deploy Backend to Railway
+print_status "Deploying backend to Railway..."
+cd backend
+
+# Check if Railway CLI is installed
+if ! command -v railway &> /dev/null; then
+    print_warning "Railway CLI not found. Please install it first:"
+    echo "npm install -g @railway/cli"
+    echo "railway login"
     exit 1
 fi
 
-# Check git status
-echo "📋 Checking git status..."
-if [ -n "$(git status --porcelain)" ]; then
-    echo "📝 Changes detected, committing..."
-    
-    # Add all changes
-    git add .
-    
-    # Commit with timestamp
-    timestamp=$(date '+%Y-%m-%d %H:%M:%S')
-    git commit -m "Deploy: Fix login issues, rebrand to Huddle - $timestamp"
-    
-    echo "✅ Changes committed"
+# Deploy to Railway
+print_status "Deploying backend to Railway..."
+railway up
+
+if [ $? -eq 0 ]; then
+    print_status "Backend deployed successfully to Railway!"
 else
-    echo "✅ No changes to commit"
-fi
-
-# Check if we're on the main branch
-current_branch=$(git branch --show-current)
-if [ "$current_branch" != "main" ]; then
-    echo "⚠️  Warning: You're on branch '$current_branch', not 'main'"
-    read -p "Do you want to continue? (y/N): " -n 1 -r
-    echo
-    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-        echo "❌ Deployment cancelled"
-        exit 1
-    fi
-fi
-
-# Push to remote
-echo "📤 Pushing to remote repository..."
-if git push origin $current_branch; then
-    echo "✅ Successfully pushed to remote"
-else
-    echo "❌ Failed to push to remote"
+    print_error "Backend deployment failed!"
     exit 1
 fi
+
+cd ..
+
+# Deploy Frontend to Vercel
+print_status "Deploying frontend to Vercel..."
+cd frontend
 
 # Check if Vercel CLI is installed
-if command_exists vercel; then
-    echo "🌐 Vercel CLI detected"
-    echo "📋 Current Vercel project status:"
-    vercel ls 2>/dev/null || echo "No Vercel projects found"
-    
-    echo ""
-    echo "🎉 Deployment completed!"
-    echo "📱 Your Huddle app should automatically deploy on Vercel"
-    echo "🔗 Check your Vercel dashboard for the deployment status"
-else
-    echo "🌐 Vercel CLI not found"
-    echo "📋 To install Vercel CLI: npm i -g vercel"
-    echo "🎉 Git push completed!"
-    echo "📱 Your Huddle app should automatically deploy on Vercel if connected"
+if ! command -v vercel &> /dev/null; then
+    print_warning "Vercel CLI not found. Please install it first:"
+    echo "npm install -g vercel"
+    echo "vercel login"
+    exit 1
 fi
 
-echo ""
-echo "🔧 Troubleshooting tips:"
-echo "1. Check Vercel dashboard for deployment status"
-echo "2. Verify environment variables are set in Vercel"
-echo "3. Check build logs for any errors"
-echo "4. Test the API connection using the debug tools"
-echo ""
-echo "📞 If you need help, check the console logs and error messages"
+# Deploy to Vercel
+print_status "Deploying frontend to Vercel..."
+vercel --prod
+
+if [ $? -eq 0 ]; then
+    print_status "Frontend deployed successfully to Vercel!"
+else
+    print_error "Frontend deployment failed!"
+    exit 1
+fi
+
+cd ..
+
+print_status "🎉 Deployment completed successfully!"
+print_status "Your application should now be live!"
+print_status ""
+print_status "Important notes:"
+print_status "1. The 405 error should now be resolved with the updated Vercel configuration"
+print_status "2. API requests are now properly proxied to your Railway backend"
+print_status "3. If you still encounter issues, check the browser console for detailed error messages"
+print_status ""
+print_status "Frontend URL: https://your-vercel-app.vercel.app"
+print_status "Backend URL: https://eventify-production-ea1c.up.railway.app"

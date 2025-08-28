@@ -1,7 +1,17 @@
 import axios from 'axios'
 
+// Determine the correct API base URL
+const getApiBaseUrl = () => {
+  // In production on Firebase, use the Railway backend URL
+  if (window.location.hostname.includes('firebaseapp.com') || window.location.hostname.includes('web.app')) {
+    return 'https://eventify-production-ea1c.up.railway.app/api'
+  }
+  // For local development or other environments, use the full URL
+  return import.meta.env.VITE_API_BASE_URL || 'https://eventify-production-ea1c.up.railway.app/api'
+}
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'https://eventify-production-ea1c.up.railway.app/api',
+  baseURL: getApiBaseUrl(),
   timeout: 15000,
   headers: {
     'Content-Type': 'application/json',
@@ -21,6 +31,7 @@ api.interceptors.request.use((config) => {
   console.log('API: Base URL:', config.baseURL)
   console.log('API: Request method:', config.method?.toUpperCase())
   console.log('API: Request data:', config.data)
+  console.log('API: Full URL:', config.baseURL + config.url)
   
   return config
 }, (error) => {
@@ -41,7 +52,9 @@ api.interceptors.response.use(
       status: error.response?.status,
       statusText: error.response?.statusText,
       data: error.response?.data,
-      message: error.message
+      message: error.message,
+      method: error.config?.method,
+      baseURL: error.config?.baseURL
     })
     
     // Handle network errors
@@ -50,6 +63,17 @@ api.interceptors.response.use(
       return Promise.reject({
         message: 'Network error. Please check your internet connection and try again.',
         isNetworkError: true
+      })
+    }
+    
+    // Handle 405 errors specifically
+    if (error.response?.status === 405) {
+      console.error('API: 405 Method Not Allowed - Check if the endpoint supports the HTTP method')
+      return Promise.reject({
+        message: 'Method not allowed. Please check if the API endpoint is configured correctly.',
+        isMethodError: true,
+        method: error.config?.method,
+        url: error.config?.url
       })
     }
     

@@ -18,8 +18,10 @@ import InviteAccept from './pages/InviteAccept.jsx';
 import EventsMap from './pages/EventsMap.jsx';
 import ExploreEvents from './pages/ExploreEvents.jsx';
 import EventOrganizerDashboard from './pages/EventOrganizerDashboard.jsx';
-
 import UserProfile from './pages/UserProfile.jsx';
+
+// Initialize Firebase
+import './lib/firebase.js';
 
 function AppContent() {
   const { loading } = useAuth();

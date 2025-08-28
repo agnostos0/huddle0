@@ -1,126 +1,144 @@
-# Huddle Login Fixes & Deployment Guide
+# Deployment Fixes and Troubleshooting Guide
 
-## 🔧 Login Issues Fixed
+## 405 Method Not Allowed Error - RESOLVED ✅
 
-### 1. Environment Configuration
-- Added `.env.production` with correct API base URL for Vercel deployment
-- Added `.env.development` for local development
-- Updated API configuration to handle production URLs
+### Problem
+The login functionality was returning a 405 (Method Not Allowed) error on Vercel deployment.
 
-### 2. API Error Handling
-- Enhanced error handling in `api.js` with better debugging
-- Added network error detection
-- Added CORS error handling
-- Improved error messages for users
+### Root Cause
+The Vercel configuration was not properly routing API requests to the Railway backend, causing the frontend to try to handle API calls locally.
 
-### 3. CORS Configuration
-- Updated backend CORS to allow Vercel domains
-- Added proper headers for cross-origin requests
-- Enhanced CORS logging for debugging
+### Solution Applied
+1. **Updated `frontend/vercel.json`**:
+   - Added proper API proxy configuration
+   - Routes `/api/*` requests to Railway backend
+   - Maintains SPA routing for frontend pages
 
-### 4. Debug Tools
-- Added API connection testing utility
-- Added debug section in Login component (development only)
-- Enhanced console logging for troubleshooting
+2. **Enhanced API Configuration**:
+   - Updated `frontend/src/lib/api.js` to handle different environments
+   - Added specific 405 error handling
+   - Improved debugging and error reporting
 
-### 5. Registration Fixes
-- Fixed gender field requirement in User model
-- Added proper validation for all required fields
-- Improved error messages for registration issues
+3. **Updated Login Component**:
+   - Added specific handling for 405 errors
+   - Better error messages for users
 
-## 🚀 Quick Deployment
+### Files Modified
+- `frontend/vercel.json` - API routing configuration
+- `frontend/src/lib/api.js` - Enhanced API handling
+- `frontend/src/pages/Login.jsx` - Better error handling
+- `deploy.sh` - Updated deployment script
+
+## How to Deploy the Fix
 
 ### Option 1: Use the Deployment Script
 ```bash
+chmod +x deploy.sh
 ./deploy.sh
 ```
 
-This script will:
-- Check for uncommitted changes
-- Commit changes with timestamp
-- Push to GitHub
-- Provide deployment status
-
 ### Option 2: Manual Deployment
+
+#### Deploy Backend (Railway)
 ```bash
-# 1. Add and commit changes
-git add .
-git commit -m "Fix login issues, rebrand to Huddle"
-
-# 2. Push to GitHub
-git push origin main
-
-# 3. Vercel will automatically deploy
+cd backend
+railway up
 ```
 
-## 🔍 Troubleshooting
+#### Deploy Frontend (Vercel)
+```bash
+cd frontend
+vercel --prod
+```
 
-### If Login Still Doesn't Work:
+## Testing the Fix
 
-1. **Check Environment Variables in Vercel:**
-   - Go to your Vercel project dashboard
-   - Navigate to Settings > Environment Variables
-   - Ensure `VITE_API_BASE_URL` is set to your backend URL
+1. **Check API Health**:
+   - Visit: `https://eventify-production-ea1c.up.railway.app/api/health`
+   - Should return: `{"status":"ok","service":"huddle-backend"}`
 
-2. **Verify Backend is Running:**
-   - Check Railway dashboard for backend status
-   - Test backend health endpoint: `https://your-backend-url/api/health`
+2. **Test Login**:
+   - Try logging in with valid credentials
+   - Check browser console for detailed logs
+   - Should no longer show 405 error
 
-3. **Check CORS Issues:**
+3. **Debug Information**:
    - Open browser developer tools
-   - Look for CORS errors in Console tab
-   - Verify your frontend domain is in allowed origins
+   - Check Network tab for API requests
+   - Look for proper routing to Railway backend
 
-4. **Use Debug Tools:**
-   - In development mode, use the "Test Connection" button
-   - Check console logs for detailed error information
+## Common Issues and Solutions
 
-### Common Issues:
+### Issue: Still Getting 405 Error
+**Solution**: 
+1. Clear browser cache
+2. Hard refresh the page (Ctrl+F5)
+3. Check if Vercel deployment completed successfully
+4. Verify the API proxy is working by checking Network tab
 
-1. **Network Error:**
-   - Check internet connection
-   - Verify backend URL is correct
-   - Ensure backend is accessible
+### Issue: CORS Errors
+**Solution**:
+- The backend CORS configuration should handle this
+- Check if the origin is in the allowed list in `backend/src/server.js`
 
-2. **CORS Error:**
-   - Backend not allowing your frontend domain
-   - Check CORS configuration in backend
-   - Verify domain is in allowed origins list
+### Issue: Network Errors
+**Solution**:
+1. Check if Railway backend is running
+2. Verify the API URL is correct
+3. Test the health endpoint directly
 
-3. **Authentication Error:**
-   - Check if user credentials are correct
-   - Verify backend authentication endpoint
-   - Check JWT token generation
+### Issue: Authentication Errors
+**Solution**:
+1. Check if user exists in database
+2. Verify password is correct
+3. Check if account is active
 
-4. **Registration Error:**
-   - Ensure all required fields are provided (including gender)
-   - Check username availability
-   - Verify email format
+## Environment Variables
 
-## 📋 Environment Variables
+Make sure these are set correctly:
 
 ### Frontend (Vercel)
-```
-VITE_API_BASE_URL=https://your-backend-url/api
-```
+- `VITE_API_BASE_URL` (optional, will use proxy if not set)
 
 ### Backend (Railway)
-```
-MONGODB_URI=your-mongodb-connection-string
-JWT_SECRET=your-jwt-secret
-CLIENT_ORIGIN=https://your-frontend-url
-```
+- `MONGODB_URI`
+- `JWT_SECRET`
+- `CLIENT_ORIGIN`
+- `PORT`
 
-## 🔗 Useful Links
+## Monitoring and Debugging
 
-- [Vercel Dashboard](https://vercel.com/dashboard)
-- [Railway Dashboard](https://railway.app/dashboard)
-- [MongoDB Atlas](https://cloud.mongodb.com/)
+### Browser Console
+Check for these log messages:
+- `API: Making request to: /api/auth/login`
+- `API: Base URL: /api` (on Vercel)
+- `API: Response received: /api/auth/login 200`
 
-## 📞 Support
+### Network Tab
+Look for:
+- Requests to `/api/*` endpoints
+- Proper HTTP methods (POST for login)
+- Correct response status codes
 
-If you're still having issues:
-1. Check the browser console for error messages
-2. Use the debug tools in development mode
-3. Verify all environment variables are set correctly
-4. Test the API endpoints directly using tools like Postman
+### Vercel Logs
+Check Vercel deployment logs for:
+- Build success
+- No routing conflicts
+- Proper proxy configuration
+
+## Support
+
+If you're still experiencing issues:
+
+1. **Check the logs**: Browser console and Vercel deployment logs
+2. **Test the API directly**: Use tools like Postman or curl
+3. **Verify deployment**: Ensure both frontend and backend are deployed
+4. **Clear cache**: Browser cache and CDN cache
+
+## Recent Changes Summary
+
+- ✅ Fixed 405 Method Not Allowed error
+- ✅ Improved API routing configuration
+- ✅ Enhanced error handling and debugging
+- ✅ Updated deployment process
+- ✅ Added comprehensive troubleshooting guide

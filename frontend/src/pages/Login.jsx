@@ -69,7 +69,9 @@ export default function Login() {
       console.error('Login error:', err)
       
       // Handle different types of errors
-      if (err.isNetworkError) {
+      if (err.isMethodError) {
+        setError(`Method not allowed (405). The login endpoint might not be configured correctly. Please contact support.`)
+      } else if (err.isNetworkError) {
         setError('Network error. Please check your internet connection and try again.')
       } else if (err.isCorsError) {
         setError('Connection error. Please check if the server is accessible.')
