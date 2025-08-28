@@ -382,6 +382,19 @@ router.delete('/events/:eventId', async (req, res) => {
   }
 });
 
+// Delete all events
+router.delete('/events', async (req, res) => {
+  try {
+    const result = await Event.deleteMany({});
+    res.json({ 
+      message: `All events deleted successfully. Deleted ${result.deletedCount} events.` 
+    });
+  } catch (error) {
+    console.error('Delete all events error:', error);
+    res.status(500).json({ message: 'Failed to delete all events' });
+  }
+});
+
 // Delete invite
 router.delete('/invites/:inviteId', async (req, res) => {
   try {
