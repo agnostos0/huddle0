@@ -205,15 +205,23 @@ router.post('/users/:userId/:action', async (req, res) => {
       return res.status(400).json({ message: 'Invalid action' });
     }
 
+    // Check if user exists and get their email
+    const existingUser = await User.findById(userId);
+    
+    if (!existingUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    // Prevent deactivation of admin@huddle.com account
+    if (action === 'deactivate' && existingUser.email === 'admin@huddle.com') {
+      return res.status(403).json({ message: 'Cannot deactivate the main admin account' });
+    }
+
     const user = await User.findByIdAndUpdate(
       userId,
       { isActive: action === 'activate' },
       { new: true }
     ).select('-password');
-
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
 
     res.json({ message: `User ${action}d successfully`, user });
   } catch (error) {
@@ -256,6 +264,18 @@ router.delete('/users/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
     
+    // Check if user exists and get their email
+    const user = await User.findById(userId);
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    // Prevent deletion of admin@huddle.com account
+    if (user.email === 'admin@huddle.com') {
+      return res.status(403).json({ message: 'Cannot delete the main admin account' });
+    }
+    
     // Delete user's events
     await Event.deleteMany({ organizer: userId });
     
@@ -272,11 +292,7 @@ router.delete('/users/:userId', async (req, res) => {
     await Invite.deleteMany({ invitedBy: userId });
     
     // Finally delete the user
-    const user = await User.findByIdAndDelete(userId);
-    
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
+    await User.findByIdAndDelete(userId);
 
     res.json({ message: 'User deleted successfully' });
   } catch (error) {

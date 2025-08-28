@@ -410,23 +410,31 @@ export default function AdminDashboard() {
                             >
                               {impersonateLoading ? 'Loading...' : 'Login As'}
                             </button>
-                            <button
-                              onClick={() => {
-                                setSelectedUserForNotice(user);
-                                setShowNoticeModal(true);
-                              }}
-                              className="text-orange-400 hover:text-orange-300"
-                            >
-                              Notice
-                            </button>
-                            {user.isActive ? (
+                            {user.email !== 'admin@huddle.com' ? (
                               <button
-                                onClick={() => handleDeactivateUser(user._id)}
-                                disabled={deleteLoading[user._id]}
-                                className="text-yellow-400 hover:text-yellow-300 disabled:opacity-50"
+                                onClick={() => {
+                                  setSelectedUserForNotice(user);
+                                  setShowNoticeModal(true);
+                                }}
+                                className="text-orange-400 hover:text-orange-300"
                               >
-                                {deleteLoading[user._id] ? 'Deactivating...' : 'Deactivate'}
+                                Notice
                               </button>
+                            ) : (
+                              <span className="text-gray-500 text-xs">Protected</span>
+                            )}
+                            {user.isActive ? (
+                              user.email !== 'admin@huddle.com' ? (
+                                <button
+                                  onClick={() => handleDeactivateUser(user._id)}
+                                  disabled={deleteLoading[user._id]}
+                                  className="text-yellow-400 hover:text-yellow-300 disabled:opacity-50"
+                                >
+                                  {deleteLoading[user._id] ? 'Deactivating...' : 'Deactivate'}
+                                </button>
+                              ) : (
+                                <span className="text-gray-500 text-xs">Protected</span>
+                              )
                             ) : (
                               <button
                                 onClick={() => handleActivateUser(user._id)}
@@ -436,13 +444,15 @@ export default function AdminDashboard() {
                                 {deleteLoading[user._id] ? 'Activating...' : 'Activate'}
                               </button>
                             )}
-                            <button
-                              onClick={() => handleDeleteUser(user._id)}
-                              disabled={deleteLoading[user._id]}
-                              className="text-red-400 hover:text-red-300 disabled:opacity-50"
-                            >
-                              {deleteLoading[user._id] ? 'Deleting...' : 'Delete'}
-                            </button>
+                            {user.email !== 'admin@huddle.com' && (
+                              <button
+                                onClick={() => handleDeleteUser(user._id)}
+                                disabled={deleteLoading[user._id]}
+                                className="text-red-400 hover:text-red-300 disabled:opacity-50"
+                              >
+                                {deleteLoading[user._id] ? 'Deleting...' : 'Delete'}
+                              </button>
+                            )}
                             </div>
                           </td>
                         </tr>
