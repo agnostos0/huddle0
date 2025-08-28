@@ -155,7 +155,7 @@ router.post('/:id/join', authenticate, async (req, res) => {
     
     const { teamId, mobileNumber, otp } = req.body || {};
     
-    // Verify OTP if provided
+    // Verify OTP if provided (optional for now)
     if (mobileNumber && otp) {
       const otpDoc = await OTP.findOne({
         mobileNumber,
@@ -174,9 +174,8 @@ router.post('/:id/join', authenticate, async (req, res) => {
       // Mark OTP as used
       otpDoc.isUsed = true;
       await otpDoc.save();
-    } else {
-      return res.status(400).json({ message: 'Mobile number and OTP are required' });
     }
+    // OTP is optional for now - allow joining without OTP
     
     let joinType = 'Individual';
     let teamName = null;
@@ -208,7 +207,7 @@ router.post('/:id/join', authenticate, async (req, res) => {
     
     await event.save();
     
-    // Send email notification to organizer
+    // Send email notification to organizer (optional)
     try {
       const user = await User.findById(req.user.id);
       await sendEventJoinNotification(event, user, joinType, teamName);
