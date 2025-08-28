@@ -212,14 +212,14 @@ router.post('/:id/join', authenticate, async (req, res) => {
     
     await event.save();
     
-    // Send email notification to organizer (optional)
-    try {
-      const user = await User.findById(req.user.id);
-      await sendEventJoinNotification(event, user, joinType, teamName);
-    } catch (emailError) {
-      console.error('Failed to send join notification email:', emailError);
-      // Don't fail the request if email fails
-    }
+    // Send email notification to organizer (optional) - temporarily disabled
+    // try {
+    //   const user = await User.findById(req.user.id);
+    //   await sendEventJoinNotification(event, user, joinType, teamName);
+    // } catch (emailError) {
+    //   console.error('Failed to send join notification email:', emailError);
+    //   // Don't fail the request if email fails
+    // }
     
     res.json(event);
   } catch (error) {
