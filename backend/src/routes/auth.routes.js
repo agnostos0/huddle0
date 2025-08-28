@@ -289,7 +289,7 @@ router.get('/check-username/:username', async (req, res) => {
 // Create admin user (for development only)
 router.post('/create-admin', async (req, res) => {
   try {
-    const { name, email, username, password } = req.body;
+    const { name, email, username, password, gender = 'male' } = req.body;
 
     // Check if user already exists
     const existingUser = await User.findOne({
@@ -308,6 +308,7 @@ router.post('/create-admin', async (req, res) => {
       email,
       username,
       password,
+      gender,
       role: 'admin'
     });
 

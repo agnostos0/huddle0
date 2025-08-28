@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext.jsx';
 import confetti from 'canvas-confetti';
 import Navbar from '../components/Navbar.jsx';
 import api from '../lib/api.js';
-import { testUsernameAvailability, testDebugUsernames } from '../utils/testApi.js';
+
 
 export default function Register() {
   const navigate = useNavigate();
@@ -51,6 +51,16 @@ export default function Register() {
     setDebugInfo(JSON.stringify(result, null, 2))
   }
 
+  const testApiCall = async () => {
+    setDebugInfo('Testing API call...')
+    try {
+      const response = await api.get('/auth/check-username/testuser')
+      setDebugInfo(`API call successful: ${JSON.stringify(response.data, null, 2)}`)
+    } catch (error) {
+      setDebugInfo(`API call failed: ${error.message}\n${JSON.stringify(error.response?.data, null, 2)}`)
+    }
+  }
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
@@ -79,12 +89,18 @@ export default function Register() {
         noSpaces: !/\s/.test(username),
         noCapital: !/[A-Z]/.test(username),
         validChars: /^[a-z0-9_]+$/.test(username),
-        isAvailable: false // Reset availability check
+        isAvailable: prev.isAvailable // Keep previous availability status
       }));
       
       // Check username availability if basic criteria are met
       if (isValid) {
         checkUsernameAvailability(username);
+      } else {
+        // Reset availability if basic criteria are not met
+        setUsernameCriteria(prev => ({
+          ...prev,
+          isAvailable: false
+        }));
       }
     }
   };
@@ -158,12 +174,20 @@ export default function Register() {
     } catch (error) {
       console.error('Error checking username availability:', error);
       console.error('Error details:', error.response?.data);
+      console.error('Error message:', error.message);
+      console.error('Error config:', error.config);
       
-      // If there's an error, assume username is not available to be safe
-      setUsernameCriteria(prev => ({
-        ...prev,
-        isAvailable: false
-      }));
+      // Only set as unavailable if it's a real error, not a network issue
+      if (error.response && error.response.status === 409) {
+        // Username is actually taken
+        setUsernameCriteria(prev => ({
+          ...prev,
+          isAvailable: false
+        }));
+      } else {
+        // Network error or other issue - don't assume unavailable
+        console.log('Network error or other issue - not setting availability to false');
+      }
     } finally {
       setIsCheckingUsername(false);
     }
@@ -299,7 +323,7 @@ export default function Register() {
                       </div>
                       <span className="text-sm font-medium">Username is available! ✅</span>
                     </div>
-                  ) : (
+                  ) : formData.username.length >= 3 && usernameCriteria.validChars && !usernameCriteria.isAvailable && !isCheckingUsername ? (
                     <div className="flex items-center space-x-2 text-red-600">
                       <div className="w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
                         <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -308,6 +332,23 @@ export default function Register() {
                       </div>
                       <span className="text-sm font-medium">Username is not available ❌</span>
                     </div>
+                  ) : null}
+                </div>
+              )}
+              
+              {/* Username Requirements */}
+              {formData.username.length > 0 && (
+                <div className="mt-3 space-y-2">
+                  <UsernameChecklistItem met={usernameCriteria.minLength} text="At least 3 characters" />
+                  <UsernameChecklistItem met={usernameCriteria.noSpaces} text="No spaces" />
+                  <UsernameChecklistItem met={usernameCriteria.noCapital} text="Lowercase only" />
+                  <UsernameChecklistItem met={usernameCriteria.validChars} text="Letters, numbers, and underscores only" />
+                  {formData.username.length >= 3 && usernameCriteria.validChars && (
+                    <UsernameChecklistItem 
+                      met={usernameCriteria.isAvailable} 
+                      text="Username is available" 
+                      loading={isCheckingUsername}
+                    />
                   )}
                 </div>
               )}
@@ -408,36 +449,7 @@ export default function Register() {
             </p>
           </div>
 
-          {/* Debug Section - Only show in development */}
-          {import.meta.env.DEV && (
-            <div className="mt-6 p-4 bg-gray-50 rounded-lg">
-              <h3 className="text-sm font-semibold text-gray-700 mb-2">Debug Info</h3>
-              <div className="text-xs text-gray-600 mb-2">
-                API URL: {import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000/api'}
-              </div>
-              <div className="flex space-x-2 mb-2">
-                <button
-                  type="button"
-                  onClick={testUsername}
-                  className="text-xs bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600"
-                >
-                  Test Username
-                </button>
-                <button
-                  type="button"
-                  onClick={testDebug}
-                  className="text-xs bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600"
-                >
-                  Debug DB
-                </button>
-              </div>
-              {debugInfo && (
-                <pre className="text-xs bg-white p-2 rounded border overflow-auto max-h-32">
-                  {debugInfo}
-                </pre>
-              )}
-            </div>
-          )}
+
         </div>
       </div>
     </div>
