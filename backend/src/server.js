@@ -24,12 +24,6 @@ const allowedOrigins = [
   'http://localhost:5177',
   'https://huddle-e6492.web.app',
   'https://huddle-e6492.firebaseapp.com',
-  'https://huddle-frontend.vercel.app',
-  'https://huddle-frontend-git-main.vercel.app',
-  'https://huddle-frontend-git-develop.vercel.app',
-  'https://eventify-frontend.vercel.app',
-  'https://eventify-frontend-git-main.vercel.app',
-  'https://frontend-80mhyiqvf-princetagadiyas-projects.vercel.app',
   env.clientOrigin
 ].filter(Boolean);
 
