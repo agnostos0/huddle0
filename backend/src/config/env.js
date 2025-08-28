@@ -15,6 +15,18 @@ export const config = {
   email: {
     from: process.env.EMAIL_FROM || 'Huddle <noreply@huddle.com>',
   },
+  // SMS Configuration
+  sms: {
+    apiKey: process.env.SMS_API_KEY, // For 2factor.in
+    msg91AuthKey: process.env.MSG91_AUTH_KEY, // For MSG91
+    msg91TemplateId: process.env.MSG91_TEMPLATE_ID, // For MSG91
+  },
+  // Twilio Configuration (optional)
+  twilio: {
+    accountSid: process.env.TWILIO_ACCOUNT_SID,
+    authToken: process.env.TWILIO_AUTH_TOKEN,
+    phoneNumber: process.env.TWILIO_PHONE_NUMBER,
+  },
 };
 
 export const env = config;

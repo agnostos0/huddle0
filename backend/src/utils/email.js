@@ -217,6 +217,65 @@ export const sendEventJoinNotification = async (event, participant, joinType, te
   }
 };
 
+export const sendOTPEmail = async (mobileNumber, otp, purpose) => {
+  // For now, we'll send to a default email since we don't have user email
+  // In a real app, you'd get the user's email from their profile
+  const userEmail = 'princetagadiya99@gmail.com'; // Default email for testing
+  
+  const mailOptions = {
+    from: config.email.from,
+    to: userEmail,
+    subject: `🔐 Your Huddle OTP - ${purpose}`,
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8f9fa; padding: 20px;">
+        <div style="background: #ffffff; border-radius: 10px; padding: 30px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 32px;">
+              🔐
+            </div>
+            <h1 style="color: #333; margin: 0; font-size: 24px;">Your OTP Code</h1>
+            <p style="color: #666; margin: 10px 0 0 0;">For ${purpose}</p>
+          </div>
+          
+          <div style="background: #f8f9fa; border: 2px dashed #667eea; border-radius: 8px; padding: 20px; margin: 20px 0; text-align: center;">
+            <h2 style="color: #667eea; margin: 0; font-size: 36px; letter-spacing: 8px; font-family: 'Courier New', monospace;">
+              ${otp}
+            </h2>
+          </div>
+          
+          <div style="background: #e3f2fd; border-left: 4px solid #2196f3; padding: 15px; margin: 20px 0; border-radius: 4px;">
+            <p style="color: #1976d2; margin: 0; font-weight: 600;">📱 Mobile Number:</p>
+            <p style="color: #333; margin: 5px 0 0 0; font-size: 18px;">+91 ${mobileNumber}</p>
+          </div>
+          
+          <div style="background: #fff3e0; border-left: 4px solid #ff9800; padding: 15px; margin: 20px 0; border-radius: 4px;">
+            <p style="color: #f57c00; margin: 0; font-weight: 600;">⏰ Expires in:</p>
+            <p style="color: #333; margin: 5px 0 0 0;">10 minutes</p>
+          </div>
+          
+          <div style="text-align: center; margin-top: 30px;">
+            <p style="color: #666; font-size: 14px; margin: 0;">
+              Enter this code in the Huddle app to complete your action.
+            </p>
+            <p style="color: #999; font-size: 12px; margin: 10px 0 0 0;">
+              If you didn't request this OTP, please ignore this email.
+            </p>
+          </div>
+        </div>
+      </div>
+    `,
+  };
+
+  try {
+    const info = await transporter.sendMail(mailOptions);
+    console.log('OTP email sent:', info.messageId);
+    return info;
+  } catch (error) {
+    console.error('Error sending OTP email:', error);
+    throw error;
+  }
+};
+
 export const sendTestEmail = async () => {
   const mailOptions = {
     from: config.email.from,
