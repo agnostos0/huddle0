@@ -318,6 +318,56 @@ export default function AdminDashboard() {
     }
   };
 
+  const handlePromoteUser = async (userId, newRole) => {
+    if (!confirm(`Are you sure you want to promote this user to ${newRole}?`)) {
+      return;
+    }
+
+    try {
+      setDeleteLoading(prev => ({ ...prev, [userId]: true }));
+      await api.put(`/admin/users/${userId}/role`, { role: newRole });
+      
+      // Update user in the list
+      setUsers(users.map(user => 
+        user._id === userId 
+          ? { ...user, role: newRole }
+          : user
+      ));
+      
+      alert(`User promoted to ${newRole} successfully!`);
+    } catch (error) {
+      console.error('Error promoting user:', error);
+      alert('Failed to promote user');
+    } finally {
+      setDeleteLoading(prev => ({ ...prev, [userId]: false }));
+    }
+  };
+
+  const handleDemoteUser = async (userId, newRole) => {
+    if (!confirm(`Are you sure you want to demote this user to ${newRole}?`)) {
+      return;
+    }
+
+    try {
+      setDeleteLoading(prev => ({ ...prev, [userId]: true }));
+      await api.put(`/admin/users/${userId}/role`, { role: newRole });
+      
+      // Update user in the list
+      setUsers(users.map(user => 
+        user._id === userId 
+          ? { ...user, role: newRole }
+          : user
+      ));
+      
+      alert(`User demoted to ${newRole} successfully!`);
+    } catch (error) {
+      console.error('Error demoting user:', error);
+      alert('Failed to demote user');
+    } finally {
+      setDeleteLoading(prev => ({ ...prev, [userId]: false }));
+    }
+  };
+
   const handleActivateUser = async (userId) => {
     try {
       setDeleteLoading(prev => ({ ...prev, [userId]: true }));
@@ -490,6 +540,7 @@ export default function AdminDashboard() {
                       <tr>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">User</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Email</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Role</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Notice</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
@@ -514,6 +565,17 @@ export default function AdminDashboard() {
                             </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{user.email}</td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                              user.role === 'admin' ? 'bg-purple-100 text-purple-800' :
+                              user.role === 'organizer' ? 'bg-blue-100 text-blue-800' :
+                              'bg-gray-100 text-gray-800'
+                            }`}>
+                              {user.role === 'admin' ? 'Admin' :
+                               user.role === 'organizer' ? 'Organizer' :
+                               'Attendee'}
+                            </span>
+                          </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
                               user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
@@ -547,6 +609,30 @@ export default function AdminDashboard() {
                             >
                               {impersonateLoading ? 'Loading...' : 'Login As'}
                             </button>
+                            
+                            {/* Role Management - Only for non-admin users */}
+                            {user.role !== 'admin' && (
+                              <>
+                                {user.role === 'user' && (
+                                  <button
+                                    onClick={() => handlePromoteUser(user._id, 'organizer')}
+                                    disabled={deleteLoading[user._id]}
+                                    className="text-green-400 hover:text-green-300 disabled:opacity-50"
+                                  >
+                                    {deleteLoading[user._id] ? 'Promoting...' : 'Promote to Organizer'}
+                                  </button>
+                                )}
+                                {user.role === 'organizer' && (
+                                  <button
+                                    onClick={() => handleDemoteUser(user._id, 'user')}
+                                    disabled={deleteLoading[user._id]}
+                                    className="text-orange-400 hover:text-orange-300 disabled:opacity-50"
+                                  >
+                                    {deleteLoading[user._id] ? 'Demoting...' : 'Demote to Attendee'}
+                                  </button>
+                                )}
+                              </>
+                            )}
                             {user.email !== 'admin@huddle.com' ? (
                               <button
                                 onClick={() => {
