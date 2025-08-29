@@ -817,6 +817,7 @@ export default function AdminDashboard() {
                         <tr>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">User</th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Organization</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Contact</th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Reason</th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Requested</th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
@@ -833,6 +834,12 @@ export default function AdminDashboard() {
                               <div className="text-sm text-gray-300">{request.organizerProfile?.organization}</div>
                               <div className="text-xs text-gray-400 max-w-xs truncate">
                                 {request.organizerProfile?.description}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-300">{request.organizerProfile?.contactEmail || request.email}</div>
+                              <div className="text-xs text-gray-400">
+                                {request.organizerProfile?.contactPhone || request.contactNumber}
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap">

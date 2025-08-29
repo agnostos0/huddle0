@@ -33,9 +33,18 @@ export default function UserProfile() {
     newPassword: '',
     confirmPassword: ''
   })
+  const [organizerRequest, setOrganizerRequest] = useState({
+    organization: '',
+    description: '',
+    contactEmail: '',
+    contactPhone: '',
+    reason: ''
+  })
+  const [organizerStatus, setOrganizerStatus] = useState(null)
 
   useEffect(() => {
     fetchProfile()
+    fetchOrganizerStatus()
   }, [])
 
   const fetchProfile = async () => {
@@ -47,6 +56,15 @@ export default function UserProfile() {
       setError('Failed to load profile')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchOrganizerStatus = async () => {
+    try {
+      const response = await api.get('/users/organizer-request-status')
+      setOrganizerStatus(response.data)
+    } catch (err) {
+      console.error('Failed to fetch organizer status:', err)
     }
   }
 
@@ -90,6 +108,24 @@ export default function UserProfile() {
       triggerConfetti()
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to change password')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleOrganizerRequest = async (e) => {
+    e.preventDefault()
+    setSaving(true)
+    setError('')
+    setSuccess('')
+
+    try {
+      const response = await api.post('/users/request-organizer', organizerRequest)
+      setSuccess('Organizer request submitted successfully! Admin will review your request.')
+      setOrganizerStatus(response.data.request)
+      triggerConfetti()
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to submit organizer request')
     } finally {
       setSaving(false)
     }
@@ -209,6 +245,18 @@ export default function UserProfile() {
               >
                 Change Password
               </button>
+              {user && user.role === 'user' && (
+                <button
+                  onClick={() => setActiveTab('organizer')}
+                  className={`py-4 px-1 border-b-2 font-medium text-sm ${
+                    activeTab === 'organizer'
+                      ? 'border-purple-500 text-purple-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  Request Organizer Status
+                </button>
+              )}
               <button
                 onClick={() => setActiveTab('danger')}
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
@@ -425,6 +473,158 @@ export default function UserProfile() {
                   </button>
                 </div>
               </form>
+            )}
+
+            {/* Organizer Request Tab */}
+            {activeTab === 'organizer' && (
+              <div className="space-y-6">
+                {organizerStatus && (
+                  <div className="mb-6">
+                    {organizerStatus.isOrganizer ? (
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                        <div className="flex items-center">
+                          <svg className="w-5 h-5 text-green-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                          </svg>
+                          <span className="text-green-800 font-medium">You are already an organizer!</span>
+                        </div>
+                      </div>
+                    ) : organizerStatus.hasRequested ? (
+                      <div className={`border rounded-lg p-4 ${
+                        organizerStatus.status === 'pending' ? 'bg-yellow-50 border-yellow-200' :
+                        organizerStatus.status === 'approved' ? 'bg-green-50 border-green-200' :
+                        'bg-red-50 border-red-200'
+                      }`}>
+                        <div className="flex items-center mb-2">
+                          <span className={`font-medium ${
+                            organizerStatus.status === 'pending' ? 'text-yellow-800' :
+                            organizerStatus.status === 'approved' ? 'text-green-800' :
+                            'text-red-800'
+                          }`}>
+                            Request Status: {organizerStatus.status.charAt(0).toUpperCase() + organizerStatus.status.slice(1)}
+                          </span>
+                        </div>
+                        {organizerStatus.status === 'pending' && (
+                          <p className="text-yellow-700 text-sm">
+                            Your request is under review. You'll be notified once the admin makes a decision.
+                          </p>
+                        )}
+                        {organizerStatus.status === 'rejected' && organizerStatus.rejectionReason && (
+                          <p className="text-red-700 text-sm">
+                            <strong>Reason:</strong> {organizerStatus.rejectionReason}
+                          </p>
+                        )}
+                        {organizerStatus.status === 'approved' && (
+                          <p className="text-green-700 text-sm">
+                            Congratulations! You can now create events.
+                          </p>
+                        )}
+                      </div>
+                    ) : null}
+                  </div>
+                )}
+
+                {(!organizerStatus || (!organizerStatus.hasRequested && !organizerStatus.isOrganizer)) && (
+                  <form onSubmit={handleOrganizerRequest} className="space-y-6">
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                      <div className="flex items-start">
+                        <svg className="w-5 h-5 text-blue-600 mt-0.5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                        </svg>
+                        <div>
+                          <h3 className="text-blue-800 font-medium">Request Organizer Status</h3>
+                          <p className="text-blue-700 text-sm mt-1">
+                            Become an organizer to create and manage events. Your request will be reviewed by an admin.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Organization Name *
+                        </label>
+                        <input
+                          type="text"
+                          value={organizerRequest.organization}
+                          onChange={(e) => setOrganizerRequest({ ...organizerRequest, organization: e.target.value })}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                          required
+                          placeholder="Your organization or company name"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Contact Email
+                        </label>
+                        <input
+                          type="email"
+                          value={organizerRequest.contactEmail}
+                          onChange={(e) => setOrganizerRequest({ ...organizerRequest, contactEmail: e.target.value })}
+                          className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                          placeholder="contact@yourorganization.com"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Organization Description *
+                      </label>
+                      <textarea
+                        value={organizerRequest.description}
+                        onChange={(e) => setOrganizerRequest({ ...organizerRequest, description: e.target.value })}
+                        rows="3"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        required
+                        placeholder="Describe your organization and what type of events you plan to host"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Contact Phone
+                      </label>
+                      <input
+                        type="tel"
+                        value={organizerRequest.contactPhone}
+                        onChange={(e) => setOrganizerRequest({ ...organizerRequest, contactPhone: e.target.value })}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        placeholder="+91-9876543210"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Reason for Request *
+                      </label>
+                      <textarea
+                        value={organizerRequest.reason}
+                        onChange={(e) => setOrganizerRequest({ ...organizerRequest, reason: e.target.value })}
+                        rows="3"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                        required
+                        placeholder="Explain why you want to become an organizer and what events you plan to create"
+                      />
+                    </div>
+
+                    <div className="flex justify-end">
+                      <button
+                        type="submit"
+                        disabled={saving}
+                        className={`px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
+                          saving
+                            ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                            : 'bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:shadow-lg transform hover:scale-105'
+                        }`}
+                      >
+                        {saving ? 'Submitting...' : 'Submit Request'}
+                      </button>
+                    </div>
+                  </form>
+                )}
+              </div>
             )}
 
             {/* Danger Zone Tab */}
