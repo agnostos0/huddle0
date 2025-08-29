@@ -250,6 +250,27 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleApproveAllEvents = async () => {
+    if (!confirm('Are you sure you want to approve ALL pending events? This will make them visible to all users.')) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await api.post('/admin/events/approve-all');
+      
+      alert(`Successfully approved ${response.data.modifiedCount} events!`);
+      
+      // Refresh data
+      await fetchData();
+    } catch (error) {
+      console.error('Error approving all events:', error);
+      alert('Failed to approve all events');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleActivateUser = async (userId) => {
     try {
       setDeleteLoading(prev => ({ ...prev, [userId]: true }));
@@ -571,7 +592,18 @@ export default function AdminDashboard() {
             {/* Pending Events Tab */}
             {selectedUser === 'pending-events' && (
               <div className="space-y-4">
-                <h3 className="text-xl font-semibold text-yellow-400 mb-4">Pending Event Approvals</h3>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xl font-semibold text-yellow-400">Pending Event Approvals</h3>
+                  {pendingEvents.length > 0 && (
+                    <button
+                      onClick={handleApproveAllEvents}
+                      disabled={loading}
+                      className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium disabled:opacity-50"
+                    >
+                      {loading ? 'Approving...' : `Approve All (${pendingEvents.length})`}
+                    </button>
+                  )}
+                </div>
                 {pendingEvents.length === 0 ? (
                   <div className="text-center py-8">
                     <p className="text-gray-400">No pending events to approve</p>
