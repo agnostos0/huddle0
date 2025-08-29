@@ -41,11 +41,23 @@ export default function UserProfile() {
     reason: ''
   })
   const [organizerStatus, setOrganizerStatus] = useState(null)
+  const [showOrganizerNotification, setShowOrganizerNotification] = useState(false)
+  const [notificationMessage, setNotificationMessage] = useState('')
+  const [notificationType, setNotificationType] = useState('success')
 
   useEffect(() => {
     fetchProfile()
     fetchOrganizerStatus()
-  }, [])
+    
+    // Set up real-time polling for organizer status changes
+    const interval = setInterval(() => {
+      if (organizerStatus && organizerStatus.status === 'pending') {
+        fetchOrganizerStatus()
+      }
+    }, 5000) // Check every 5 seconds if status is pending
+    
+    return () => clearInterval(interval)
+  }, [organizerStatus?.status])
 
   const fetchProfile = async () => {
     try {
@@ -62,7 +74,37 @@ export default function UserProfile() {
   const fetchOrganizerStatus = async () => {
     try {
       const response = await api.get('/users/organizer-request-status')
-      setOrganizerStatus(response.data)
+      const newStatus = response.data
+      
+      // Check if status changed from pending to approved
+      if (organizerStatus && 
+          organizerStatus.status === 'pending' && 
+          newStatus.status === 'approved') {
+        setNotificationMessage('🎉 Congratulations! Your organizer request has been approved! You can now create events.')
+        setNotificationType('success')
+        setShowOrganizerNotification(true)
+        
+        // Auto-hide notification after 10 seconds
+        setTimeout(() => {
+          setShowOrganizerNotification(false)
+        }, 10000)
+      }
+      
+      // Check if status changed from pending to rejected
+      if (organizerStatus && 
+          organizerStatus.status === 'pending' && 
+          newStatus.status === 'rejected') {
+        setNotificationMessage(`❌ Your organizer request has been rejected. Reason: ${newStatus.rejectionReason || 'No reason provided'}`)
+        setNotificationType('error')
+        setShowOrganizerNotification(true)
+        
+        // Auto-hide notification after 10 seconds
+        setTimeout(() => {
+          setShowOrganizerNotification(false)
+        }, 10000)
+      }
+      
+      setOrganizerStatus(newStatus)
     } catch (err) {
       console.error('Failed to fetch organizer status:', err)
     }
@@ -169,6 +211,50 @@ export default function UserProfile() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50">
       <Navbar />
+      
+      {/* Organizer Status Notification */}
+      {showOrganizerNotification && (
+        <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 max-w-md w-full mx-4">
+          <div className={`rounded-lg p-4 shadow-lg border ${
+            notificationType === 'success' 
+              ? 'bg-green-50 border-green-200 text-green-800' 
+              : 'bg-red-50 border-red-200 text-red-800'
+          }`}>
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                {notificationType === 'success' ? (
+                  <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                )}
+              </div>
+              <div className="ml-3 flex-1">
+                <p className="text-sm font-medium">
+                  {notificationMessage}
+                </p>
+              </div>
+              <div className="ml-4 flex-shrink-0">
+                <button
+                  onClick={() => setShowOrganizerNotification(false)}
+                  className={`inline-flex rounded-md p-1.5 focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                    notificationType === 'success'
+                      ? 'text-green-500 hover:bg-green-100 focus:ring-green-600'
+                      : 'text-red-500 hover:bg-red-100 focus:ring-red-600'
+                  }`}
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Back Button */}
       <div className="max-w-4xl mx-auto px-6 py-6">
