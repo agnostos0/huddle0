@@ -153,8 +153,9 @@ eventSchema.pre('save', function(next) {
       return next(new Error('Girls and boys requirements cannot be negative'));
     }
     
-    if (calculatedTeamSize === 0) {
-      return next(new Error('Team must have at least one member (girls or boys)'));
+    // Allow team size of 0 for individual events
+    if (calculatedTeamSize < 0) {
+      return next(new Error('Team size cannot be negative'));
     }
   }
   

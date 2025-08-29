@@ -11,6 +11,11 @@ const router = Router();
 // Create
 router.post('/', authenticate, async (req, res) => {
   try {
+    console.log('Event creation request received:', {
+      body: req.body,
+      user: req.user.id
+    });
+
     const {
       title,
       description,
@@ -26,6 +31,7 @@ router.post('/', authenticate, async (req, res) => {
       teamRequirements,
       price,
       prizePool,
+      pricing, // Handle both pricing and prizePool
       currency,
       eventType,
       virtualMeetingLink,
@@ -34,6 +40,25 @@ router.post('/', authenticate, async (req, res) => {
       website,
       socialLinks
     } = req.body;
+
+    // Convert pricing to prizePool if needed
+    let finalPrizePool = prizePool;
+    if (pricing && !prizePool) {
+      finalPrizePool = {
+        totalAmount: 0,
+        firstPlace: pricing.individual || 0,
+        secondPlace: pricing.teamLeader || 0,
+        thirdPlace: pricing.teamMember || 0,
+        consolationPrizes: [pricing.malePrice || 0, pricing.femalePrice || 0].filter(p => p > 0),
+        currency: currency || 'INR'
+      };
+    }
+
+    // Clean up teamRequirements - remove teamSize if present
+    let cleanTeamRequirements = teamRequirements || { girlsRequired: 0, boysRequired: 0 };
+    if (cleanTeamRequirements.teamSize !== undefined) {
+      delete cleanTeamRequirements.teamSize;
+    }
 
     const eventData = {
       title,
@@ -48,9 +73,9 @@ router.post('/', authenticate, async (req, res) => {
       photos: photos || [],
       coverPhoto,
       maxParticipants: maxParticipants || 0,
-      teamRequirements: teamRequirements || { girlsRequired: 0, boysRequired: 0 },
+      teamRequirements: cleanTeamRequirements,
       price: price || 0,
-      prizePool: prizePool || { 
+      prizePool: finalPrizePool || { 
         totalAmount: 0, 
         firstPlace: 0, 
         secondPlace: 0, 
@@ -67,16 +92,24 @@ router.post('/', authenticate, async (req, res) => {
       socialLinks
     };
 
+    console.log('Event data to be created:', eventData);
+
     // Ensure organizer is set
     if (!eventData.organizer) {
       return res.status(400).json({ message: 'Organizer is required' });
     }
 
     const event = await Event.create(eventData);
+    console.log('Event created successfully:', event._id);
     res.status(201).json(event);
   } catch (err) {
     console.error('Event creation error:', err);
-    res.status(400).json({ message: 'Failed to create event' });
+    console.error('Error details:', {
+      name: err.name,
+      message: err.message,
+      stack: err.stack
+    });
+    res.status(400).json({ message: 'Failed to create event', error: err.message });
   }
 });
 
