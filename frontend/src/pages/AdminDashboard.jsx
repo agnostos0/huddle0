@@ -187,6 +187,37 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleWithdrawNotice = async (userId) => {
+    if (!confirm('Are you sure you want to withdraw this notice? This will remove the notice from the user.')) {
+      return;
+    }
+
+    try {
+      setDeleteLoading(prev => ({ ...prev, [userId]: true }));
+      await api.post(`/admin/users/${userId}/withdraw-notice`);
+      
+      // Update user in the list - remove notice fields
+      setUsers(users.map(user => 
+        user._id === userId 
+          ? { 
+              ...user, 
+              notice: undefined,
+              noticeDate: undefined,
+              noticeAcknowledged: undefined,
+              noticeAcknowledgedAt: undefined
+            }
+          : user
+      ));
+      
+      alert('Notice withdrawn successfully');
+    } catch (error) {
+      console.error('Error withdrawing notice:', error);
+      alert('Failed to withdraw notice');
+    } finally {
+      setDeleteLoading(prev => ({ ...prev, [userId]: false }));
+    }
+  };
+
   const handleDeactivateUser = async (userId) => {
     if (!confirm('Are you sure you want to deactivate this user account?')) {
       return;
@@ -656,6 +687,15 @@ export default function AdminDashboard() {
                               </button>
                             ) : (
                               <span className="text-gray-500 text-xs">Protected</span>
+                            )}
+                            {user.notice && user.email !== 'admin@huddle.com' && (
+                              <button
+                                onClick={() => handleWithdrawNotice(user._id)}
+                                disabled={deleteLoading[user._id]}
+                                className="text-purple-400 hover:text-purple-300 disabled:opacity-50"
+                              >
+                                {deleteLoading[user._id] ? 'Withdrawing...' : 'Withdraw Notice'}
+                              </button>
                             )}
                             {user.isActive ? (
                               user.email !== 'admin@huddle.com' ? (

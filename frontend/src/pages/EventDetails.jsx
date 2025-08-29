@@ -29,6 +29,7 @@ export default function EventDetails() {
   const [joinLoading, setJoinLoading] = useState(false)
   const [selectedPhoto, setSelectedPhoto] = useState(null)
   const [showPhotoModal, setShowPhotoModal] = useState(false)
+  const [showDeactivationModal, setShowDeactivationModal] = useState(false)
 
   async function load() {
     try {
@@ -109,6 +110,12 @@ export default function EventDetails() {
       return
     }
     
+    // Check if user is deactivated
+    if (!user.isActive) {
+      setShowDeactivationModal(true)
+      return
+    }
+    
     try { 
       await api.post(`/events/${id}/join`); 
       await load() 
@@ -157,6 +164,12 @@ export default function EventDetails() {
       return
     }
     
+    // Check if user is deactivated
+    if (!user.isActive) {
+      setShowDeactivationModal(true)
+      return
+    }
+    
     if (!selectedTeam) return
     
     setJoinLoading(true)
@@ -186,6 +199,12 @@ export default function EventDetails() {
     if (!user) {
       setError('Please login to join this event')
       navigate('/login')
+      return
+    }
+    
+    // Check if user is deactivated
+    if (!user.isActive) {
+      setShowDeactivationModal(true)
       return
     }
     
@@ -953,6 +972,53 @@ export default function EventDetails() {
                 </span>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Deactivation Modal */}
+      {showDeactivationModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 border-4 border-red-500 shadow-2xl">
+            <div className="text-center">
+              {/* Warning Icon */}
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              </div>
+
+              {/* Title */}
+              <h2 className="text-2xl font-bold text-red-600 mb-2">
+                ⚠️ Account Deactivated
+              </h2>
+
+              {/* Message */}
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                <p className="text-red-800 font-medium mb-2">Access Restricted</p>
+                <p className="text-red-700 text-sm leading-relaxed">
+                  Your account has been deactivated by an administrator. You cannot join events or perform other actions until your account is reactivated.
+                </p>
+              </div>
+
+              {/* Contact Info */}
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
+                <p className="text-gray-800 font-medium mb-2">Need Help?</p>
+                <p className="text-gray-700 text-sm">
+                  Please contact the administrator or support team to reactivate your account.
+                </p>
+              </div>
+
+              {/* Action Button */}
+              <div className="mt-6">
+                <button
+                  onClick={() => setShowDeactivationModal(false)}
+                  className="w-full px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+                >
+                  I Understand
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
