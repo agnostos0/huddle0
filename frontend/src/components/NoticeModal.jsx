@@ -14,16 +14,12 @@ export default function NoticeModal({ notice, onAcknowledge }) {
   return (
     <div 
       className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" 
-      style={{ backdropFilter: 'blur(5px)' }}
       onClick={onAcknowledge}
     >
       <div 
         className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 border-4 border-red-500 shadow-2xl relative" 
         style={{ 
-          filter: 'blur(0px)', 
-          backdropFilter: 'blur(0px)',
-          zIndex: 9999,
-          transform: 'translateZ(0)'
+          zIndex: 9999
         }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -83,19 +79,13 @@ export default function NoticeModal({ notice, onAcknowledge }) {
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex space-x-3 mt-6">
+          {/* Action Button */}
+          <div className="mt-6">
             <button
               onClick={onAcknowledge}
-              className="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+              className="w-full px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
             >
               I Understand
-            </button>
-            <button
-              onClick={onAcknowledge}
-              className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
-            >
-              Close
             </button>
           </div>
         </div>

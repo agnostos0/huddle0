@@ -41,21 +41,16 @@ export default function AttendeeDashboard() {
       const response = await api.get('/users/profile');
       const hasNotice = response.data.notice && 
                        response.data.notice.trim() !== '' && 
-                       !response.data.noticeAcknowledged &&
                        response.data.isActive !== false; // Don't show if user is deactivated
       
-      // Also check if this specific notice was already acknowledged in this session
-      const noticeAlreadyAcknowledged = response.data.notice && 
-                                       localStorage.getItem(`notice_acknowledged_${response.data.notice}`) === 'true';
-      
-      if (hasNotice && !noticeAlreadyAcknowledged) {
+      if (hasNotice) {
         setNotice(response.data);
         setShowNotice(true);
         console.log('Notice found and displayed');
       } else {
         setNotice(null);
         setShowNotice(false);
-        console.log('No active notice to display or notice already acknowledged');
+        console.log('No active notice to display');
       }
     } catch (error) {
       console.error('Error checking for notice:', error);
@@ -66,26 +61,21 @@ export default function AttendeeDashboard() {
 
   const handleAcknowledgeNotice = async () => {
     try {
-      // Mark notice as acknowledged in backend
+      // Mark notice as acknowledged and remove it completely from backend
       await api.post('/users/notice/acknowledge');
-      
-      // Store in localStorage to prevent showing again in this session
-      if (notice && notice.notice) {
-        localStorage.setItem(`notice_acknowledged_${notice.notice}`, 'true');
-      }
       
       // Update local state immediately
       setShowNotice(false);
       setNotice(null);
       
-      // Also update the user context to reflect the change
+      // Update the user context to reflect the change
       const { setUser } = useAuth();
       if (setUser) {
         const response = await api.get('/users/profile');
         setUser(response.data);
       }
       
-      console.log('Notice acknowledged and permanently dismissed');
+      console.log('Notice acknowledged and permanently removed');
     } catch (error) {
       console.error('Error acknowledging notice:', error);
       // Still close the modal even if backend call fails
@@ -124,7 +114,7 @@ export default function AttendeeDashboard() {
   }
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 ${showNotice && notice ? 'blur-sm' : ''}`}>
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50">
       <Navbar />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
