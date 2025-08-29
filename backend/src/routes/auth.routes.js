@@ -9,9 +9,9 @@ const router = Router();
 // Register
 router.post('/register', async (req, res) => {
   try {
-    const { name, email, username, password, contactNumber, gender, role = 'user' } = req.body;
+    const { name, email, username, password, contactNumber, gender } = req.body;
 
-    console.log('Registration attempt:', { name, email, username, gender, role });
+    console.log('Registration attempt:', { name, email, username, gender });
 
     // Validate required fields
     if (!name || !email || !username || !password || !gender) {
@@ -39,10 +39,8 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ message });
     }
 
-    // Validate role (only allow user and organizer roles during registration)
-    if (!['user', 'organizer'].includes(role)) {
-      return res.status(400).json({ message: 'Invalid role' });
-    }
+    // All new users are attendees by default - only admins can promote to organizer
+    const role = 'user';
 
     // Create user
     const user = new User({
