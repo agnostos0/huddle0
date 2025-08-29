@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { User } from '../models/User.js';
 import { signJwt } from '../utils/jwt.js';
 import { authenticate } from '../middleware/auth.js';
+import axios from 'axios';
 
 const router = Router();
 
@@ -330,6 +331,97 @@ router.post('/create-admin', async (req, res) => {
   } catch (error) {
     console.error('Admin creation error:', error);
     res.status(500).json({ message: 'Admin creation failed' });
+  }
+});
+
+// Google OAuth authentication
+router.post('/google', async (req, res) => {
+  try {
+    const { accessToken, user: googleUser } = req.body;
+
+    if (!accessToken || !googleUser) {
+      return res.status(400).json({ message: 'Invalid Google authentication data' });
+    }
+
+    // Verify the Google access token
+    try {
+      const googleResponse = await axios.get(`https://www.googleapis.com/oauth2/v3/userinfo?access_token=${accessToken}`);
+      const verifiedUser = googleResponse.data;
+
+      // Check if the email matches
+      if (verifiedUser.email !== googleUser.email) {
+        return res.status(401).json({ message: 'Invalid Google authentication' });
+      }
+    } catch (error) {
+      console.error('Google token verification failed:', error);
+      return res.status(401).json({ message: 'Invalid Google authentication token' });
+    }
+
+    // Check if user already exists
+    let user = await User.findOne({ email: googleUser.email.toLowerCase() });
+
+    if (user) {
+      // User exists, update last login and return token
+      user.lastLogin = new Date();
+      await user.save();
+
+      const token = signJwt({ id: user._id.toString(), role: user.role });
+
+      return res.json({
+        token,
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          username: user.username,
+          role: user.role,
+          isOrganizer: user.isOrganizer(),
+          isAdmin: user.isAdmin()
+        }
+      });
+    } else {
+      // Create new user from Google data
+      const username = googleUser.email.split('@')[0].toLowerCase();
+      
+      // Ensure username is unique
+      let uniqueUsername = username;
+      let counter = 1;
+      while (await User.findOne({ username: uniqueUsername })) {
+        uniqueUsername = `${username}${counter}`;
+        counter++;
+      }
+
+      const newUser = new User({
+        name: googleUser.displayName || 'Google User',
+        email: googleUser.email.toLowerCase(),
+        username: uniqueUsername,
+        password: 'google-oauth-' + Math.random().toString(36).substring(2), // Random password for Google users
+        gender: 'other', // Default gender
+        role: 'user',
+        isActive: true,
+        lastLogin: new Date()
+      });
+
+      await newUser.save();
+
+      const token = signJwt({ id: newUser._id.toString(), role: newUser.role });
+
+      return res.status(201).json({
+        token,
+        user: {
+          id: newUser._id,
+          name: newUser.name,
+          email: newUser.email,
+          username: newUser.username,
+          role: newUser.role,
+          isOrganizer: newUser.isOrganizer(),
+          isAdmin: newUser.isAdmin()
+        }
+      });
+    }
+  } catch (error) {
+    console.error('Google OAuth error:', error);
+    res.status(500).json({ message: 'Google authentication failed' });
   }
 });
 
