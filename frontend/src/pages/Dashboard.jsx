@@ -371,12 +371,25 @@ export default function Dashboard() {
                         {ev.participants?.length || 0} participants
                       </p>
                     </div>
-                    <div className="ml-4">
+                    <div className="ml-4 flex flex-col items-end space-y-1">
                       <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                        ev.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                        ev.status === 'approved' ? 'bg-green-100 text-green-800' :
+                        ev.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                        ev.status === 'edited_pending' ? 'bg-blue-100 text-blue-800' :
                         new Date(ev.date) > new Date() ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
                       }`}>
-                        {new Date(ev.date) > new Date() ? 'Upcoming' : 'Past'}
+                        {ev.status === 'pending' ? 'Pending Approval' :
+                         ev.status === 'approved' ? 'Approved' :
+                         ev.status === 'rejected' ? 'Rejected' :
+                         ev.status === 'edited_pending' ? 'Edit Pending' :
+                         new Date(ev.date) > new Date() ? 'Upcoming' : 'Past'}
                       </span>
+                      {ev.status === 'rejected' && ev.rejectionReason && (
+                        <span className="text-xs text-red-600 max-w-xs truncate" title={ev.rejectionReason}>
+                          Reason: {ev.rejectionReason}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>

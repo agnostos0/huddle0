@@ -8,9 +8,11 @@ export default function AdminDashboard() {
   const [analytics, setAnalytics] = useState({});
   const [users, setUsers] = useState([]);
   const [events, setEvents] = useState([]);
+  const [pendingEvents, setPendingEvents] = useState([]);
   const [teams, setTeams] = useState([]);
   const [invites, setInvites] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('overview');
   const [selectedUser, setSelectedUser] = useState(null);
   const [showImpersonateModal, setShowImpersonateModal] = useState(false);
   const [showNoticeModal, setShowNoticeModal] = useState(false);
@@ -27,10 +29,11 @@ export default function AdminDashboard() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [analyticsRes, usersRes, eventsRes, teamsRes, invitesRes] = await Promise.all([
+      const [analyticsRes, usersRes, eventsRes, pendingEventsRes, teamsRes, invitesRes] = await Promise.all([
         api.get('/admin/analytics'),
         api.get('/admin/users'),
         api.get('/admin/events'),
+        api.get('/admin/events/pending'),
         api.get('/admin/teams'),
         api.get('/admin/invites')
       ]);
@@ -38,6 +41,7 @@ export default function AdminDashboard() {
       setAnalytics(analyticsRes.data);
       setUsers(usersRes.data);
       setEvents(eventsRes.data);
+      setPendingEvents(pendingEventsRes.data);
       setTeams(teamsRes.data);
       setInvites(invitesRes.data);
     } catch (error) {
@@ -197,6 +201,55 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleApproveEvent = async (eventId) => {
+    if (!confirm('Are you sure you want to approve this event? It will be visible to all users.')) {
+      return;
+    }
+
+    try {
+      setDeleteLoading(prev => ({ ...prev, [eventId]: true }));
+      await api.post(`/admin/events/${eventId}/approve`);
+      
+      // Remove from pending events and add to approved events
+      setPendingEvents(pendingEvents.filter(event => event._id !== eventId));
+      const approvedEvent = pendingEvents.find(event => event._id === eventId);
+      if (approvedEvent) {
+        approvedEvent.status = 'approved';
+        setEvents([approvedEvent, ...events]);
+      }
+      
+      alert('Event approved successfully!');
+    } catch (error) {
+      console.error('Error approving event:', error);
+      alert('Failed to approve event');
+    } finally {
+      setDeleteLoading(prev => ({ ...prev, [eventId]: false }));
+    }
+  };
+
+  const handleRejectEvent = async (eventId) => {
+    const reason = prompt('Please provide a reason for rejecting this event:');
+    if (!reason || reason.trim() === '') {
+      alert('Rejection reason is required');
+      return;
+    }
+
+    try {
+      setDeleteLoading(prev => ({ ...prev, [eventId]: true }));
+      await api.post(`/admin/events/${eventId}/reject`, { reason });
+      
+      // Remove from pending events
+      setPendingEvents(pendingEvents.filter(event => event._id !== eventId));
+      
+      alert('Event rejected successfully!');
+    } catch (error) {
+      console.error('Error rejecting event:', error);
+      alert('Failed to reject event');
+    } finally {
+      setDeleteLoading(prev => ({ ...prev, [eventId]: false }));
+    }
+  };
+
   const handleActivateUser = async (userId) => {
     try {
       setDeleteLoading(prev => ({ ...prev, [userId]: true }));
@@ -322,6 +375,14 @@ export default function AdminDashboard() {
                 }`}
               >
                 Events ({events.length})
+              </button>
+              <button
+                onClick={() => setSelectedUser('pending-events')}
+                className={`py-3 sm:py-4 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap ${
+                  selectedUser === 'pending-events' ? 'border-yellow-400 text-yellow-400' : 'border-transparent text-gray-400 hover:text-gray-300'
+                }`}
+              >
+                Pending Events ({pendingEvents.length})
               </button>
               <button
                 onClick={() => setSelectedUser('teams')}
@@ -504,6 +565,67 @@ export default function AdminDashboard() {
                     </tbody>
                   </table>
                 </div>
+              </div>
+            )}
+
+            {/* Pending Events Tab */}
+            {selectedUser === 'pending-events' && (
+              <div className="space-y-4">
+                <h3 className="text-xl font-semibold text-yellow-400 mb-4">Pending Event Approvals</h3>
+                {pendingEvents.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-gray-400">No pending events to approve</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-700">
+                      <thead className="bg-gray-700">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Event</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Organizer</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Category</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Date</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-gray-800 divide-y divide-gray-700">
+                        {pendingEvents.map((event) => (
+                          <tr key={event._id}>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm font-medium text-white">{event.title}</div>
+                              <div className="text-sm text-gray-400">{event.location}</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                              {event.organizer?.name || 'Unknown'}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                              {event.category}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                              {new Date(event.date).toLocaleDateString()}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                              <button
+                                onClick={() => handleApproveEvent(event._id)}
+                                disabled={deleteLoading[event._id]}
+                                className="text-green-400 hover:text-green-300 disabled:opacity-50"
+                              >
+                                {deleteLoading[event._id] ? 'Approving...' : 'Approve'}
+                              </button>
+                              <button
+                                onClick={() => handleRejectEvent(event._id)}
+                                disabled={deleteLoading[event._id]}
+                                className="text-red-400 hover:text-red-300 disabled:opacity-50"
+                              >
+                                {deleteLoading[event._id] ? 'Rejecting...' : 'Reject'}
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             )}
 
