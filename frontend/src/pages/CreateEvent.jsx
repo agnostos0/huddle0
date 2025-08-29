@@ -175,9 +175,15 @@ export default function CreateEvent() {
         coverPhoto: form.photos.length > 0 ? form.photos[0] : null
       }
       
+      // Clean up teamRequirements - remove teamSize if present
+      if (payload.teamRequirements && payload.teamRequirements.teamSize !== undefined) {
+        delete payload.teamRequirements.teamSize;
+      }
+      
       console.log('Creating event with payload:', {
         ...payload,
-        photos: payload.photos ? `${payload.photos.length} photos` : 'no photos'
+        photos: payload.photos ? `${payload.photos.length} photos` : 'no photos',
+        teamRequirements: payload.teamRequirements
       })
       
       const { data } = await api.post('/events', payload)
