@@ -82,6 +82,18 @@ router.get('/organizer-request-status', authenticate, async (req, res) => {
       await user.save();
     }
 
+    // If user is demoted to attendee and has any request status, clear the request
+    if (user.role === 'user' && user.organizerProfile.hasRequestedOrganizer) {
+      user.organizerProfile.hasRequestedOrganizer = false;
+      user.organizerProfile.organizerRequestStatus = 'pending';
+      user.organizerProfile.organizerRequestReason = '';
+      user.organizerProfile.organizerRequestDate = null;
+      user.organizerProfile.organizerRequestRejectionReason = '';
+      user.organizerProfile.approvedBy = null;
+      user.organizerProfile.approvedAt = null;
+      await user.save();
+    }
+
     res.json({
       hasRequested: user.organizerProfile.hasRequestedOrganizer,
       status: user.organizerProfile.organizerRequestStatus,

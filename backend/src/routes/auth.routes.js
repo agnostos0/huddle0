@@ -359,8 +359,17 @@ router.post('/google', async (req, res) => {
     let user = await User.findOne({ email: googleUser.email.toLowerCase() });
 
     if (user) {
+      console.log('Google OAuth - User found:', {
+        id: user._id,
+        email: user.email,
+        isActive: user.isActive,
+        role: user.role,
+        deactivationReason: user.deactivationReason
+      });
+
       // Check if user is deactivated
       if (!user.isActive) {
+        console.log('Google OAuth - Deactivated user attempting login:', user.email);
         return res.status(403).json({ 
           message: 'Account deactivated', 
           deactivationReason: user.deactivationReason || 'Account has been deactivated by administrator'
