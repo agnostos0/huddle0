@@ -229,7 +229,7 @@ router.post('/events/:id/reject', authenticate, requireAdmin, async (req, res) =
 });
 
 // Get all teams
-router.get('/teams', async (req, res) => {
+router.get('/teams', authenticate, requireAdmin, async (req, res) => {
   try {
     const teams = await Team.find({})
       .populate('owner', 'name email')
@@ -242,7 +242,7 @@ router.get('/teams', async (req, res) => {
 });
 
 // Get all invites
-router.get('/invites', async (req, res) => {
+router.get('/invites', authenticate, requireAdmin, async (req, res) => {
   try {
     const invites = await Invite.find({})
       .populate('team', 'name')
@@ -255,7 +255,7 @@ router.get('/invites', async (req, res) => {
 });
 
 // Get admin analytics
-router.get('/analytics', async (req, res) => {
+router.get('/analytics', authenticate, requireAdmin, async (req, res) => {
   try {
     const [
       totalUsers,
@@ -331,7 +331,7 @@ router.post('/create-admin', async (req, res) => {
 });
 
 // Send notice and deactivate user
-router.post('/users/:userId/notice', async (req, res) => {
+router.post('/users/:userId/notice', authenticate, requireAdmin, async (req, res) => {
   try {
     const { userId } = req.params;
     const { notice, deactivateAccount } = req.body;
@@ -379,7 +379,7 @@ router.post('/users/:userId/notice', async (req, res) => {
 });
 
 // Activate/Deactivate user
-router.post('/users/:userId/:action', async (req, res) => {
+router.post('/users/:userId/:action', authenticate, requireAdmin, async (req, res) => {
   try {
     const { userId, action } = req.params;
     
@@ -412,7 +412,7 @@ router.post('/users/:userId/:action', async (req, res) => {
 });
 
 // Update user role
-router.put('/users/:userId/role', async (req, res) => {
+router.put('/users/:userId/role', authenticate, requireAdmin, async (req, res) => {
   try {
     const { userId } = req.params;
     const { role } = req.body;
@@ -442,7 +442,7 @@ router.put('/users/:userId/role', async (req, res) => {
 });
 
 // Delete user
-router.delete('/users/:userId', async (req, res) => {
+router.delete('/users/:userId', authenticate, requireAdmin, async (req, res) => {
   try {
     const { userId } = req.params;
     
