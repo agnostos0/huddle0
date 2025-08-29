@@ -9,6 +9,7 @@ export default function AdminDashboard() {
   const [users, setUsers] = useState([]);
   const [events, setEvents] = useState([]);
   const [pendingEvents, setPendingEvents] = useState([]);
+  const [organizerRequests, setOrganizerRequests] = useState([]);
   const [teams, setTeams] = useState([]);
   const [invites, setInvites] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -29,11 +30,12 @@ export default function AdminDashboard() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [analyticsRes, usersRes, eventsRes, pendingEventsRes, teamsRes, invitesRes] = await Promise.all([
+      const [analyticsRes, usersRes, eventsRes, pendingEventsRes, organizerRequestsRes, teamsRes, invitesRes] = await Promise.all([
         api.get('/admin/analytics'),
         api.get('/admin/users'),
         api.get('/admin/events'),
         api.get('/admin/events/pending'),
+        api.get('/admin/organizer-requests'),
         api.get('/admin/teams'),
         api.get('/admin/invites')
       ]);
@@ -42,6 +44,7 @@ export default function AdminDashboard() {
       setUsers(usersRes.data);
       setEvents(eventsRes.data);
       setPendingEvents(pendingEventsRes.data);
+      setOrganizerRequests(organizerRequestsRes.data);
       setTeams(teamsRes.data);
       setInvites(invitesRes.data);
     } catch (error) {
@@ -271,6 +274,50 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleApproveOrganizer = async (userId) => {
+    if (!confirm('Are you sure you want to approve this organizer request? The user will be able to create events.')) {
+      return;
+    }
+
+    try {
+      setDeleteLoading(prev => ({ ...prev, [userId]: true }));
+      await api.post(`/admin/organizer-requests/${userId}/approve`);
+      
+      // Remove from organizer requests
+      setOrganizerRequests(organizerRequests.filter(req => req._id !== userId));
+      
+      alert('Organizer request approved successfully!');
+    } catch (error) {
+      console.error('Error approving organizer request:', error);
+      alert('Failed to approve organizer request');
+    } finally {
+      setDeleteLoading(prev => ({ ...prev, [userId]: false }));
+    }
+  };
+
+  const handleRejectOrganizer = async (userId) => {
+    const reason = prompt('Please provide a reason for rejecting this organizer request:');
+    if (!reason || reason.trim() === '') {
+      alert('Rejection reason is required');
+      return;
+    }
+
+    try {
+      setDeleteLoading(prev => ({ ...prev, [userId]: true }));
+      await api.post(`/admin/organizer-requests/${userId}/reject`, { reason });
+      
+      // Remove from organizer requests
+      setOrganizerRequests(organizerRequests.filter(req => req._id !== userId));
+      
+      alert('Organizer request rejected successfully!');
+    } catch (error) {
+      console.error('Error rejecting organizer request:', error);
+      alert('Failed to reject organizer request');
+    } finally {
+      setDeleteLoading(prev => ({ ...prev, [userId]: false }));
+    }
+  };
+
   const handleActivateUser = async (userId) => {
     try {
       setDeleteLoading(prev => ({ ...prev, [userId]: true }));
@@ -404,6 +451,14 @@ export default function AdminDashboard() {
                 }`}
               >
                 Pending Events ({pendingEvents.length})
+              </button>
+              <button
+                onClick={() => setSelectedUser('organizer-requests')}
+                className={`py-3 sm:py-4 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap ${
+                  selectedUser === 'organizer-requests' ? 'border-yellow-400 text-yellow-400' : 'border-transparent text-gray-400 hover:text-gray-300'
+                }`}
+              >
+                Organizer Requests ({organizerRequests.length})
               </button>
               <button
                 onClick={() => setSelectedUser('teams')}
@@ -650,6 +705,72 @@ export default function AdminDashboard() {
                                 className="text-red-400 hover:text-red-300 disabled:opacity-50"
                               >
                                 {deleteLoading[event._id] ? 'Rejecting...' : 'Reject'}
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Organizer Requests Tab */}
+            {selectedUser === 'organizer-requests' && (
+              <div className="space-y-4">
+                <h3 className="text-xl font-semibold text-yellow-400 mb-4">Organizer Request Approvals</h3>
+                {organizerRequests.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-gray-400">No pending organizer requests</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-700">
+                      <thead className="bg-gray-700">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">User</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Organization</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Reason</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Requested</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-gray-800 divide-y divide-gray-700">
+                        {organizerRequests.map((request) => (
+                          <tr key={request._id}>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm font-medium text-white">{request.name}</div>
+                              <div className="text-sm text-gray-400">{request.email}</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-300">{request.organizerProfile?.organization}</div>
+                              <div className="text-xs text-gray-400 max-w-xs truncate">
+                                {request.organizerProfile?.description}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-300 max-w-xs truncate">
+                                {request.organizerProfile?.organizerRequestReason}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                              {new Date(request.organizerProfile?.organizerRequestDate).toLocaleDateString()}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                              <button
+                                onClick={() => handleApproveOrganizer(request._id)}
+                                disabled={deleteLoading[request._id]}
+                                className="text-green-400 hover:text-green-300 disabled:opacity-50"
+                              >
+                                {deleteLoading[request._id] ? 'Approving...' : 'Approve'}
+                              </button>
+                              <button
+                                onClick={() => handleRejectOrganizer(request._id)}
+                                disabled={deleteLoading[request._id]}
+                                className="text-red-400 hover:text-red-300 disabled:opacity-50"
+                              >
+                                {deleteLoading[request._id] ? 'Rejecting...' : 'Reject'}
                               </button>
                             </td>
                           </tr>

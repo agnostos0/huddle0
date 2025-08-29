@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext.jsx'
 import confetti from 'canvas-confetti'
 import Navbar from '../components/Navbar.jsx'
 import { compressImages } from '../utils/imageCompression.js'
+import OrganizerRequestModal from '../components/OrganizerRequestModal.jsx'
 
 export default function CreateEvent() {
   const navigate = useNavigate()
@@ -44,6 +45,7 @@ export default function CreateEvent() {
   const [showGoogleLink, setShowGoogleLink] = useState(false)
   const [locationSuggestions, setLocationSuggestions] = useState([])
   const [showSuggestions, setShowSuggestions] = useState(false)
+  const [showOrganizerRequest, setShowOrganizerRequest] = useState(false)
 
   const categories = [
     'General', 'Technology', 'Business', 'Social', 'Education', 
@@ -166,6 +168,13 @@ export default function CreateEvent() {
       if (!user || !token) {
         throw new Error('User or token not found')
       }
+
+      // Check if user is an organizer
+      if (user.role !== 'organizer' && user.role !== 'admin') {
+        setShowOrganizerRequest(true)
+        setIsSubmitting(false)
+        return
+      }
       
       // Prepare payload with photos
       const payload = { 
@@ -234,6 +243,14 @@ export default function CreateEvent() {
               Create Amazing Event
             </h2>
             <p className="text-gray-600 mt-2">Share your event with the world!</p>
+            {user && (user.role === 'organizer' || user.role === 'admin') && (
+              <div className="mt-4 inline-flex items-center px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-medium">
+                <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+                {user.role === 'admin' ? 'Admin' : 'Organizer'} - Can Create Events
+              </div>
+            )}
           </div>
           
           {error && (
@@ -709,6 +726,17 @@ export default function CreateEvent() {
           </form>
         </div>
       </div>
+
+      {/* Organizer Request Modal */}
+      <OrganizerRequestModal
+        isOpen={showOrganizerRequest}
+        onClose={() => setShowOrganizerRequest(false)}
+        onSuccess={(message) => {
+          alert(message);
+          // Refresh user data to update role
+          window.location.reload();
+        }}
+      />
     </div>
   )
 }
