@@ -115,8 +115,23 @@ router.post('/', authenticate, async (req, res) => {
 
 // Read all (public/basic) - only show approved events
 router.get('/', async (_req, res) => {
-  const events = await Event.find({ status: 'approved' }).populate('organizer', 'name').sort({ date: 1 });
-  res.json(events);
+  try {
+    console.log('Fetching public events...');
+    const events = await Event.find({ status: 'approved' }).populate('organizer', 'name').sort({ date: 1 });
+    console.log(`Found ${events.length} approved events`);
+    
+    // Also log all events for debugging
+    const allEvents = await Event.find({}).populate('organizer', 'name');
+    console.log(`Total events in database: ${allEvents.length}`);
+    allEvents.forEach(event => {
+      console.log(`Event: ${event.title}, Status: ${event.status}, Organizer: ${event.organizer?.name}`);
+    });
+    
+    res.json(events);
+  } catch (error) {
+    console.error('Error fetching public events:', error);
+    res.status(500).json({ message: 'Failed to fetch events' });
+  }
 });
 
 // Read all events (admin only) - includes pending and rejected

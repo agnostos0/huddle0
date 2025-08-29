@@ -93,6 +93,28 @@ router.post('/events/:id/approve', authenticate, requireAdmin, async (req, res) 
   }
 });
 
+// Approve all pending events (temporary utility)
+router.post('/events/approve-all', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const result = await Event.updateMany(
+      { status: 'pending' },
+      { 
+        status: 'approved',
+        approvedBy: req.user.id,
+        approvedAt: new Date()
+      }
+    );
+    
+    res.json({
+      message: `Approved ${result.modifiedCount} events`,
+      modifiedCount: result.modifiedCount
+    });
+  } catch (error) {
+    console.error('Bulk approval error:', error);
+    res.status(500).json({ message: 'Failed to approve events' });
+  }
+});
+
 // Reject event
 router.post('/events/:id/reject', authenticate, requireAdmin, async (req, res) => {
   try {
