@@ -16,8 +16,17 @@ export default function Events() {
   const fetchEvents = async () => {
     try {
       setLoading(true)
-      const response = await api.get('/events')
-      setEvents(response.data)
+      // Try to get all events (including pending) for testing
+      let response;
+      try {
+        response = await api.get('/events/admin/all');
+      } catch (err) {
+        // Fallback to public events if admin route fails
+        response = await api.get('/events');
+      }
+      
+      setEvents(response.data);
+      console.log('Fetched events for list view:', response.data.length, response.data);
     } catch (err) {
       setError('Failed to load events')
       console.error('Error fetching events:', err)

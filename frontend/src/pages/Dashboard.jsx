@@ -41,14 +41,24 @@ export default function Dashboard() {
     async function fetchData() {
       try {
         setLoading(true)
-        const [mine, joined, all, teams, invites, stats] = await Promise.all([
+        // Try to get all events (including pending) for testing
+        let allEventsResponse;
+        try {
+          allEventsResponse = await api.get('/events/admin/all');
+        } catch (err) {
+          // Fallback to public events if admin route fails
+          allEventsResponse = await api.get('/events');
+        }
+
+        const [mine, joined, teams, invites, stats] = await Promise.all([
           api.get(`/users/${user.id}/events`),
           api.get(`/users/${user.id}/joined`),
-          api.get(`/events`),
           api.get(`/users/${user.id}/teams`),
           api.get(`/users/${user.id}/invites`),
           api.get(`/users/${user.id}/analytics`)
         ])
+        
+        const all = allEventsResponse;
         setMyEvents(mine.data)
         setJoinedEvents(joined.data)
         setAllEvents(all.data)
@@ -83,12 +93,22 @@ export default function Dashboard() {
   async function joinEvent(eventId) {
     try {
       await api.post(`/events/${eventId}/join`)
-      const [joined, all] = await Promise.all([
+      
+      // Try to get all events (including pending) for testing
+      let allEventsResponse;
+      try {
+        allEventsResponse = await api.get('/events/admin/all');
+      } catch (err) {
+        // Fallback to public events if admin route fails
+        allEventsResponse = await api.get('/events');
+      }
+
+      const [joined] = await Promise.all([
         api.get(`/users/${user.id}/joined`),
-        api.get(`/events`),
       ])
+      
       setJoinedEvents(joined.data)
-      setAllEvents(all.data)
+      setAllEvents(allEventsResponse.data)
       triggerConfetti('join')
     } catch (e) {
       setError('Failed to join event')
@@ -99,12 +119,22 @@ export default function Dashboard() {
   async function leaveEvent(eventId) {
     try {
       await api.post(`/events/${eventId}/leave`)
-      const [joined, all] = await Promise.all([
+      
+      // Try to get all events (including pending) for testing
+      let allEventsResponse;
+      try {
+        allEventsResponse = await api.get('/events/admin/all');
+      } catch (err) {
+        // Fallback to public events if admin route fails
+        allEventsResponse = await api.get('/events');
+      }
+
+      const [joined] = await Promise.all([
         api.get(`/users/${user.id}/joined`),
-        api.get(`/events`),
       ])
+      
       setJoinedEvents(joined.data)
-      setAllEvents(all.data)
+      setAllEvents(allEventsResponse.data)
     } catch (e) {
       setError('Failed to leave event')
       throw e
