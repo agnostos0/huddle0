@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import api from '../lib/api.js';
 import Navbar from '../components/Navbar.jsx';
-import NoticeModal from '../components/NoticeModal.jsx';
 
 export default function AttendeeDashboard() {
   const { user } = useAuth();
@@ -11,76 +10,39 @@ export default function AttendeeDashboard() {
   const [myTeams, setMyTeams] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('events');
-  const [showNotice, setShowNotice] = useState(false);
-  const [notice, setNotice] = useState(null);
+  const [showDeactivationModal, setShowDeactivationModal] = useState(false);
+  const [deactivationReason, setDeactivationReason] = useState('');
 
   useEffect(() => {
     fetchData();
-    checkForNotice();
+    checkForDeactivation();
   }, []);
 
   const fetchData = async () => {
     try {
       setLoading(true);
       const [eventsRes, teamsRes] = await Promise.all([
-        api.get(`/users/${user.id}/joined`),
-        api.get(`/users/${user.id}/teams`)
+        api.get('/users/joined-events'),
+        api.get('/users/my-teams')
       ]);
-
       setJoinedEvents(eventsRes.data);
       setMyTeams(teamsRes.data);
     } catch (error) {
-      console.error('Error fetching attendee data:', error);
+      console.error('Error fetching dashboard data:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const checkForNotice = async () => {
+  const checkForDeactivation = async () => {
     try {
       const response = await api.get('/users/profile');
-      const hasNotice = response.data.notice && 
-                       response.data.notice.trim() !== '' && 
-                       response.data.isActive !== false; // Don't show if user is deactivated
-      
-      if (hasNotice) {
-        setNotice(response.data);
-        setShowNotice(true);
-        console.log('Notice found and displayed');
-      } else {
-        setNotice(null);
-        setShowNotice(false);
-        console.log('No active notice to display');
+      if (!response.data.isActive && response.data.deactivationReason) {
+        setDeactivationReason(response.data.deactivationReason);
+        setShowDeactivationModal(true);
       }
     } catch (error) {
-      console.error('Error checking for notice:', error);
-      setNotice(null);
-      setShowNotice(false);
-    }
-  };
-
-  const handleAcknowledgeNotice = async () => {
-    try {
-      // Mark notice as acknowledged and remove it completely from backend
-      await api.post('/users/notice/acknowledge');
-      
-      // Update local state immediately
-      setShowNotice(false);
-      setNotice(null);
-      
-      // Update the user context to reflect the change
-      const { setUser } = useAuth();
-      if (setUser) {
-        const response = await api.get('/users/profile');
-        setUser(response.data);
-      }
-      
-      console.log('Notice acknowledged and permanently removed');
-    } catch (error) {
-      console.error('Error acknowledging notice:', error);
-      // Still close the modal even if backend call fails
-      setShowNotice(false);
-      setNotice(null);
+      console.error('Error checking for deactivation:', error);
     }
   };
 
@@ -184,11 +146,14 @@ export default function AttendeeDashboard() {
                       </svg>
                     </div>
                     <h3 className="text-lg font-medium text-gray-900 mb-2">No events joined yet</h3>
-                    <p className="text-gray-600 mb-6">Join events to start participating and building teams!</p>
+                    <p className="text-gray-500 mb-6">Start exploring events and join the ones that interest you!</p>
                     <Link
                       to="/events"
-                      className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-300"
+                      className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-300"
                     >
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                      </svg>
                       Browse Events
                     </Link>
                   </div>
@@ -198,30 +163,41 @@ export default function AttendeeDashboard() {
                       <div key={event._id} className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow">
                         <div className="p-6">
                           <div className="flex items-start justify-between mb-4">
-                            <div className="flex-1">
-                              <h3 className="text-lg font-semibold text-gray-900 mb-2">{event.title}</h3>
-                              <p className="text-gray-600 text-sm mb-2">{event.description}</p>
-                              <div className="flex items-center text-sm text-gray-500 mb-2">
-                                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                                {new Date(event.date).toLocaleDateString()}
-                              </div>
-                              <div className="flex items-center text-sm text-gray-500">
-                                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                </svg>
-                                {event.location}
-                              </div>
-                            </div>
-                            <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
-                              Joined
+                            <h4 className="text-lg font-semibold text-gray-900 line-clamp-2">{event.title}</h4>
+                            <span className={`px-2 py-1 text-xs rounded-full ${
+                              event.status === 'upcoming' ? 'bg-blue-100 text-blue-800' :
+                              event.status === 'ongoing' ? 'bg-green-100 text-green-800' :
+                              'bg-gray-100 text-gray-800'
+                            }`}>
+                              {event.status}
                             </span>
                           </div>
+                          
+                          <div className="space-y-3 mb-4">
+                            <div className="flex items-center text-sm text-gray-600">
+                              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                              </svg>
+                              {new Date(event.date).toLocaleDateString()}
+                            </div>
+                            <div className="flex items-center text-sm text-gray-600">
+                              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                              </svg>
+                              {event.location}
+                            </div>
+                            <div className="flex items-center text-sm text-gray-600">
+                              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                              </svg>
+                              {event.participants?.length || 0} participants
+                            </div>
+                          </div>
+                          
                           <div className="flex space-x-2">
                             <Link
-                              to={`/event/${event._id}`}
+                              to={`/events/${event._id}`}
                               className="flex-1 px-4 py-2 bg-purple-600 text-white text-center rounded-lg hover:bg-purple-700 transition-colors"
                             >
                               View Details
@@ -261,12 +237,15 @@ export default function AttendeeDashboard() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                       </svg>
                     </div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No teams yet</h3>
-                    <p className="text-gray-600 mb-6">Join teams or create your own to participate in events!</p>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No teams joined yet</h3>
+                    <p className="text-gray-500 mb-6">Join teams to collaborate with others on events!</p>
                     <Link
                       to="/teams"
-                      className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-300"
+                      className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-300"
                     >
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
                       Browse Teams
                     </Link>
                   </div>
@@ -276,28 +255,26 @@ export default function AttendeeDashboard() {
                       <div key={team._id} className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-shadow">
                         <div className="p-6">
                           <div className="flex items-start justify-between mb-4">
-                            <div className="flex-1">
-                              <h3 className="text-lg font-semibold text-gray-900 mb-2">{team.name}</h3>
-                              <p className="text-gray-600 text-sm mb-2">{team.description}</p>
-                              <div className="flex items-center text-sm text-gray-500 mb-2">
-                                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                </svg>
-                                {team.members?.length || 0} members
-                              </div>
-                              <div className="flex items-center text-sm text-gray-500">
-                                <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                </svg>
-                                Created {new Date(team.createdAt).toLocaleDateString()}
-                              </div>
+                            <h4 className="text-lg font-semibold text-gray-900">{team.name}</h4>
+                            <span className={`px-2 py-1 text-xs rounded-full ${
+                              team.owner._id === user._id ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
+                            }`}>
+                              {team.owner._id === user._id ? 'Owner' : 'Member'}
+                            </span>
+                          </div>
+                          
+                          <div className="space-y-3 mb-4">
+                            <div className="flex items-center text-sm text-gray-600">
+                              <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                              </svg>
+                              {team.members?.length || 0} members
                             </div>
-                            {team.owner?._id === user.id && (
-                              <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
-                                Owner
-                              </span>
+                            {team.description && (
+                              <p className="text-sm text-gray-600 line-clamp-2">{team.description}</p>
                             )}
                           </div>
+                          
                           <Link
                             to={`/teams/${team._id}`}
                             className="w-full px-4 py-2 bg-purple-600 text-white text-center rounded-lg hover:bg-purple-700 transition-colors"
@@ -315,12 +292,52 @@ export default function AttendeeDashboard() {
         </div>
       </div>
 
-      {/* Notice Modal */}
-      {showNotice && notice && (
-        <NoticeModal 
-          notice={notice} 
-          onAcknowledge={handleAcknowledgeNotice} 
-        />
+      {/* Deactivation Modal */}
+      {showDeactivationModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 border-4 border-red-500 shadow-2xl">
+            <div className="text-center">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <h2 className="text-2xl font-bold text-red-600 mb-2">⚠️ Account Deactivated</h2>
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                <p className="text-red-800 font-medium mb-2">Access Restricted</p>
+                <p className="text-red-700 text-sm leading-relaxed">
+                  Your account has been deactivated by an administrator.
+                </p>
+              </div>
+              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
+                <p className="text-gray-800 font-medium mb-2">Reason:</p>
+                <p className="text-gray-700 text-sm">
+                  {deactivationReason}
+                </p>
+              </div>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <p className="text-blue-800 font-medium mb-2">Need Help?</p>
+                <p className="text-blue-700 text-sm">
+                  Please contact the administrator or support team to reactivate your account.
+                </p>
+              </div>
+              <div className="mt-6">
+                <button
+                  onClick={() => {
+                    setShowDeactivationModal(false);
+                    // Logout the user
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    window.location.href = '/login';
+                  }}
+                  className="w-full px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+                >
+                  I Understand - Logout
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

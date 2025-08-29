@@ -16,12 +16,8 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('users');
   const [selectedUser, setSelectedUser] = useState(null);
   const [showImpersonateModal, setShowImpersonateModal] = useState(false);
-  const [showNoticeModal, setShowNoticeModal] = useState(false);
-  const [selectedUserForNotice, setSelectedUserForNotice] = useState(null);
-  const [noticeText, setNoticeText] = useState('');
   const [impersonateLoading, setImpersonateLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState({});
-  const [noticeLoading, setNoticeLoading] = useState(false);
   const [showOrganizerApprovalModal, setShowOrganizerApprovalModal] = useState(false);
   const [selectedOrganizerRequest, setSelectedOrganizerRequest] = useState(null);
   const [organizerApprovalStep, setOrganizerApprovalStep] = useState(1); // 1: Review, 2: Confirm
@@ -155,79 +151,31 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleSendNotice = async () => {
-    if (!noticeText.trim()) {
-      alert('Please enter a notice message');
-      return;
-    }
 
-    try {
-      setNoticeLoading(true);
-      await api.post(`/admin/users/${selectedUserForNotice._id}/notice`, {
-        notice: noticeText,
-        deactivateAccount: true
-      });
-      
-      // Update user status in the list
-      setUsers(users.map(user => 
-        user._id === selectedUserForNotice._id 
-          ? { ...user, isActive: false, notice: noticeText }
-          : user
-      ));
-      
-      setNoticeText('');
-      setShowNoticeModal(false);
-      setSelectedUserForNotice(null);
-      alert('Notice sent and account deactivated successfully');
-    } catch (error) {
-      console.error('Error sending notice:', error);
-      alert('Failed to send notice');
-    } finally {
-      setNoticeLoading(false);
-    }
-  };
-
-  const handleWithdrawNotice = async (userId) => {
-    if (!confirm('Are you sure you want to withdraw this notice? This will remove the notice from the user.')) {
-      return;
-    }
-
-    try {
-      setDeleteLoading(prev => ({ ...prev, [userId]: true }));
-      await api.post(`/admin/users/${userId}/withdraw-notice`);
-      
-      // Update user in the list - remove notice fields
-      setUsers(users.map(user => 
-        user._id === userId 
-          ? { 
-              ...user, 
-              notice: undefined,
-              noticeDate: undefined,
-              noticeAcknowledged: undefined,
-              noticeAcknowledgedAt: undefined
-            }
-          : user
-      ));
-      
-      alert('Notice withdrawn successfully');
-    } catch (error) {
-      console.error('Error withdrawing notice:', error);
-      alert('Failed to withdraw notice');
-    } finally {
-      setDeleteLoading(prev => ({ ...prev, [userId]: false }));
-    }
-  };
 
   const handleDeactivateUser = async (userId) => {
+    const reason = prompt('Please provide a reason for deactivating this user:');
+    if (!reason || reason.trim() === '') {
+      alert('Deactivation reason is required');
+      return;
+    }
+
     if (!confirm('Are you sure you want to deactivate this user account?')) {
       return;
     }
 
     try {
       setDeleteLoading(prev => ({ ...prev, [userId]: true }));
-      await api.post(`/admin/users/${userId}/deactivate`);
+      await api.post(`/admin/users/${userId}/deactivate`, { reason });
       setUsers(users.map(user => 
-        user._id === userId ? { ...user, isActive: false } : user
+        user._id === userId 
+          ? { 
+              ...user, 
+              isActive: false,
+              deactivationReason: reason,
+              deactivatedAt: new Date()
+            }
+          : user
       ));
       alert('User account deactivated successfully');
     } catch (error) {
@@ -237,6 +185,8 @@ export default function AdminDashboard() {
       setDeleteLoading(prev => ({ ...prev, [userId]: false }));
     }
   };
+
+
 
   const handleApproveEvent = async (eventId) => {
     if (!confirm('Are you sure you want to approve this event? It will be visible to all users.')) {
@@ -544,14 +494,7 @@ export default function AdminDashboard() {
               >
                 Organizer Requests ({organizerRequests.length})
               </button>
-              <button
-                onClick={() => setActiveTab('send-notice')}
-                className={`py-3 sm:py-4 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap ${
-                  activeTab === 'send-notice' ? 'border-yellow-400 text-yellow-400' : 'border-transparent text-gray-400 hover:text-gray-300'
-                }`}
-              >
-                Send Notice
-              </button>
+
               <button
                 onClick={() => setActiveTab('teams')}
                 className={`py-3 sm:py-4 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap ${
@@ -584,7 +527,7 @@ export default function AdminDashboard() {
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Email</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Role</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Notice</th>
+
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
                       </tr>
                     </thead>
@@ -625,23 +568,7 @@ export default function AdminDashboard() {
                               {user.isActive ? 'Active' : 'Inactive'}
                             </span>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                            {user.notice ? (
-                              <div className="max-w-xs">
-                                <div className="text-yellow-400 font-medium">Notice Sent</div>
-                                <div className="text-xs text-gray-400 truncate" title={user.notice}>
-                                  {user.notice}
-                                </div>
-                                {user.noticeDate && (
-                                  <div className="text-xs text-gray-500">
-                                    {new Date(user.noticeDate).toLocaleDateString()}
-                                  </div>
-                                )}
-                              </div>
-                            ) : (
-                              <span className="text-gray-500">No notice</span>
-                            )}
-                          </td>
+
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div className="flex flex-col sm:flex-row gap-2">
                             <button
@@ -675,28 +602,7 @@ export default function AdminDashboard() {
                                 )}
                               </>
                             )}
-                            {user.email !== 'admin@huddle.com' ? (
-                              <button
-                                onClick={() => {
-                                  setSelectedUserForNotice(user);
-                                  setShowNoticeModal(true);
-                                }}
-                                className="text-orange-400 hover:text-orange-300"
-                              >
-                                Notice
-                              </button>
-                            ) : (
-                              <span className="text-gray-500 text-xs">Protected</span>
-                            )}
-                            {user.notice && user.email !== 'admin@huddle.com' && (
-                              <button
-                                onClick={() => handleWithdrawNotice(user._id)}
-                                disabled={deleteLoading[user._id]}
-                                className="text-purple-400 hover:text-purple-300 disabled:opacity-50"
-                              >
-                                {deleteLoading[user._id] ? 'Withdrawing...' : 'Withdraw Notice'}
-                              </button>
-                            )}
+
                             {user.isActive ? (
                               user.email !== 'admin@huddle.com' ? (
                                 <button
@@ -1024,159 +930,12 @@ export default function AdminDashboard() {
               </div>
             )}
 
-            {/* Send Notice Tab */}
-            {activeTab === 'send-notice' && (
-              <div className="space-y-4">
-                <h3 className="text-xl font-semibold text-yellow-400 mb-4">Send Notice to Users</h3>
-                <div className="bg-gray-700 rounded-lg p-6">
-                  <div className="mb-6">
-                    <h4 className="text-lg font-medium text-white mb-2">Select User to Send Notice</h4>
-                    <p className="text-gray-400 text-sm mb-4">
-                      Choose a user from the list below to send them a legal notice. This will also deactivate their account.
-                    </p>
-                  </div>
-                  
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-600">
-                      <thead className="bg-gray-600">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">User</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Email</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Role</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Current Notice</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Action</th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-gray-800 divide-y divide-gray-600">
-                        {users.map((user) => (
-                          <tr key={user._id}>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="flex items-center">
-                                <div className="flex-shrink-0 h-10 w-10">
-                                  <div className="h-10 w-10 rounded-full bg-gray-600 flex items-center justify-center">
-                                    <span className="text-sm font-medium text-white">
-                                      {user.name?.charAt(0)?.toUpperCase() || 'U'}
-                                    </span>
-                                  </div>
-                                </div>
-                                <div className="ml-4">
-                                  <div className="text-sm font-medium text-white">{user.name}</div>
-                                  <div className="text-sm text-gray-400">@{user.username}</div>
-                                </div>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{user.email}</td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                user.role === 'admin' ? 'bg-purple-100 text-purple-800' :
-                                user.role === 'organizer' ? 'bg-blue-100 text-blue-800' :
-                                'bg-gray-100 text-gray-800'
-                              }`}>
-                                {user.role === 'admin' ? 'Admin' :
-                                 user.role === 'organizer' ? 'Organizer' :
-                                 'Attendee'}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                              }`}>
-                                {user.isActive ? 'Active' : 'Inactive'}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                              {user.notice ? (
-                                <div className="max-w-xs">
-                                  <div className="text-yellow-400 font-medium">Notice Sent</div>
-                                  <div className="text-xs text-gray-400 truncate" title={user.notice}>
-                                    {user.notice}
-                                  </div>
-                                  {user.noticeDate && (
-                                    <div className="text-xs text-gray-500">
-                                      {new Date(user.noticeDate).toLocaleDateString()}
-                                    </div>
-                                  )}
-                                </div>
-                              ) : (
-                                <span className="text-gray-500">No notice</span>
-                              )}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                              <button
-                                onClick={() => {
-                                  setSelectedUserForNotice(user);
-                                  setShowNoticeModal(true);
-                                }}
-                                disabled={!user.isActive}
-                                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                              >
-                                Send Notice
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            )}
+
           </div>
         </div>
       </div>
 
-      {/* Notice Modal */}
-      {showNoticeModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-800 rounded-2xl p-6 w-full max-w-md mx-4 border border-gray-700">
-            <h3 className="text-xl font-semibold text-yellow-400 mb-4">
-              Send Legal Notice
-            </h3>
-            <div className="mb-4">
-              <p className="text-gray-300 text-sm mb-2">
-                Sending notice to: <span className="font-semibold text-white">{selectedUserForNotice?.name}</span>
-              </p>
-              <p className="text-gray-400 text-xs">
-                This will send a notice and deactivate the user's account.
-              </p>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Notice Message
-                </label>
-                <textarea
-                  value={noticeText}
-                  onChange={(e) => setNoticeText(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent text-white placeholder-gray-400"
-                  placeholder="Enter the legal notice message..."
-                  rows={4}
-                />
-              </div>
-            </div>
-            <div className="flex space-x-3 mt-6">
-              <button
-                onClick={() => {
-                  setShowNoticeModal(false);
-                  setSelectedUserForNotice(null);
-                  setNoticeText('');
-                }}
-                className="flex-1 px-4 py-2 border border-gray-600 rounded-lg text-gray-300 hover:bg-gray-700 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSendNotice}
-                disabled={noticeLoading}
-                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
-              >
-                {noticeLoading ? 'Sending...' : 'Send Notice & Deactivate'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+
     </div>
   );
 }

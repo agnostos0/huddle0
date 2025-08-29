@@ -610,7 +610,7 @@ export default function UserProfile() {
                   </div>
                 )}
 
-                {(!organizerStatus || (!organizerStatus.hasRequested && !organizerStatus.isOrganizer)) && (
+                {(!organizerStatus || !organizerStatus.isOrganizer) && (
                   <form onSubmit={handleOrganizerRequest} className="space-y-6">
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                       <div className="flex items-start">

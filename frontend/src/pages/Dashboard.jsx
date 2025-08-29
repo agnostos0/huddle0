@@ -5,7 +5,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import confetti from 'canvas-confetti'
 import Navbar from '../components/Navbar.jsx'
 import ConfirmationDialog from '../components/ConfirmationDialog.jsx'
-import NoticeModal from '../components/NoticeModal.jsx'
+
 
 export default function Dashboard() {
   const { user, logout } = useAuth()
@@ -29,8 +29,7 @@ export default function Dashboard() {
   const [showLeaveDialog, setShowLeaveDialog] = useState(false)
   const [selectedEvent, setSelectedEvent] = useState(null)
   const [isImpersonating, setIsImpersonating] = useState(false)
-  const [showNotice, setShowNotice] = useState(false)
-  const [notice, setNotice] = useState(null)
+
 
   useEffect(() => {
     // Check if this is an admin impersonating a user
@@ -76,26 +75,11 @@ export default function Dashboard() {
     }
     if (user?.id) {
       fetchData()
-      checkForNotice()
+
     }
   }, [user])
 
-  const checkForNotice = async () => {
-    try {
-      const response = await api.get('/users/profile');
-      if (response.data.notice && response.data.notice.trim() !== '') {
-        setNotice(response.data);
-        setShowNotice(true);
-      }
-    } catch (error) {
-      console.error('Error checking for notice:', error);
-    }
-  };
 
-  const handleAcknowledgeNotice = () => {
-    setShowNotice(false);
-    // Optionally mark notice as read in backend
-  };
 
   const triggerConfetti = (type = 'default') => {
     const colors = {
@@ -641,13 +625,7 @@ export default function Dashboard() {
         showConsent={false}
       />
 
-      {/* Notice Modal */}
-      {showNotice && notice && (
-        <NoticeModal 
-          notice={notice} 
-          onAcknowledge={handleAcknowledgeNotice}
-        />
-      )}
+
     </div>
   )
 }
