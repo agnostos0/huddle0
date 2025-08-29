@@ -56,9 +56,9 @@ router.post('/', authenticate, async (req, res) => {
         secondPlace: 0, 
         thirdPlace: 0, 
         consolationPrizes: [],
-        currency: currency || 'USD'
+        currency: currency || 'INR'
       },
-      currency: currency || 'USD',
+      currency: currency || 'INR',
       eventType: eventType || 'in-person',
       virtualMeetingLink,
       contactEmail,

@@ -49,14 +49,14 @@ const eventSchema = new mongoose.Schema({
   }],
   isPublic: { type: Boolean, default: true },
   price: { type: Number, default: 0 },
-  currency: { type: String, default: 'USD' },
+  currency: { type: String, default: 'INR' },
   prizePool: {
     totalAmount: { type: Number, default: 0 },
     firstPlace: { type: Number, default: 0 },
     secondPlace: { type: Number, default: 0 },
     thirdPlace: { type: Number, default: 0 },
     consolationPrizes: [{ type: Number }], // Additional prizes
-    currency: { type: String, default: 'USD' }
+    currency: { type: String, default: 'INR' }
   },
   eventType: { type: String, enum: ['in-person', 'virtual', 'hybrid'], default: 'in-person' },
   virtualMeetingLink: { type: String },
