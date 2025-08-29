@@ -20,7 +20,6 @@ export default function CreateEvent() {
     category: 'General',
     maxParticipants: 0,
     teamRequirements: {
-      teamSize: 0,
       girlsRequired: 0,
       boysRequired: 0
     },
@@ -392,44 +391,50 @@ export default function CreateEvent() {
                 Team Requirements
               </h3>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Team Size</label>
-                  <input 
-                    type="number"
-                    name="teamRequirements.teamSize"
-                    value={form.teamRequirements.teamSize}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300" 
-                    placeholder="0 for individual"
-                    min="0"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Girls Required</label>
-                  <input 
-                    type="number"
-                    name="teamRequirements.girlsRequired"
-                    value={form.teamRequirements.girlsRequired}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300" 
-                    placeholder="0"
-                    min="0"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Boys Required</label>
-                  <input 
-                    type="number"
-                    name="teamRequirements.boysRequired"
-                    value={form.teamRequirements.boysRequired}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300" 
-                    placeholder="0"
-                    min="0"
-                  />
+              <div className="space-y-4">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <p className="text-sm text-blue-800 mb-3">
+                    <strong>Team Requirements:</strong> Set how many girls and boys are required for each team. 
+                    The total team size will be calculated automatically.
+                  </p>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Girls Required per Team
+                      </label>
+                      <input 
+                        type="number"
+                        name="teamRequirements.girlsRequired"
+                        value={form.teamRequirements.girlsRequired}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300" 
+                        placeholder="0"
+                        min="0"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Boys Required per Team
+                      </label>
+                      <input 
+                        type="number"
+                        name="teamRequirements.boysRequired"
+                        value={form.teamRequirements.boysRequired}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300" 
+                        placeholder="0"
+                        min="0"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="mt-3 p-3 bg-white border border-gray-200 rounded-lg">
+                    <p className="text-sm text-gray-600">
+                      <strong>Total Team Size:</strong> {form.teamRequirements.girlsRequired + form.teamRequirements.boysRequired} members
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -470,15 +475,22 @@ export default function CreateEvent() {
               </div>
             </div>
 
-            {/* Pricing Structure */}
+            {/* Prize Pool Structure */}
             <div className="space-y-6">
               <h3 className="text-xl font-semibold text-gray-800 border-b border-gray-200 pb-2">
-                Pricing Structure
+                Prize Pool Structure (₹)
               </h3>
+              
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4 mb-4">
+                <p className="text-sm text-green-800 mb-3">
+                  <strong>Prize Pool:</strong> Set the prize amounts for different positions. 
+                  This will be distributed among winners.
+                </p>
+              </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Individual Price (₹)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">1st Place Prize (₹)</label>
                   <input 
                     type="number"
                     name="pricing.individual"
@@ -492,7 +504,7 @@ export default function CreateEvent() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Team Leader Price (₹)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">2nd Place Prize (₹)</label>
                   <input 
                     type="number"
                     name="pricing.teamLeader"
@@ -506,7 +518,7 @@ export default function CreateEvent() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Team Member Price (₹)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">3rd Place Prize (₹)</label>
                   <input 
                     type="number"
                     name="pricing.teamMember"
@@ -520,7 +532,7 @@ export default function CreateEvent() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Male Price (₹)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Consolation Prize 1 (₹)</label>
                   <input 
                     type="number"
                     name="pricing.malePrice"
@@ -534,7 +546,7 @@ export default function CreateEvent() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Female Price (₹)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Consolation Prize 2 (₹)</label>
                   <input 
                     type="number"
                     name="pricing.femalePrice"
