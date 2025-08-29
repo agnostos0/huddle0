@@ -8,6 +8,91 @@ import { authenticate } from '../middleware/auth.js';
 
 const router = Router();
 
+// Request to become an organizer
+router.post('/request-organizer', authenticate, async (req, res) => {
+  try {
+    const { organization, description, contactEmail, contactPhone, reason } = req.body;
+    
+    if (!organization || !description || !reason) {
+      return res.status(400).json({ 
+        message: 'Organization, description, and reason are required' 
+      });
+    }
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Check if user already has a pending request
+    if (user.organizerProfile.hasRequestedOrganizer && 
+        user.organizerProfile.organizerRequestStatus === 'pending') {
+      return res.status(400).json({ 
+        message: 'You already have a pending organizer request' 
+      });
+    }
+
+    // Check if user is already an organizer
+    if (user.role === 'organizer') {
+      return res.status(400).json({ 
+        message: 'You are already an organizer' 
+      });
+    }
+
+    // Update user with organizer request
+    user.organizerProfile.hasRequestedOrganizer = true;
+    user.organizerProfile.organizerRequestDate = new Date();
+    user.organizerProfile.organizerRequestReason = reason;
+    user.organizerProfile.organizerRequestStatus = 'pending';
+    user.organizerProfile.organization = organization;
+    user.organizerProfile.description = description;
+    user.organizerProfile.contactEmail = contactEmail || user.email;
+    user.organizerProfile.contactPhone = contactPhone || user.contactNumber;
+
+    await user.save();
+
+    res.json({
+      message: 'Organizer request submitted successfully. Admin will review your request.',
+      request: {
+        organization: user.organizerProfile.organization,
+        description: user.organizerProfile.description,
+        reason: user.organizerProfile.organizerRequestReason,
+        status: user.organizerProfile.organizerRequestStatus,
+        submittedAt: user.organizerProfile.organizerRequestDate
+      }
+    });
+  } catch (error) {
+    console.error('Organizer request error:', error);
+    res.status(500).json({ message: 'Failed to submit organizer request' });
+  }
+});
+
+// Get user's organizer request status
+router.get('/organizer-request-status', authenticate, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.json({
+      hasRequested: user.organizerProfile.hasRequestedOrganizer,
+      status: user.organizerProfile.organizerRequestStatus,
+      organization: user.organizerProfile.organization,
+      description: user.organizerProfile.description,
+      reason: user.organizerProfile.organizerRequestReason,
+      rejectionReason: user.organizerProfile.organizerRequestRejectionReason,
+      submittedAt: user.organizerProfile.organizerRequestDate,
+      approvedAt: user.organizerProfile.approvedAt,
+      isOrganizer: user.role === 'organizer',
+      isVerified: user.organizerProfile.isVerified
+    });
+  } catch (error) {
+    console.error('Organizer status fetch error:', error);
+    res.status(500).json({ message: 'Failed to fetch organizer status' });
+  }
+});
+
 // Events created by a user
 router.get('/:id/events', async (req, res) => {
   const events = await Event.find({ organizer: req.params.id })

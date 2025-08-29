@@ -68,7 +68,33 @@ const userSchema = new mongoose.Schema({
     organization: String,
     description: String,
     contactEmail: String,
-    contactPhone: String
+    contactPhone: String,
+    // Organizer request system
+    hasRequestedOrganizer: {
+      type: Boolean,
+      default: false
+    },
+    organizerRequestDate: {
+      type: Date
+    },
+    organizerRequestReason: {
+      type: String
+    },
+    organizerRequestStatus: {
+      type: String,
+      enum: ['pending', 'approved', 'rejected'],
+      default: 'pending'
+    },
+    organizerRequestRejectionReason: {
+      type: String
+    },
+    approvedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    approvedAt: {
+      type: Date
+    }
   },
   preferences: {
     notifications: {

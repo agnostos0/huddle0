@@ -115,6 +115,84 @@ router.post('/events/approve-all', authenticate, requireAdmin, async (req, res) 
   }
 });
 
+// Get organizer requests
+router.get('/organizer-requests', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const requests = await User.find({
+      'organizerProfile.hasRequestedOrganizer': true,
+      'organizerProfile.organizerRequestStatus': 'pending'
+    }).select('-password');
+    
+    res.json(requests);
+  } catch (error) {
+    console.error('Organizer requests fetch error:', error);
+    res.status(500).json({ message: 'Failed to fetch organizer requests' });
+  }
+});
+
+// Approve organizer request
+router.post('/organizer-requests/:userId/approve', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const user = await User.findById(req.params.userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    user.role = 'organizer';
+    user.organizerProfile.isVerified = true;
+    user.organizerProfile.organizerRequestStatus = 'approved';
+    user.organizerProfile.approvedBy = req.user.id;
+    user.organizerProfile.approvedAt = new Date();
+
+    await user.save();
+
+    res.json({
+      message: 'Organizer request approved successfully',
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }
+    });
+  } catch (error) {
+    console.error('Organizer approval error:', error);
+    res.status(500).json({ message: 'Failed to approve organizer request' });
+  }
+});
+
+// Reject organizer request
+router.post('/organizer-requests/:userId/reject', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const { reason } = req.body;
+    if (!reason || reason.trim() === '') {
+      return res.status(400).json({ message: 'Rejection reason is required' });
+    }
+
+    const user = await User.findById(req.params.userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    user.organizerProfile.organizerRequestStatus = 'rejected';
+    user.organizerProfile.organizerRequestRejectionReason = reason;
+
+    await user.save();
+
+    res.json({
+      message: 'Organizer request rejected successfully',
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email
+      }
+    });
+  } catch (error) {
+    console.error('Organizer rejection error:', error);
+    res.status(500).json({ message: 'Failed to reject organizer request' });
+  }
+});
+
 // Reject event
 router.post('/events/:id/reject', authenticate, requireAdmin, async (req, res) => {
   try {

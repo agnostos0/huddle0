@@ -16,6 +16,18 @@ router.post('/', authenticate, async (req, res) => {
       user: req.user.id
     });
 
+    // Check if user is an organizer
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (user.role !== 'organizer' && user.role !== 'admin') {
+      return res.status(403).json({ 
+        message: 'Only organizers can create events. Please request organizer status first.' 
+      });
+    }
+
     const {
       title,
       description,
