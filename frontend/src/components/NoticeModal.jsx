@@ -18,7 +18,13 @@ export default function NoticeModal({ notice, onAcknowledge }) {
       onClick={onAcknowledge}
     >
       <div 
-        className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 border-4 border-red-500 shadow-2xl" 
+        className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 border-4 border-red-500 shadow-2xl relative" 
+        style={{ 
+          filter: 'blur(0px)', 
+          backdropFilter: 'blur(0px)',
+          zIndex: 9999,
+          transform: 'translateZ(0)'
+        }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="text-center relative">
