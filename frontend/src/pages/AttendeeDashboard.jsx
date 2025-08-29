@@ -39,18 +39,41 @@ export default function AttendeeDashboard() {
   const checkForNotice = async () => {
     try {
       const response = await api.get('/users/profile');
-      if (response.data.notice && response.data.notice.trim() !== '') {
+      const hasNotice = response.data.notice && 
+                       response.data.notice.trim() !== '' && 
+                       !response.data.noticeAcknowledged;
+      
+      if (hasNotice) {
         setNotice(response.data);
         setShowNotice(true);
+      } else {
+        setNotice(null);
+        setShowNotice(false);
       }
     } catch (error) {
       console.error('Error checking for notice:', error);
+      setNotice(null);
+      setShowNotice(false);
     }
   };
 
-  const handleAcknowledgeNotice = () => {
-    setShowNotice(false);
-    // Optionally mark notice as read in backend
+  const handleAcknowledgeNotice = async () => {
+    try {
+      // Mark notice as acknowledged in backend
+      await api.post('/users/notice/acknowledge');
+      
+      // Update local state
+      setShowNotice(false);
+      setNotice(null);
+      
+      // Refresh user profile to get updated notice status
+      await fetchData();
+    } catch (error) {
+      console.error('Error acknowledging notice:', error);
+      // Still close the modal even if backend call fails
+      setShowNotice(false);
+      setNotice(null);
+    }
   };
 
   const leaveEvent = async (eventId) => {
@@ -68,7 +91,7 @@ export default function AttendeeDashboard() {
     }
   };
 
-    if (loading) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50">
         <Navbar />
@@ -83,7 +106,7 @@ export default function AttendeeDashboard() {
   }
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 ${showNotice ? 'blur-sm' : ''}`}>
+    <div className={`min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 ${showNotice && notice ? 'blur-sm' : ''}`}>
       <Navbar />
       
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -100,59 +123,14 @@ export default function AttendeeDashboard() {
             <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
             </svg>
-            Attendee - Can Join Events & Teams
-          </div>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-2xl shadow-lg border border-white/20 p-6">
-            <div className="flex items-center">
-              <div className="p-3 bg-purple-500 rounded-lg">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                </svg>
-              </div>
-              <div className="ml-4">
-                <p className="text-gray-600 text-sm">Joined Events</p>
-                <p className="text-2xl font-bold text-gray-900">{joinedEvents.length}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-lg border border-white/20 p-6">
-            <div className="flex items-center">
-              <div className="p-3 bg-blue-500 rounded-lg">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-              </div>
-              <div className="ml-4">
-                <p className="text-gray-600 text-sm">My Teams</p>
-                <p className="text-2xl font-bold text-gray-900">{myTeams.length}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-lg border border-white/20 p-6">
-            <div className="flex items-center">
-              <div className="p-3 bg-green-500 rounded-lg">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div className="ml-4">
-                <p className="text-gray-600 text-sm">Account Status</p>
-                <p className="text-2xl font-bold text-gray-900">Active</p>
-              </div>
-            </div>
+            Attendee
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="bg-white rounded-2xl shadow-lg border border-white/20">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 mb-8">
           <div className="border-b border-gray-200">
-            <nav className="flex space-x-8 px-8">
+            <nav className="flex space-x-8 px-6">
               <button
                 onClick={() => setActiveTab('events')}
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
@@ -176,17 +154,17 @@ export default function AttendeeDashboard() {
             </nav>
           </div>
 
-          <div className="p-8">
+          <div className="p-6">
             {/* Joined Events Tab */}
             {activeTab === 'events' && (
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <h3 className="text-xl font-semibold text-gray-900">Events You've Joined</h3>
                   <Link
-                    to="/explore"
+                    to="/events"
                     className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-300"
                   >
-                    Explore More Events
+                    Browse Events
                   </Link>
                 </div>
 
@@ -198,9 +176,9 @@ export default function AttendeeDashboard() {
                       </svg>
                     </div>
                     <h3 className="text-lg font-medium text-gray-900 mb-2">No events joined yet</h3>
-                    <p className="text-gray-600 mb-6">Start exploring events and join the ones that interest you!</p>
+                    <p className="text-gray-600 mb-6">Join events to start participating and building teams!</p>
                     <Link
-                      to="/explore"
+                      to="/events"
                       className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-300"
                     >
                       Browse Events
@@ -229,14 +207,8 @@ export default function AttendeeDashboard() {
                                 {event.location}
                               </div>
                             </div>
-                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                              event.category === 'sports' ? 'bg-green-100 text-green-800' :
-                              event.category === 'music' ? 'bg-purple-100 text-purple-800' :
-                              event.category === 'technology' ? 'bg-blue-100 text-blue-800' :
-                              event.category === 'food' ? 'bg-orange-100 text-orange-800' :
-                              'bg-gray-100 text-gray-800'
-                            }`}>
-                              {event.category}
+                            <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                              Joined
                             </span>
                           </div>
                           <div className="flex space-x-2">
@@ -334,6 +306,14 @@ export default function AttendeeDashboard() {
           </div>
         </div>
       </div>
+
+      {/* Notice Modal */}
+      {showNotice && notice && (
+        <NoticeModal 
+          notice={notice} 
+          onAcknowledge={handleAcknowledgeNotice} 
+        />
+      )}
     </div>
   );
 }

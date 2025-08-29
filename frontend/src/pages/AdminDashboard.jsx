@@ -22,6 +22,9 @@ export default function AdminDashboard() {
   const [impersonateLoading, setImpersonateLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState({});
   const [noticeLoading, setNoticeLoading] = useState(false);
+  const [showOrganizerApprovalModal, setShowOrganizerApprovalModal] = useState(false);
+  const [selectedOrganizerRequest, setSelectedOrganizerRequest] = useState(null);
+  const [organizerApprovalStep, setOrganizerApprovalStep] = useState(1); // 1: Review, 2: Confirm
 
   useEffect(() => {
     fetchData();
