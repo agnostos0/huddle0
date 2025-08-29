@@ -190,7 +190,7 @@ export const AuthProvider = ({ children }) => {
       case 'organizer':
         return '/dashboard';
       default:
-        return '/events'; // Normal users go to events list instead of dashboard
+        return '/attendee-dashboard'; // Normal users go to attendee dashboard
     }
   };
 

@@ -642,6 +642,22 @@ export default function UserProfile() {
                     Delete Account
                   </button>
                 </div>
+
+                {/* Organizer Request Section for Attendees */}
+                {user && user.role === 'user' && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-6">
+                    <h3 className="text-lg font-medium text-blue-800 mb-2">Want to Create Events?</h3>
+                    <p className="text-blue-700 mb-4">
+                      Request organizer status to create and manage your own events.
+                    </p>
+                    <button
+                      onClick={() => setActiveTab('organizer')}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      Request Organizer Status
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>

@@ -20,6 +20,7 @@ import ExploreEvents from './pages/ExploreEvents.jsx';
 import EventOrganizerDashboard from './pages/EventOrganizerDashboard.jsx';
 import UserProfile from './pages/UserProfile.jsx';
 import Events from './pages/Events.jsx';
+import AttendeeDashboard from './pages/AttendeeDashboard.jsx';
 
 // Initialize Firebase
 import './lib/firebase.js';
@@ -43,6 +44,12 @@ function AppContent() {
           <Route path="/dashboard" element={
             <ProtectedRoute requiredRole="organizer">
               <Dashboard />
+            </ProtectedRoute>
+          } />
+          
+          <Route path="/attendee-dashboard" element={
+            <ProtectedRoute>
+              <AttendeeDashboard />
             </ProtectedRoute>
           } />
           

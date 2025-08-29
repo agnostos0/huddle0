@@ -64,15 +64,13 @@ export default function Navbar() {
                   </Link>
                 )}
 
-                {/* Dashboard Button - Only for organizers and admins */}
-                {canAccessDashboard() && (
-                  <button
-                    onClick={handleDashboardClick}
-                    className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-300 text-sm"
-                  >
-                    {isAdmin() ? 'Admin Panel' : 'Organizer Dashboard'}
-                  </button>
-                )}
+                {/* Dashboard Button */}
+                <button
+                  onClick={handleDashboardClick}
+                  className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-300 text-sm"
+                >
+                  {isAdmin() ? 'Admin Panel' : isOrganizer() ? 'Organizer Dashboard' : 'My Dashboard'}
+                </button>
 
                 {/* Profile Dropdown */}
                 <div className="relative">
@@ -127,18 +125,14 @@ export default function Navbar() {
                         </Link>
                       )}
 
-                      {/* Show organizer request for normal users */}
-                      {!canAccessDashboard() && (
-                        <button
-                          onClick={() => {
-                            setIsProfileOpen(false);
-                            // This will be handled by the CreateEvent page
-                            navigate('/create-event');
-                          }}
-                          className="block w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50"
+                      {!isOrganizer() && !isAdmin() && (
+                        <Link
+                          to="/attendee-dashboard"
+                          onClick={() => setIsProfileOpen(false)}
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                         >
-                          Request Organizer Status
-                        </button>
+                          My Dashboard
+                        </Link>
                       )}
                       
                       <div className="border-t border-gray-100">

@@ -46,7 +46,7 @@ const ProtectedRoute = ({ children, requiredRole = null }) => {
   } else if (user && user.role === 'organizer') {
     return <Navigate to="/dashboard" replace />;
   } else {
-    return <Navigate to="/events" replace />;
+    return <Navigate to="/attendee-dashboard" replace />;
   }
 };
 
