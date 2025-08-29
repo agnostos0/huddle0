@@ -1,10 +1,38 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
 export default function NoticeModal({ notice, onAcknowledge }) {
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        onAcknowledge();
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [onAcknowledge]);
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 border-4 border-red-500 shadow-2xl">
-        <div className="text-center">
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" 
+      style={{ backdropFilter: 'blur(0px)' }}
+      onClick={onAcknowledge}
+    >
+      <div 
+        className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 border-4 border-red-500 shadow-2xl" 
+        style={{ filter: 'blur(0px)' }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="text-center relative">
+          {/* Close Button */}
+          <button
+            onClick={onAcknowledge}
+            className="absolute top-0 right-0 text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+
           {/* Warning Icon */}
           <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg className="w-8 h-8 text-red-600" fill="currentColor" viewBox="0 0 20 20">
@@ -50,13 +78,21 @@ export default function NoticeModal({ notice, onAcknowledge }) {
             </div>
           </div>
 
-          {/* Acknowledge Button */}
-          <button
-            onClick={onAcknowledge}
-            className="w-full px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
-          >
-            I Understand
-          </button>
+          {/* Action Buttons */}
+          <div className="flex space-x-3 mt-6">
+            <button
+              onClick={onAcknowledge}
+              className="flex-1 px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+            >
+              I Understand
+            </button>
+            <button
+              onClick={onAcknowledge}
+              className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+            >
+              Close
+            </button>
+          </div>
         </div>
       </div>
     </div>
