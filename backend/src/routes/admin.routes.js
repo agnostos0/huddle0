@@ -34,15 +34,97 @@ router.get('/users', authenticate, requireAdmin, async (req, res) => {
 });
 
 // Get all events
-router.get('/events', async (req, res) => {
+router.get('/events', authenticate, requireAdmin, async (req, res) => {
   try {
     const events = await Event.find({})
       .populate('organizer', 'name email')
       .populate('participants', 'name email')
+      .populate('approvedBy', 'name')
       .sort({ createdAt: -1 });
     res.json(events);
   } catch (error) {
     res.status(500).json({ message: 'Failed to fetch events' });
+  }
+});
+
+// Get pending events
+router.get('/events/pending', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const pendingEvents = await Event.find({ status: 'pending' })
+      .populate('organizer', 'name email')
+      .populate('approvedBy', 'name')
+      .sort({ createdAt: -1 });
+    res.json(pendingEvents);
+  } catch (error) {
+    console.error('Pending events fetch error:', error);
+    res.status(500).json({ message: 'Failed to fetch pending events' });
+  }
+});
+
+// Approve event
+router.post('/events/:id/approve', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const event = await Event.findById(req.params.id);
+    if (!event) {
+      return res.status(404).json({ message: 'Event not found' });
+    }
+
+    event.status = 'approved';
+    event.approvedBy = req.user.id;
+    event.approvedAt = new Date();
+    event.rejectionReason = undefined;
+
+    await event.save();
+
+    const user = await User.findById(req.user.id);
+    res.json({
+      message: 'Event approved successfully',
+      event: {
+        _id: event._id,
+        title: event.title,
+        status: event.status,
+        approvedBy: user.name,
+        approvedAt: event.approvedAt
+      }
+    });
+  } catch (error) {
+    console.error('Event approval error:', error);
+    res.status(500).json({ message: 'Failed to approve event' });
+  }
+});
+
+// Reject event
+router.post('/events/:id/reject', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const { reason } = req.body;
+    if (!reason || reason.trim() === '') {
+      return res.status(400).json({ message: 'Rejection reason is required' });
+    }
+
+    const event = await Event.findById(req.params.id);
+    if (!event) {
+      return res.status(404).json({ message: 'Event not found' });
+    }
+
+    event.status = 'rejected';
+    event.rejectionReason = reason;
+    event.approvedBy = undefined;
+    event.approvedAt = undefined;
+
+    await event.save();
+
+    res.json({
+      message: 'Event rejected successfully',
+      event: {
+        _id: event._id,
+        title: event.title,
+        status: event.status,
+        rejectionReason: event.rejectionReason
+      }
+    });
+  } catch (error) {
+    console.error('Event rejection error:', error);
+    res.status(500).json({ message: 'Failed to reject event' });
   }
 });
 
