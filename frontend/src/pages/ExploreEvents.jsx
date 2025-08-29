@@ -78,12 +78,21 @@ export default function ExploreEvents() {
   const fetchEvents = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/events');
+      // Try to get all events (including pending) for testing
+      let response;
+      try {
+        response = await api.get('/events/admin/all');
+      } catch (err) {
+        // Fallback to public events if admin route fails
+        response = await api.get('/events');
+      }
+      
       // Filter events that have coordinates
       const eventsWithCoords = response.data.filter(event => 
         event.coordinates && event.coordinates.lat && event.coordinates.lng
       );
       setEvents(eventsWithCoords);
+      console.log('Fetched events:', eventsWithCoords.length, eventsWithCoords);
     } catch (err) {
       console.error('Error fetching events:', err);
     } finally {
