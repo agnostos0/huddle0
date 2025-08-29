@@ -39,7 +39,7 @@ router.get('/mine', authenticate, async (req, res) => {
   res.json(teams);
 });
 
-// Get all teams (for event joining)
+// Get all teams (for event joining) - only show approved teams
 router.get('/', authenticate, async (req, res) => {
   try {
     // Get teams where user is a member
@@ -48,8 +48,8 @@ router.get('/', authenticate, async (req, res) => {
       .populate('leader', 'name')
       .populate('members', 'name');
     
-    // Get all public teams (for joining events)
-    const allTeams = await Team.find({})
+    // Get all approved teams (for joining events)
+    const allTeams = await Team.find({ status: 'approved' })
       .populate('owner', 'name')
       .populate('leader', 'name')
       .populate('members', 'name')
@@ -62,6 +62,48 @@ router.get('/', authenticate, async (req, res) => {
   } catch (error) {
     console.error('Error fetching teams:', error);
     res.status(500).json({ message: 'Failed to fetch teams' });
+  }
+});
+
+// Get all teams (admin only) - includes pending and rejected
+router.get('/admin/all', authenticate, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user || user.role !== 'admin') {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
+    
+    const teams = await Team.find()
+      .populate('owner', 'name email')
+      .populate('leader', 'name email')
+      .populate('members', 'name email')
+      .populate('approvedBy', 'name')
+      .populate('joinRequests.userId', 'name email')
+      .sort({ createdAt: -1 });
+    res.json(teams);
+  } catch (error) {
+    console.error('Admin teams fetch error:', error);
+    res.status(500).json({ message: 'Failed to fetch teams' });
+  }
+});
+
+// Get pending teams (admin only)
+router.get('/admin/pending', authenticate, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user || user.role !== 'admin') {
+      return res.status(403).json({ message: 'Admin access required' });
+    }
+    
+    const teams = await Team.find({ status: 'pending' })
+      .populate('owner', 'name email')
+      .populate('leader', 'name email')
+      .populate('members', 'name email')
+      .sort({ createdAt: -1 });
+    res.json(teams);
+  } catch (error) {
+    console.error('Pending teams fetch error:', error);
+    res.status(500).json({ message: 'Failed to fetch pending teams' });
   }
 });
 
