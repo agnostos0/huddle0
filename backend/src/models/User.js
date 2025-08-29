@@ -106,11 +106,11 @@ const userSchema = new mongoose.Schema({
       showPhone: { type: Boolean, default: false }
     }
   },
-  notice: {
+  deactivationReason: {
     type: String,
     default: ''
   },
-  noticeDate: {
+  deactivatedAt: {
     type: Date
   }
 }, {

@@ -21,41 +21,46 @@ transporter.verify(function (error, success) {
   }
 });
 
-export const sendNoticeEmail = async (user, notice) => {
+export const sendOrganizerApprovalEmail = async (user) => {
   const mailOptions = {
     from: config.smtpUser,
     to: user.email,
-    subject: '🔔 Important Notice from Huddle Admin',
+    subject: '🎉 Congratulations! Your Organizer Request Has Been Approved',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8f9fa; padding: 20px;">
         <div style="background: #ffffff; border-radius: 10px; padding: 30px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
           <div style="text-align: center; margin-bottom: 30px;">
-            <div style="background: #dc3545; color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 24px;">
-              ⚠️
+            <div style="background: #28a745; color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 24px;">
+              🎉
             </div>
-            <h1 style="color: #dc3545; margin: 0; font-size: 24px;">Important Notice</h1>
-            <p style="color: #6c757d; margin: 10px 0 0 0;">From Huddle Administration</p>
+            <h1 style="color: #28a745; margin: 0; font-size: 24px;">Request Approved!</h1>
+            <p style="color: #6c757d; margin: 10px 0 0 0;">You're now an Organizer on Huddle</p>
           </div>
           
-          <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 20px; margin: 20px 0;">
-            <h2 style="color: #856404; margin: 0 0 15px 0; font-size: 18px;">Dear ${user.name},</h2>
-            <p style="color: #856404; line-height: 1.6; margin: 0;">
-              ${notice}
+          <div style="background: #d4edda; border: 1px solid #c3e6cb; border-radius: 8px; padding: 20px; margin: 20px 0;">
+            <h2 style="color: #155724; margin: 0 0 15px 0; font-size: 18px;">Dear ${user.name},</h2>
+            <p style="color: #155724; line-height: 1.6; margin: 0;">
+              Great news! Your request to become an organizer has been approved by our admin team. 
+              You now have the ability to create and manage events on Huddle.
             </p>
           </div>
           
-          <div style="background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 8px; padding: 15px; margin: 20px 0;">
-            <p style="color: #721c24; margin: 0; font-size: 14px; font-weight: bold;">
-              ⚠️ Your account has been deactivated due to this notice.
-            </p>
+          <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 15px; margin: 20px 0;">
+            <h3 style="color: #856404; margin: 0 0 10px 0; font-size: 16px;">What you can do now:</h3>
+            <ul style="color: #856404; margin: 0; padding-left: 20px;">
+              <li>Create new events</li>
+              <li>Manage your events</li>
+              <li>View event analytics</li>
+              <li>Invite participants</li>
+            </ul>
           </div>
           
           <div style="text-align: center; margin-top: 30px;">
-            <p style="color: #6c757d; font-size: 14px; margin: 0;">
-              If you have any questions or concerns, please contact our support team.
-            </p>
-            <p style="color: #6c757d; font-size: 12px; margin: 10px 0 0 0;">
-              This is an automated message from Huddle. Please do not reply to this email.
+            <a href="${config.clientOrigin}/dashboard" style="background: #28a745; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
+              Go to Your Dashboard
+            </a>
+            <p style="color: #6c757d; font-size: 14px; margin: 20px 0 0 0;">
+              Start creating amazing events and bringing people together!
             </p>
           </div>
         </div>
@@ -65,12 +70,63 @@ export const sendNoticeEmail = async (user, notice) => {
 
   try {
     await transporter.sendMail(mailOptions);
-    console.log('Notice email sent successfully to:', user.email);
+    console.log('Organizer approval email sent successfully to:', user.email);
   } catch (error) {
-    console.error('Error sending notice email:', error);
+    console.error('Error sending organizer approval email:', error);
     throw error;
   }
 };
+
+export const sendOrganizerRejectionEmail = async (user, reason) => {
+  const mailOptions = {
+    from: config.smtpUser,
+    to: user.email,
+    subject: '❌ Update on Your Organizer Request',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8f9fa; padding: 20px;">
+        <div style="background: #ffffff; border-radius: 10px; padding: 30px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+          <div style="text-align: center; margin-bottom: 30px;">
+            <div style="background: #dc3545; color: white; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 24px;">
+              ❌
+            </div>
+            <h1 style="color: #dc3545; margin: 0; font-size: 24px;">Request Update</h1>
+            <p style="color: #6c757d; margin: 10px 0 0 0;">Your organizer request has been reviewed</p>
+          </div>
+          
+          <div style="background: #f8d7da; border: 1px solid #f5c6cb; border-radius: 8px; padding: 20px; margin: 20px 0;">
+            <h2 style="color: #721c24; margin: 0 0 15px 0; font-size: 18px;">Dear ${user.name},</h2>
+            <p style="color: #721c24; line-height: 1.6; margin: 0;">
+              We regret to inform you that your request to become an organizer has not been approved at this time.
+            </p>
+          </div>
+          
+          ${reason ? `
+          <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 15px; margin: 20px 0;">
+            <h3 style="color: #856404; margin: 0 0 10px 0; font-size: 16px;">Reason for rejection:</h3>
+            <p style="color: #856404; margin: 0; font-style: italic;">"${reason}"</p>
+          </div>
+          ` : ''}
+          
+          <div style="text-align: center; margin-top: 30px;">
+            <p style="color: #6c757d; font-size: 14px; margin: 0;">
+              You can still participate in events as an attendee. If you have any questions, please contact our support team.
+            </p>
+          </div>
+        </div>
+      </div>
+    `
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log('Organizer rejection email sent successfully to:', user.email);
+  } catch (error) {
+    console.error('Error sending organizer rejection email:', error);
+    throw error;
+  }
+};
+
+
 
 export const sendInviteEmail = async (invite, teamName, inviterName, reason = null) => {
   const inviteUrl = `${config.clientOrigin}/invite/${invite.token}`;

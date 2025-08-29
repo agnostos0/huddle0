@@ -359,7 +359,15 @@ router.post('/google', async (req, res) => {
     let user = await User.findOne({ email: googleUser.email.toLowerCase() });
 
     if (user) {
-      // User exists, update last login and return token
+      // Check if user is deactivated
+      if (!user.isActive) {
+        return res.status(403).json({ 
+          message: 'Account deactivated', 
+          deactivationReason: user.deactivationReason || 'Account has been deactivated by administrator'
+        });
+      }
+
+      // User exists and is active, update last login and return token
       user.lastLogin = new Date();
       await user.save();
 

@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext.jsx'
 import api from '../lib/api.js'
+import Navbar from '../components/Navbar.jsx'
 
 export default function Events() {
+  const { user } = useAuth()
   const [events, setEvents] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -16,14 +19,8 @@ export default function Events() {
   const fetchEvents = async () => {
     try {
       setLoading(true)
-      // Try to get all events (including pending) for testing
-      let response;
-      try {
-        response = await api.get('/events/admin/all');
-      } catch (err) {
-        // Fallback to public events if admin route fails
-        response = await api.get('/events');
-      }
+      // Always use the public events endpoint to avoid authentication issues
+      const response = await api.get('/events');
       
       setEvents(response.data);
       console.log('Fetched events for list view:', response.data.length, response.data);

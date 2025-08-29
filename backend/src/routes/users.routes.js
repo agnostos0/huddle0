@@ -75,6 +75,13 @@ router.get('/organizer-request-status', authenticate, async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
+    // If user is demoted to attendee but still has approved status, reset it
+    if (user.role === 'user' && user.organizerProfile.organizerRequestStatus === 'approved') {
+      user.organizerProfile.organizerRequestStatus = 'pending';
+      user.organizerProfile.isVerified = false;
+      await user.save();
+    }
+
     res.json({
       hasRequested: user.organizerProfile.hasRequestedOrganizer,
       status: user.organizerProfile.organizerRequestStatus,
@@ -92,6 +99,8 @@ router.get('/organizer-request-status', authenticate, async (req, res) => {
     res.status(500).json({ message: 'Failed to fetch organizer status' });
   }
 });
+
+
 
 // Events created by a user
 router.get('/:id/events', async (req, res) => {

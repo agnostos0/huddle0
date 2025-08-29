@@ -165,8 +165,12 @@ export default function AdminDashboard() {
     }
 
     try {
+      console.log('Attempting to deactivate user:', userId, 'with reason:', reason);
       setDeleteLoading(prev => ({ ...prev, [userId]: true }));
-      await api.post(`/admin/users/${userId}/deactivate`, { reason });
+      
+      const response = await api.post(`/admin/users/${userId}/deactivate`, { reason });
+      console.log('Deactivation response:', response.data);
+      
       setUsers(users.map(user => 
         user._id === userId 
           ? { 
@@ -180,7 +184,12 @@ export default function AdminDashboard() {
       alert('User account deactivated successfully');
     } catch (error) {
       console.error('Error deactivating user:', error);
-      alert('Failed to deactivate user account');
+      console.error('Error details:', {
+        status: error.response?.status,
+        data: error.response?.data,
+        message: error.message
+      });
+      alert(`Failed to deactivate user account: ${error.response?.data?.message || error.message}`);
     } finally {
       setDeleteLoading(prev => ({ ...prev, [userId]: false }));
     }

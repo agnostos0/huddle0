@@ -146,6 +146,14 @@ router.post('/organizer-requests/:userId/approve', authenticate, requireAdmin, a
 
     await user.save();
 
+    // Send approval email
+    try {
+      const { sendOrganizerApprovalEmail } = await import('../utils/email.js');
+      await sendOrganizerApprovalEmail(user);
+    } catch (emailError) {
+      console.error('Failed to send organizer approval email:', emailError);
+    }
+
     res.json({
       message: 'Organizer request approved successfully',
       user: {
@@ -178,6 +186,14 @@ router.post('/organizer-requests/:userId/reject', authenticate, requireAdmin, as
     user.organizerProfile.organizerRequestRejectionReason = reason;
 
     await user.save();
+
+    // Send rejection email
+    try {
+      const { sendOrganizerRejectionEmail } = await import('../utils/email.js');
+      await sendOrganizerRejectionEmail(user, reason);
+    } catch (emailError) {
+      console.error('Failed to send organizer rejection email:', emailError);
+    }
 
     res.json({
       message: 'Organizer request rejected successfully',
@@ -330,84 +346,82 @@ router.post('/create-admin', async (req, res) => {
   }
 });
 
-// Send notice and deactivate user
-router.post('/users/:userId/notice', authenticate, requireAdmin, async (req, res) => {
+// Deactivate user with reason
+router.post('/users/:userId/deactivate', authenticate, requireAdmin, async (req, res) => {
   try {
     const { userId } = req.params;
-    const { notice, deactivateAccount } = req.body;
+    const { reason } = req.body;
     
-    if (!notice || !notice.trim()) {
-      return res.status(400).json({ message: 'Notice message is required' });
-    }
-
-    const updateData = {
-      notice: notice.trim(),
-      noticeDate: new Date()
-    };
-
-    if (deactivateAccount) {
-      updateData.isActive = false;
-    }
-
-    const user = await User.findByIdAndUpdate(
-      userId,
-      updateData,
-      { new: true }
-    ).select('-password');
-
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    // Send email notification to user
-    try {
-      const { sendNoticeEmail } = await import('../utils/email.js');
-      await sendNoticeEmail(user, notice);
-    } catch (emailError) {
-      console.error('Failed to send notice email:', emailError);
-    }
-
-    res.json({ 
-      message: 'Notice sent successfully', 
-      user,
-      deactivated: deactivateAccount 
-    });
-  } catch (error) {
-    console.error('Send notice error:', error);
-    res.status(500).json({ message: 'Failed to send notice' });
-  }
-});
-
-// Activate/Deactivate user
-router.post('/users/:userId/:action', authenticate, requireAdmin, async (req, res) => {
-  try {
-    const { userId, action } = req.params;
+    console.log('Deactivation request:', { userId, reason });
     
-    if (!['activate', 'deactivate'].includes(action)) {
-      return res.status(400).json({ message: 'Invalid action' });
+    if (!reason || reason.trim() === '') {
+      console.log('Deactivation failed: No reason provided');
+      return res.status(400).json({ message: 'Deactivation reason is required' });
     }
 
-    // Check if user exists and get their email
+    // Check if user exists first
     const existingUser = await User.findById(userId);
-    
     if (!existingUser) {
+      console.log('Deactivation failed: User not found');
       return res.status(404).json({ message: 'User not found' });
     }
-    
+
+    console.log('Found user:', { id: existingUser._id, email: existingUser.email, isActive: existingUser.isActive });
+
     // Prevent deactivation of admin@huddle.com account
-    if (action === 'deactivate' && existingUser.email === 'admin@huddle.com') {
+    if (existingUser.email === 'admin@huddle.com') {
+      console.log('Deactivation failed: Cannot deactivate admin account');
       return res.status(403).json({ message: 'Cannot deactivate the main admin account' });
     }
 
     const user = await User.findByIdAndUpdate(
       userId,
-      { isActive: action === 'activate' },
+      {
+        isActive: false,
+        deactivationReason: reason.trim(),
+        deactivatedAt: new Date()
+      },
       { new: true }
     ).select('-password');
 
-    res.json({ message: `User ${action}d successfully`, user });
+    console.log('User deactivated successfully:', { id: user._id, email: user.email, isActive: user.isActive });
+
+    res.json({ 
+      message: 'User deactivated successfully', 
+      user 
+    });
   } catch (error) {
-    res.status(500).json({ message: `Failed to ${req.params.action} user` });
+    console.error('Deactivate user error:', error);
+    res.status(500).json({ message: 'Failed to deactivate user' });
+  }
+});
+
+// Activate user
+router.post('/users/:userId/activate', authenticate, requireAdmin, async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Check if user exists
+    const existingUser = await User.findById(userId);
+    
+    if (!existingUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      {
+        isActive: true,
+        deactivationReason: '',
+        deactivatedAt: null
+      },
+      { new: true }
+    ).select('-password');
+
+    res.json({ message: 'User activated successfully', user });
+  } catch (error) {
+    console.error('Activate user error:', error);
+    res.status(500).json({ message: 'Failed to activate user' });
   }
 });
 
@@ -421,9 +435,21 @@ router.put('/users/:userId/role', authenticate, requireAdmin, async (req, res) =
       return res.status(400).json({ message: 'Invalid role. Must be user, organizer, or admin' });
     }
 
+    // Prepare update object
+    const updateData = { role };
+
+    // If demoting to attendee (user), reset organizer status
+    if (role === 'user') {
+      updateData['organizerProfile.isVerified'] = false;
+      updateData['organizerProfile.organizerRequestStatus'] = 'pending';
+      updateData['organizerProfile.organizerRequestRejectionReason'] = '';
+      updateData['organizerProfile.approvedBy'] = null;
+      updateData['organizerProfile.approvedAt'] = null;
+    }
+
     const user = await User.findByIdAndUpdate(
       userId,
-      { role },
+      updateData,
       { new: true }
     ).select('-password');
 

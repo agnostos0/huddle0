@@ -40,9 +40,16 @@ export const signInWithGoogle = async () => {
       code: error.code,
       message: error.message,
       email: error.email,
-      credential: error.credential
+      credential: error.credential,
+      response: error.response?.data
     });
     
+    // Handle backend deactivation error
+    if (error.response?.status === 403 && error.response?.data?.message === 'Account deactivated') {
+      throw new Error(`Account deactivated: ${error.response.data.deactivationReason}`);
+    }
+    
+    // Handle Firebase auth errors
     if (error.code === 'auth/popup-closed-by-user') {
       throw new Error('Sign-in was cancelled');
     } else if (error.code === 'auth/popup-blocked') {
@@ -53,6 +60,9 @@ export const signInWithGoogle = async () => {
       throw new Error('Google sign-in is not enabled. Please contact support.');
     } else if (error.code === 'auth/network-request-failed') {
       throw new Error('Network error. Please check your internet connection.');
+    } else if (error.response?.data?.message) {
+      // Handle backend errors
+      throw new Error(error.response.data.message);
     } else {
       throw new Error(`Google sign-in failed: ${error.message}`);
     }

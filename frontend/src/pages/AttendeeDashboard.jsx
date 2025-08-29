@@ -15,8 +15,11 @@ export default function AttendeeDashboard() {
 
   useEffect(() => {
     fetchData();
-    checkForDeactivation();
-  }, []);
+    // Only check for deactivation if user exists and is authenticated
+    if (user && user._id) {
+      checkForDeactivation();
+    }
+  }, [user]);
 
   const fetchData = async () => {
     try {
@@ -43,6 +46,7 @@ export default function AttendeeDashboard() {
       }
     } catch (error) {
       console.error('Error checking for deactivation:', error);
+      // Don't show deactivation modal on API errors to avoid false positives
     }
   };
 
@@ -130,12 +134,6 @@ export default function AttendeeDashboard() {
               <div className="space-y-6">
                 <div className="flex items-center justify-between">
                   <h3 className="text-xl font-semibold text-gray-900">Events You've Joined</h3>
-                  <Link
-                    to="/events"
-                    className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-300"
-                  >
-                    Browse Events
-                  </Link>
                 </div>
 
                 {joinedEvents.length === 0 ? (
