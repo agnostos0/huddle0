@@ -50,11 +50,12 @@ export default function EventsMap() {
   const filteredEvents = events.filter(event => {
     const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          event.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = filterCategory === 'all' || event.category === filterCategory;
+    const matchesCategory = filterCategory === 'all' || 
+                           event.category?.toLowerCase() === filterCategory.toLowerCase();
     return matchesSearch && matchesCategory;
   });
 
-  const categories = ['all', 'technology', 'business', 'social', 'education', 'entertainment', 'sports'];
+  const categories = ['all', 'technology', 'business', 'social', 'education', 'entertainment', 'sports', 'food'];
 
   if (loading) {
     return (

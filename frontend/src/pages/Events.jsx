@@ -29,11 +29,12 @@ export default function Events() {
   const filteredEvents = events.filter(event => {
     const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          event.description.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesCategory = filterCategory === 'all' || event.category === filterCategory
+    const matchesCategory = filterCategory === 'all' || 
+                           event.category?.toLowerCase() === filterCategory.toLowerCase()
     return matchesSearch && matchesCategory
   })
 
-  const categories = ['all', 'technology', 'business', 'social', 'education', 'entertainment', 'sports']
+  const categories = ['all', 'technology', 'business', 'social', 'education', 'entertainment', 'sports', 'food']
 
   const handleEventClick = async (eventId) => {
     // Track view when user clicks on event
@@ -188,12 +189,13 @@ export default function Events() {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                    event.category === 'technology' ? 'bg-blue-100 text-blue-800' :
-                    event.category === 'business' ? 'bg-green-100 text-green-800' :
-                    event.category === 'social' ? 'bg-pink-100 text-pink-800' :
-                    event.category === 'education' ? 'bg-yellow-100 text-yellow-800' :
-                    event.category === 'entertainment' ? 'bg-purple-100 text-purple-800' :
-                    event.category === 'sports' ? 'bg-red-100 text-red-800' :
+                    event.category?.toLowerCase() === 'technology' ? 'bg-blue-100 text-blue-800' :
+                    event.category?.toLowerCase() === 'business' ? 'bg-green-100 text-green-800' :
+                    event.category?.toLowerCase() === 'social' ? 'bg-pink-100 text-pink-800' :
+                    event.category?.toLowerCase() === 'education' ? 'bg-yellow-100 text-yellow-800' :
+                    event.category?.toLowerCase() === 'entertainment' ? 'bg-purple-100 text-purple-800' :
+                    event.category?.toLowerCase() === 'sports' ? 'bg-red-100 text-red-800' :
+                    event.category?.toLowerCase() === 'food' ? 'bg-orange-100 text-orange-800' :
                     'bg-gray-100 text-gray-800'
                   }`}>
                     {event.category}

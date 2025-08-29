@@ -344,12 +344,13 @@ export default function EventDetails() {
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-4">
                     <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
-                      event.category === 'technology' ? 'bg-blue-100 text-blue-800' :
-                      event.category === 'business' ? 'bg-green-100 text-green-800' :
-                      event.category === 'social' ? 'bg-pink-100 text-pink-800' :
-                      event.category === 'education' ? 'bg-yellow-100 text-yellow-800' :
-                      event.category === 'entertainment' ? 'bg-purple-100 text-purple-800' :
-                      event.category === 'sports' ? 'bg-red-100 text-red-800' :
+                      event.category?.toLowerCase() === 'technology' ? 'bg-blue-100 text-blue-800' :
+                      event.category?.toLowerCase() === 'business' ? 'bg-green-100 text-green-800' :
+                      event.category?.toLowerCase() === 'social' ? 'bg-pink-100 text-pink-800' :
+                      event.category?.toLowerCase() === 'education' ? 'bg-yellow-100 text-yellow-800' :
+                      event.category?.toLowerCase() === 'entertainment' ? 'bg-purple-100 text-purple-800' :
+                      event.category?.toLowerCase() === 'sports' ? 'bg-red-100 text-red-800' :
+                      event.category?.toLowerCase() === 'food' ? 'bg-orange-100 text-orange-800' :
                       'bg-gray-100 text-gray-800'
                     }`}>
                       {event.category?.charAt(0).toUpperCase() + event.category?.slice(1)}

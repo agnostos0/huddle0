@@ -23,10 +23,11 @@ const createEventIcon = (category) => {
     education: '#F59E0B',  // Yellow
     entertainment: '#8B5CF6', // Purple
     sports: '#EF4444',     // Red
+    food: '#F97316',       // Orange
     default: '#F59E0B'     // Default orange
   };
   
-  const color = colors[category] || colors.default;
+  const color = colors[category?.toLowerCase()] || colors.default;
   
   return new L.Icon({
     iconUrl: `data:image/svg+xml;base64,${btoa(`
@@ -182,7 +183,8 @@ export default function ExploreEvents() {
   const filteredEvents = events.filter(event => {
     const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          event.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = filterCategory === 'all' || event.category === filterCategory;
+    const matchesCategory = filterCategory === 'all' || 
+                           event.category?.toLowerCase() === filterCategory.toLowerCase();
     
     let matchesLocation = true;
     if (showNearbyOnly) {
@@ -203,7 +205,7 @@ export default function ExploreEvents() {
     return matchesSearch && matchesCategory && matchesLocation;
   });
 
-  const categories = ['all', 'technology', 'business', 'social', 'education', 'entertainment', 'sports'];
+  const categories = ['all', 'technology', 'business', 'social', 'education', 'entertainment', 'sports', 'food'];
   
   // Popular cities with coordinates
   const popularCities = [
@@ -555,6 +557,10 @@ export default function ExploreEvents() {
                   <div className="w-3 h-3 rounded-full bg-red-500 mr-2"></div>
                   <span>Sports</span>
                 </div>
+                <div className="flex items-center text-xs">
+                  <div className="w-3 h-3 rounded-full bg-orange-500 mr-2"></div>
+                  <span>Food</span>
+                </div>
               </div>
             </div>
             
@@ -650,12 +656,13 @@ export default function ExploreEvents() {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                      event.category === 'technology' ? 'bg-blue-100 text-blue-800' :
-                      event.category === 'business' ? 'bg-green-100 text-green-800' :
-                      event.category === 'social' ? 'bg-pink-100 text-pink-800' :
-                      event.category === 'education' ? 'bg-yellow-100 text-yellow-800' :
-                      event.category === 'entertainment' ? 'bg-purple-100 text-purple-800' :
-                      event.category === 'sports' ? 'bg-red-100 text-red-800' :
+                      event.category?.toLowerCase() === 'technology' ? 'bg-blue-100 text-blue-800' :
+                      event.category?.toLowerCase() === 'business' ? 'bg-green-100 text-green-800' :
+                      event.category?.toLowerCase() === 'social' ? 'bg-pink-100 text-pink-800' :
+                      event.category?.toLowerCase() === 'education' ? 'bg-yellow-100 text-yellow-800' :
+                      event.category?.toLowerCase() === 'entertainment' ? 'bg-purple-100 text-purple-800' :
+                      event.category?.toLowerCase() === 'sports' ? 'bg-red-100 text-red-800' :
+                      event.category?.toLowerCase() === 'food' ? 'bg-orange-100 text-orange-800' :
                       'bg-gray-100 text-gray-800'
                     }`}>
                       {event.category}

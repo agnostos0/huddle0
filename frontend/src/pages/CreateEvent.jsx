@@ -455,7 +455,7 @@ export default function CreateEvent() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">General Price (USD)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">General Price (₹)</label>
                   <input 
                     type="number"
                     name="price"
@@ -478,7 +478,7 @@ export default function CreateEvent() {
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Individual Price (USD)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Individual Price (₹)</label>
                   <input 
                     type="number"
                     name="pricing.individual"
@@ -492,7 +492,7 @@ export default function CreateEvent() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Team Leader Price (USD)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Team Leader Price (₹)</label>
                   <input 
                     type="number"
                     name="pricing.teamLeader"
@@ -506,7 +506,7 @@ export default function CreateEvent() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Team Member Price (USD)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Team Member Price (₹)</label>
                   <input 
                     type="number"
                     name="pricing.teamMember"
@@ -520,7 +520,7 @@ export default function CreateEvent() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Male Price (USD)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Male Price (₹)</label>
                   <input 
                     type="number"
                     name="pricing.malePrice"
@@ -534,7 +534,7 @@ export default function CreateEvent() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Female Price (USD)</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Female Price (₹)</label>
                   <input 
                     type="number"
                     name="pricing.femalePrice"

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import api from '../lib/api.js';
+import { signInWithGoogle } from '../utils/googleAuth.js';
 
 const AuthContext = createContext();
 
@@ -128,6 +129,31 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('user');
   };
 
+  const loginWithGoogle = async () => {
+    try {
+      console.log('AuthContext: Attempting Google login');
+      const result = await signInWithGoogle();
+      
+      if (result.success) {
+        setToken(result.token);
+        setUser(result.user);
+        localStorage.setItem('token', result.token);
+        localStorage.setItem('user', JSON.stringify(result.user));
+        
+        console.log('AuthContext: Google login successful');
+        return { success: true, user: result.user };
+      } else {
+        return { success: false, message: result.message };
+      }
+    } catch (error) {
+      console.error('AuthContext: Google login error:', error);
+      return { 
+        success: false, 
+        message: error.message || 'Google login failed. Please try again.' 
+      };
+    }
+  };
+
 
 
   const updateUser = (updatedUser) => {
@@ -175,6 +201,7 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
+    loginWithGoogle,
     updateUser,
     hasPermission,
     isOrganizer,
