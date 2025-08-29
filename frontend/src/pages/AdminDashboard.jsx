@@ -13,8 +13,8 @@ export default function AdminDashboard() {
   const [teams, setTeams] = useState([]);
   const [invites, setInvites] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('overview');
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [activeTab, setActiveTab] = useState('users');
+  const [selectedUser, setSelectedUser] = null;
   const [showImpersonateModal, setShowImpersonateModal] = useState(false);
   const [showNoticeModal, setShowNoticeModal] = useState(false);
   const [selectedUserForNotice, setSelectedUserForNotice] = useState(null);
@@ -479,49 +479,57 @@ export default function AdminDashboard() {
           <div className="border-b border-gray-700">
             <nav className="flex flex-wrap space-x-2 sm:space-x-8 px-4 sm:px-6 overflow-x-auto">
               <button
-                onClick={() => setSelectedUser('users')}
+                onClick={() => setActiveTab('users')}
                 className={`py-3 sm:py-4 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap ${
-                  selectedUser === 'users' ? 'border-yellow-400 text-yellow-400' : 'border-transparent text-gray-400 hover:text-gray-300'
+                  activeTab === 'users' ? 'border-yellow-400 text-yellow-400' : 'border-transparent text-gray-400 hover:text-gray-300'
                 }`}
               >
                 Users ({users.length})
               </button>
               <button
-                onClick={() => setSelectedUser('events')}
+                onClick={() => setActiveTab('events')}
                 className={`py-3 sm:py-4 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap ${
-                  selectedUser === 'events' ? 'border-yellow-400 text-yellow-400' : 'border-transparent text-gray-400 hover:text-gray-300'
+                  activeTab === 'events' ? 'border-yellow-400 text-yellow-400' : 'border-transparent text-gray-400 hover:text-gray-300'
                 }`}
               >
                 Events ({events.length})
               </button>
               <button
-                onClick={() => setSelectedUser('pending-events')}
+                onClick={() => setActiveTab('pending-events')}
                 className={`py-3 sm:py-4 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap ${
-                  selectedUser === 'pending-events' ? 'border-yellow-400 text-yellow-400' : 'border-transparent text-gray-400 hover:text-gray-300'
+                  activeTab === 'pending-events' ? 'border-yellow-400 text-yellow-400' : 'border-transparent text-gray-400 hover:text-gray-300'
                 }`}
               >
                 Pending Events ({pendingEvents.length})
               </button>
               <button
-                onClick={() => setSelectedUser('organizer-requests')}
+                onClick={() => setActiveTab('organizer-requests')}
                 className={`py-3 sm:py-4 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap ${
-                  selectedUser === 'organizer-requests' ? 'border-yellow-400 text-yellow-400' : 'border-transparent text-gray-400 hover:text-gray-300'
+                  activeTab === 'organizer-requests' ? 'border-yellow-400 text-yellow-400' : 'border-transparent text-gray-400 hover:text-gray-300'
                 }`}
               >
                 Organizer Requests ({organizerRequests.length})
               </button>
               <button
-                onClick={() => setSelectedUser('teams')}
+                onClick={() => setActiveTab('send-notice')}
                 className={`py-3 sm:py-4 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap ${
-                  selectedUser === 'teams' ? 'border-yellow-400 text-yellow-400' : 'border-transparent text-gray-400 hover:text-gray-300'
+                  activeTab === 'send-notice' ? 'border-yellow-400 text-yellow-400' : 'border-transparent text-gray-400 hover:text-gray-300'
+                }`}
+              >
+                Send Notice
+              </button>
+              <button
+                onClick={() => setActiveTab('teams')}
+                className={`py-3 sm:py-4 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap ${
+                  activeTab === 'teams' ? 'border-yellow-400 text-yellow-400' : 'border-transparent text-gray-400 hover:text-gray-300'
                 }`}
               >
                 Teams ({teams.length})
               </button>
               <button
-                onClick={() => setSelectedUser('invites')}
+                onClick={() => setActiveTab('invites')}
                 className={`py-3 sm:py-4 px-2 sm:px-1 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap ${
-                  selectedUser === 'invites' ? 'border-yellow-400 text-yellow-400' : 'border-transparent text-gray-400 hover:text-gray-300'
+                  activeTab === 'invites' ? 'border-yellow-400 text-yellow-400' : 'border-transparent text-gray-400 hover:text-gray-300'
                 }`}
               >
                 Invitations ({invites.length})
@@ -531,7 +539,7 @@ export default function AdminDashboard() {
 
           <div className="p-6">
             {/* Users Tab */}
-            {selectedUser === 'users' && (
+            {activeTab === 'users' && (
               <div className="space-y-4">
                 <h3 className="text-xl font-semibold text-yellow-400 mb-4">User Management</h3>
                 <div className="overflow-x-auto">
@@ -687,7 +695,7 @@ export default function AdminDashboard() {
             )}
 
             {/* Events Tab */}
-            {selectedUser === 'events' && (
+            {activeTab === 'events' && (
               <div className="space-y-4">
                 <h3 className="text-xl font-semibold text-yellow-400 mb-4">Event Management</h3>
                 <div className="overflow-x-auto">
@@ -731,7 +739,7 @@ export default function AdminDashboard() {
             )}
 
             {/* Pending Events Tab */}
-            {selectedUser === 'pending-events' && (
+            {activeTab === 'pending-events' && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-xl font-semibold text-yellow-400">Pending Event Approvals</h3>
@@ -803,7 +811,7 @@ export default function AdminDashboard() {
             )}
 
             {/* Organizer Requests Tab */}
-            {selectedUser === 'organizer-requests' && (
+            {activeTab === 'organizer-requests' && (
               <div className="space-y-4">
                 <h3 className="text-xl font-semibold text-yellow-400 mb-4">Organizer Request Approvals</h3>
                 {organizerRequests.length === 0 ? (
@@ -876,7 +884,7 @@ export default function AdminDashboard() {
             )}
 
             {/* Teams Tab */}
-            {selectedUser === 'teams' && (
+            {activeTab === 'teams' && (
               <div className="space-y-4">
                 <h3 className="text-xl font-semibold text-yellow-400 mb-4">Team Management</h3>
                 <div className="overflow-x-auto">
@@ -914,7 +922,7 @@ export default function AdminDashboard() {
             )}
 
             {/* Invites Tab */}
-            {selectedUser === 'invites' && (
+            {activeTab === 'invites' && (
               <div className="space-y-4">
                 <h3 className="text-xl font-semibold text-yellow-400 mb-4">Invitation Management</h3>
                 <div className="overflow-x-auto">
@@ -969,6 +977,105 @@ export default function AdminDashboard() {
                       ))}
                     </tbody>
                   </table>
+                </div>
+              </div>
+            )}
+
+            {/* Send Notice Tab */}
+            {activeTab === 'send-notice' && (
+              <div className="space-y-4">
+                <h3 className="text-xl font-semibold text-yellow-400 mb-4">Send Notice to Users</h3>
+                <div className="bg-gray-700 rounded-lg p-6">
+                  <div className="mb-6">
+                    <h4 className="text-lg font-medium text-white mb-2">Select User to Send Notice</h4>
+                    <p className="text-gray-400 text-sm mb-4">
+                      Choose a user from the list below to send them a legal notice. This will also deactivate their account.
+                    </p>
+                  </div>
+                  
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-600">
+                      <thead className="bg-gray-600">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">User</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Email</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Role</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Current Notice</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Action</th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-gray-800 divide-y divide-gray-600">
+                        {users.map((user) => (
+                          <tr key={user._id}>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="flex items-center">
+                                <div className="flex-shrink-0 h-10 w-10">
+                                  <div className="h-10 w-10 rounded-full bg-gray-600 flex items-center justify-center">
+                                    <span className="text-sm font-medium text-white">
+                                      {user.name?.charAt(0)?.toUpperCase() || 'U'}
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className="ml-4">
+                                  <div className="text-sm font-medium text-white">{user.name}</div>
+                                  <div className="text-sm text-gray-400">@{user.username}</div>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{user.email}</td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                user.role === 'admin' ? 'bg-purple-100 text-purple-800' :
+                                user.role === 'organizer' ? 'bg-blue-100 text-blue-800' :
+                                'bg-gray-100 text-gray-800'
+                              }`}>
+                                {user.role === 'admin' ? 'Admin' :
+                                 user.role === 'organizer' ? 'Organizer' :
+                                 'Attendee'}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                              }`}>
+                                {user.isActive ? 'Active' : 'Inactive'}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                              {user.notice ? (
+                                <div className="max-w-xs">
+                                  <div className="text-yellow-400 font-medium">Notice Sent</div>
+                                  <div className="text-xs text-gray-400 truncate" title={user.notice}>
+                                    {user.notice}
+                                  </div>
+                                  {user.noticeDate && (
+                                    <div className="text-xs text-gray-500">
+                                      {new Date(user.noticeDate).toLocaleDateString()}
+                                    </div>
+                                  )}
+                                </div>
+                              ) : (
+                                <span className="text-gray-500">No notice</span>
+                              )}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                              <button
+                                onClick={() => {
+                                  setSelectedUserForNotice(user);
+                                  setShowNoticeModal(true);
+                                }}
+                                disabled={!user.isActive}
+                                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                Send Notice
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
             )}

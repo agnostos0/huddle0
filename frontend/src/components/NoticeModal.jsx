@@ -14,12 +14,11 @@ export default function NoticeModal({ notice, onAcknowledge }) {
   return (
     <div 
       className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4" 
-      style={{ backdropFilter: 'blur(0px)' }}
+      style={{ backdropFilter: 'blur(5px)' }}
       onClick={onAcknowledge}
     >
       <div 
         className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 border-4 border-red-500 shadow-2xl" 
-        style={{ filter: 'blur(0px)' }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="text-center relative">
