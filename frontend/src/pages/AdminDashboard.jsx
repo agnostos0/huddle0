@@ -14,7 +14,7 @@ export default function AdminDashboard() {
   const [invites, setInvites] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('users');
-  const [selectedUser, setSelectedUser] = null;
+  const [selectedUser, setSelectedUser] = useState(null);
   const [showImpersonateModal, setShowImpersonateModal] = useState(false);
   const [showNoticeModal, setShowNoticeModal] = useState(false);
   const [selectedUserForNotice, setSelectedUserForNotice] = useState(null);

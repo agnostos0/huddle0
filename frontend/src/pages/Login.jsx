@@ -251,6 +251,13 @@ export default function Login() {
             </button>
           </form>
 
+          {/* Divider with margin */}
+          <div className="my-6 flex items-center">
+            <div className="flex-1 border-t border-gray-300"></div>
+            <span className="px-4 text-sm text-gray-500">or</span>
+            <div className="flex-1 border-t border-gray-300"></div>
+          </div>
+
           {/* Google Sign-In Button */}
           <button
             type="button"
