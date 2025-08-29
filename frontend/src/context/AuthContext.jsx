@@ -188,10 +188,14 @@ export const AuthProvider = ({ children }) => {
       case 'admin':
         return '/admin-dashboard';
       case 'organizer':
-        return '/organizer-dashboard';
-      default:
         return '/dashboard';
+      default:
+        return '/events'; // Normal users go to events list instead of dashboard
     }
+  };
+
+  const canAccessDashboard = () => {
+    return user && (user.role === 'organizer' || user.role === 'admin');
   };
 
   const value = {
@@ -206,7 +210,8 @@ export const AuthProvider = ({ children }) => {
     hasPermission,
     isOrganizer,
     isAdmin,
-    getDashboardRoute
+    getDashboardRoute,
+    canAccessDashboard
   };
 
   return (

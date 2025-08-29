@@ -40,13 +40,13 @@ const ProtectedRoute = ({ children, requiredRole = null }) => {
     }
   }
 
-  // If user doesn't have the required role, redirect to appropriate dashboard
+  // If user doesn't have the required role, redirect to appropriate page
   if (user && user.role === 'admin') {
     return <Navigate to="/admin-dashboard" replace />;
   } else if (user && user.role === 'organizer') {
-    return <Navigate to="/organizer-dashboard" replace />;
-  } else {
     return <Navigate to="/dashboard" replace />;
+  } else {
+    return <Navigate to="/events" replace />;
   }
 };
 

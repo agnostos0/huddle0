@@ -19,6 +19,7 @@ import EventsMap from './pages/EventsMap.jsx';
 import ExploreEvents from './pages/ExploreEvents.jsx';
 import EventOrganizerDashboard from './pages/EventOrganizerDashboard.jsx';
 import UserProfile from './pages/UserProfile.jsx';
+import Events from './pages/Events.jsx';
 
 // Initialize Firebase
 import './lib/firebase.js';
@@ -40,7 +41,7 @@ function AppContent() {
           
           {/* Protected Routes */}
           <Route path="/dashboard" element={
-            <ProtectedRoute>
+            <ProtectedRoute requiredRole="organizer">
               <Dashboard />
             </ProtectedRoute>
           } />
@@ -89,6 +90,7 @@ function AppContent() {
           
           <Route path="/events/map" element={<EventsMap />} />
           <Route path="/explore" element={<ExploreEvents />} />
+          <Route path="/events" element={<Events />} />
           
           <Route path="/profile" element={
             <ProtectedRoute>

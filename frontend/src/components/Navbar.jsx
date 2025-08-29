@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 
 export default function Navbar() {
-  const { user, logout, isOrganizer, isAdmin, getDashboardRoute } = useAuth();
+  const { user, logout, isOrganizer, isAdmin, getDashboardRoute, canAccessDashboard } = useAuth();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const navigate = useNavigate();
 
@@ -54,21 +54,25 @@ export default function Navbar() {
           <div className="flex items-center space-x-4">
             {user ? (
               <>
-                {/* Quick Actions */}
-                <Link
-                  to="/create-event"
-                  className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-300 text-sm"
-                >
-                  + Create Event
-                </Link>
+                {/* Quick Actions - Only for organizers and admins */}
+                {canAccessDashboard() && (
+                  <Link
+                    to="/create-event"
+                    className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-300 text-sm"
+                  >
+                    + Create Event
+                  </Link>
+                )}
 
-                {/* Dashboard Button */}
-                <button
-                  onClick={handleDashboardClick}
-                  className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-300 text-sm"
-                >
-                  {isAdmin() ? 'Admin Panel' : isOrganizer() ? 'Organizer Dashboard' : 'Dashboard'}
-                </button>
+                {/* Dashboard Button - Only for organizers and admins */}
+                {canAccessDashboard() && (
+                  <button
+                    onClick={handleDashboardClick}
+                    className="px-4 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:shadow-lg transform hover:scale-105 transition-all duration-300 text-sm"
+                  >
+                    {isAdmin() ? 'Admin Panel' : 'Organizer Dashboard'}
+                  </button>
+                )}
 
                 {/* Profile Dropdown */}
                 <div className="relative">
@@ -113,14 +117,28 @@ export default function Navbar() {
                         </Link>
                       )}
                       
-                      {isOrganizer() && (
+                      {isOrganizer() && !isAdmin() && (
                         <Link
-                          to="/organizer-dashboard"
+                          to="/dashboard"
                           onClick={() => setIsProfileOpen(false)}
                           className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                         >
                           Organizer Dashboard
                         </Link>
+                      )}
+
+                      {/* Show organizer request for normal users */}
+                      {!canAccessDashboard() && (
+                        <button
+                          onClick={() => {
+                            setIsProfileOpen(false);
+                            // This will be handled by the CreateEvent page
+                            navigate('/create-event');
+                          }}
+                          className="block w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50"
+                        >
+                          Request Organizer Status
+                        </button>
                       )}
                       
                       <div className="border-t border-gray-100">
@@ -172,12 +190,22 @@ export default function Navbar() {
               >
                 Teams
               </Link>
-              <Link
-                to="/create-event"
-                className="block px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg text-center"
-              >
-                + Create Event
-              </Link>
+              {canAccessDashboard() && (
+                <Link
+                  to="/create-event"
+                  className="block px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg text-center"
+                >
+                  + Create Event
+                </Link>
+              )}
+              {!canAccessDashboard() && (
+                <button
+                  onClick={() => navigate('/create-event')}
+                  className="block w-full px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg text-center"
+                >
+                  Request Organizer Status
+                </button>
+              )}
             </>
           )}
         </div>
