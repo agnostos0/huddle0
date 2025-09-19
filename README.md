@@ -1,4 +1,4 @@
-# 🎉 Eventify - Event Management Platform
+# 🎉 HUDDLE - Event Management Platform
 
 A comprehensive event management platform built with the MERN stack, featuring real-time updates, role-based access control, and advanced event management capabilities.
 
